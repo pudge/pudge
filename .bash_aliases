@@ -1,2 +1,5 @@
-alias psg="ps auxww | grep -v grep | grep"
+alias ll="ls -lhG"
+alias grep="egrep --color"
+alias psg="ps auxww | egrep --color"
 alias whois="whois -h whois.geektools.com"
+alias confgen="perl /usr/local/src/marchex/marchex/bin/confgen"
