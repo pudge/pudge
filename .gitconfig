@@ -1,0 +1,68 @@
+[user]
+    name    = Chris Nandor
+    email   = cnandor@marchex.com
+[core]
+    excludesfile    = ~/.gitignore.default
+[push]
+    default = current
+[forward]
+    verbose = true
+[alias]
+    pullr   = !git pull --rebase
+    st      = !git --no-pager status
+
+    lasttag = describe --tags --abbrev=0
+    mod     = ls-files --modified
+    br      = symbolic-ref HEAD
+    rbr     = rev-parse --abbrev-ref --symbolic-full-name @{u}
+    repo    = config --get remote.origin.url
+    only    = !git_only
+
+    lg      = log --pretty=format:'%h... %Cblue%an (%cr)%Creset %s'
+    mn      = !git lg origin/master..HEAD
+    th      = !git lg $(git rbr)..HEAD
+    top     = !git lg -8
+
+    log1    = log --oneline
+    logs    = log --stat
+    logp    = log -p
+    logsp   = log --stat -p
+    logr    = log --raw
+    logg    = log --graph --decorate
+    logg1   = !git logg --oneline
+
+    mine    = log origin/master..HEAD
+    mine1   = !git log1 origin/master..HEAD
+    mines   = !git logs origin/master..HEAD
+    minep   = !git logp origin/master..HEAD
+    minesp  = !git logsp origin/master..HEAD
+    miner   = !git logr origin/master..HEAD
+    mineg   = !git logg origin/master..HEAD
+    mineg1  = !git logg1 origin/master..HEAD
+
+    this    = !git log $(git rbr)..HEAD
+    this1   = !git log1 $(git rbr)..HEAD
+    thiss   = !git logs $(git rbr)..HEAD
+    thisp   = !git logp $(git rbr)..HEAD
+    thissp  = !git logsp $(git rbr)..HEAD
+    thisr   = !git logr $(git rbr)..HEAD
+    thisg   = !git logg $(git rbr)..HEAD
+    thisg1  = !git logg1 $(git rbr)..HEAD
+
+    last    = log -1
+    last1   = !git log1 -1
+    lasts   = !git logs -1
+    lastp   = !git logp -1
+    lastsp  = !git logsp -1
+    lastr   = !git logr -1
+    lastc   = log --pretty=format:%H -1
+[color]
+    branch      = auto
+    diff        = auto
+    interactive = auto
+    status      = auto
+    grep        = always
+[grep]
+    patternType = perl
+[merge]
+	ff = false
