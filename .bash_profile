@@ -1,6 +1,5 @@
 umask 0002
 ulimit -n 2048
-renice +1 $$
 
 shopt -s histappend
 export HISTFILESIZE=1000000
@@ -14,7 +13,7 @@ export DEV_ID=2
 export TNS_ADMIN=$HOME
 
 if [[ $(uname) == 'Linux' ]]; then
-    export EDITOR=vi
+    export EDITOR=vim
 
     if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
         . /etc/bash_completion
@@ -33,6 +32,8 @@ if [[ $(uname) == 'Linux' ]]; then
 
         export JAVA_HOME=$SITE/jdk/jdk1.7.0_67
         export PATH=$JAVA_HOME/bin:$PATH
+    else
+        renice +1 $$
     fi
 
 elif [[ $(uname) == 'Darwin' ]]; then
