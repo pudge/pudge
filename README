@@ -2,3 +2,7 @@ Pudge's $HOME stuff.
 
 Pretty boring, really.
 
+To install I do something like:
+
+   $ git clone git@github.com:pudge/pudge.git dotfiles
+   $ perl -le 'for my $old (@ARGV) { (my $new = $old) =~ s|^dotfiles/||; next if $old eq '.git'; -f $new && (unlink $new or die "Cannot unlink $new"); symlink $old, $new or die "Cannot symlink $old to $new" }' dotfiles/.[a-zA-Z]*
