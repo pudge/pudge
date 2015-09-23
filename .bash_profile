@@ -45,13 +45,16 @@ elif [[ $(uname) == 'Darwin' ]]; then
     export VERSIONER_PERL_PREFER_32_BIT=yes
 fi
 
-export PATH=$HOME/bin:/site/marchex/bin:/opt/chef/embedded/bin:$PATH
+export PATH=$HOME/bin:/site/marchex/bin:$PATH
 
 . $HOME/.bash_aliases
 . $HOME/.bash_prompt
 . $HOME/.git-completion.bash
 . $HOME/.knife-completion.bash
 
+eval "$(chef shell-init bash)"
+
+complete -C '/usr/local/bin/aws_completer' aws
 
 if [[ -r "$HOME/.smartcd_config" ]]; then
     . ~/.smartcd_config
