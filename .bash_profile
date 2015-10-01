@@ -47,15 +47,18 @@ fi
 
 export PATH=$HOME/bin:/site/marchex/bin:$PATH
 
-. $HOME/.bash_aliases
-. $HOME/.bash_prompt
-. $HOME/.git-completion.bash
-. $HOME/.knife-completion.bash
+parent_caller=$(ps -o comm= $PPID)
+if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
+    . $HOME/.bash_aliases
+    . $HOME/.bash_prompt
+    . $HOME/.git-completion.bash
+    . $HOME/.knife-completion.bash
 
-eval "$(chef shell-init bash)"
+    eval "$(/opt/chefdk/embedded/bin/chef shell-init bash)"
 
-complete -C '/usr/local/bin/aws_completer' aws
+    complete -C '/usr/local/bin/aws_completer' aws
 
-if [[ -r "$HOME/.smartcd_config" ]]; then
-    . ~/.smartcd_config
+    if [[ -r "$HOME/.smartcd_config" ]]; then
+        . ~/.smartcd_config
+    fi
 fi
