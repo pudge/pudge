@@ -14,6 +14,7 @@ export TNS_ADMIN=$HOME
 
 if [[ $(uname) == 'Linux' ]]; then
     export EDITOR=vim
+    MYPATH=/site/marchex/bin
 
     if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
         . /etc/bash_completion
@@ -37,16 +38,18 @@ if [[ $(uname) == 'Linux' ]]; then
     fi
 
 elif [[ $(uname) == 'Darwin' ]]; then
-    unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
     export EDITOR=bbeditw
-    export PATH=/usr/local/src/marchex/marchex/bin/:$PATH
+    MYPATH=/usr/local/src/marchex/marchex/bin
+
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
     export COPYFILE_DISABLE=1
     export VERSIONER_PERL_PREFER_32_BIT=yes
+    unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
 fi
 
-export PATH=$HOME/bin:/site/marchex/bin:$PATH
+export PATH=$HOME/bin:$MYPATH:$PATH
 
+# don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
 if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.bash_aliases
@@ -54,7 +57,10 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.git-completion.bash
     . $HOME/.knife-completion.bash
 
-    eval "$(/opt/chefdk/embedded/bin/chef shell-init bash)"
+    # this is super-slow, so don't run it unless we need it
+    if ! [[ "$PATH" =~ chefdk ]]; then
+        eval "$(/opt/chefdk/embedded/bin/chef shell-init bash)"
+    fi
 
     complete -C '/usr/local/bin/aws_completer' aws
 
