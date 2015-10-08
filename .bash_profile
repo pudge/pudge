@@ -1,3 +1,6 @@
+# yes, this is stupid
+if ! [[ $(hostname) == 'slugfest.sea' ]]; then
+
 umask 0002
 ulimit -n 2048
 
@@ -67,4 +70,6 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     if [[ -r "$HOME/.smartcd_config" ]]; then
         . ~/.smartcd_config
     fi
+fi
+
 fi
