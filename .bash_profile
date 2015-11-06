@@ -50,7 +50,7 @@ elif [[ $(uname) == 'Darwin' ]]; then
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
 fi
 
-export PATH=$HOME/bin:$MYPATH:$PATH
+export PATH=$HOME/bin:/opt/delivery-cli/bin:$MYPATH:$PATH
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
