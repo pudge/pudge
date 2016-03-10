@@ -11,6 +11,8 @@
     pullr   = !git pull --rebase
     st      = !git --no-pager status
 
+    dc      = !git diff --color=always | less -R
+
     lasttag = describe --tags --abbrev=0
     mod     = ls-files --modified
     br      = symbolic-ref HEAD
@@ -66,3 +68,6 @@
     patternType = perl
 [merge]
 	ff = false
+[hub]
+	host = github.marchex.com
+	protocol = ssh

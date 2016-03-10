@@ -15,9 +15,15 @@ export SITE=/site
 export DEV_ID=2
 export TNS_ADMIN=$HOME
 
+export GITHUB_HOST=github.marchex.com
+
 if [[ $(uname) == 'Linux' ]]; then
     export EDITOR=vim
     MYPATH=/site/marchex/bin
+
+    if [ -x /site/marchex/bin/open_url ]; then
+        export BROWSER=/site/marchex/bin/open_url
+    fi
 
     if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
         . /etc/bash_completion
@@ -59,6 +65,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.bash_prompt
     . $HOME/.git-completion.bash
     . $HOME/.knife-completion.bash
+    . $HOME/.hub-completion.bash
 
     # this is super-slow, so don't run it unless we need it
     if ! [[ "$PATH" =~ chefdk ]]; then

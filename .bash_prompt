@@ -10,9 +10,10 @@ function set_ps1 {
 
 #    PS1=$(printf "%*s\r%s\n\$ " "$(tput cols)" 'right' 'left')
 
-#    export PS1="[$ptime] $phist $puser@$phost:$ppwd$pgit $pchar "
+    export PS1="[$ptime] $phist $puser@$phost:$ppwd$pgit \$ "
 ###    export PS1=$(printf "%${COLUMNS}s\r%s \$ " "$puser@$phost:$ppwd$pgit" "[$ptime] $phist$pchar")
-    export PS1="$puser@$phost:$ppwd$pgit\n[$ptime] $phist$pchar "
+#    export PS1="$puser@$phost:$ppwd$pgit\n[$ptime] $phist$pchar "
+#    export PS1="$puser@$phost:$ppwd \$ " # demo
 }
 
 function set_prompt {
