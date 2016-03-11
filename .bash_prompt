@@ -26,7 +26,7 @@ function set_ps1 {
     #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
-    export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit $red\${?##0}$end\$ "
+    export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit $yellow\${?##0}$end\$ "
 
 
 #    PS1=$(printf "%*s\r%s\n\$ " "$(tput cols)" 'right' 'left')
