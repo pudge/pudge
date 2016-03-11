@@ -8,7 +8,7 @@ function set_ps1 {
     local ptime puser phost phist ppwd pgit pchar
     ptime='\[\e[32m\]\t\[\e[0m\]' # green
     puser='\u'
-    phost='${HOSTNAME}'
+    phost=$(hostname -f | cut -d . -f 1,2)
     phist='\[\e[36m\]\!\[\e[0m\]' # cyan
     ppwd='\[\e[35m\]\w\[\e[0m\]' # pink
     pgit='\[\e[31m\]$(__git_ps1 " (%s)")\[\e[0m\]' # red
