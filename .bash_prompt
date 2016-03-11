@@ -6,18 +6,31 @@ function set_ps1 {
     export GIT_PS1_SHOWUPSTREAM='auto'
 
     local ptime puser phost phist ppwd pgit pchar
-    ptime='\[\e[32m\]\t\[\e[0m\]' # green
+    local black red green yellow blue magenta cyan white end
+    black='\[\e[30m\]'
+    red='\[\e[31m\]'
+    green='\[\e[32m\]'
+    yellow='\[\e[33m\]'
+    blue='\[\e[34m\]'
+    magenta='\[\e[35m\]'
+    cyan='\[\e[36m\]'
+    white='\[\e[37m\]'
+    end='\[\e[0m\]'
+
+    ptime="${green}\t${end}"
     puser='\u'
     phost=$(hostname -f | cut -d . -f 1,2)
-    phist='\[\e[36m\]\!\[\e[0m\]' # cyan
-    ppwd='\[\e[35m\]\w\[\e[0m\]' # pink
-    pgit='\[\e[31m\]$(__git_ps1 " (%s)")\[\e[0m\]' # red
-    #pchar='\[\e[34m\]→\[\e[0m\]' # blue
-    pchar='\[\e[34m\]\$\[\e[0m\]' # blue
+    phist="${cyan}\!${end}"
+    ppwd="${magenta}\w${end}"
+    pgit="${red}"'$(__git_ps1 " (%s)")'"${end}"
+    #pchar="${blue}→${end}"
+    pchar="${blue}\$${end}"
+
+    export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit $red\${?##0}$end\$ "
+
 
 #    PS1=$(printf "%*s\r%s\n\$ " "$(tput cols)" 'right' 'left')
 
-    export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit \$ "
 ###    export PS1=$(printf "%${COLUMNS}s\r%s \$ " "$puser@$phost:$ppwd$pgit" "[$ptime] $phist$pchar")
 #    export PS1="$puser@$phost:$ppwd$pgit\n[$ptime] $phist$pchar "
 #    export PS1="$puser@$phost:$ppwd \$ " # demo
