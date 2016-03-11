@@ -12,7 +12,7 @@ alias cenodiff="cenoview -l foo.diff"
 alias fixenv='$HOME/bin/fixenv.pl > $HOME/.fixenv;source $HOME/.fixenv'
 alias fucking=sudo
 alias tcpd='sudo tcpdump -p -i any -s0 -v -w /tmp/$(hostname).$(date +%F-%T).pcap'
-eval "$(hub alias -s)"
+alias git=hub
 
 function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep

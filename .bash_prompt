@@ -1,16 +1,23 @@
 function set_ps1 {
+    . $HOME/.git-prompt.sh
+    export GIT_PS1_SHOWSTASHSTATE=1
+    export GIT_PS1_SHOWDIRTYSTATE=1
+    export GIT_PS1_SHOWUNTRACKEDFILES=1
+    export GIT_PS1_SHOWUPSTREAM='auto'
+
     local ptime puser phost phist ppwd pgit pchar
-    ptime='\t'
+    ptime='\[\e[32m\]\t\[\e[0m\]' # green
     puser='\u'
     phost='${HOSTNAME}'
     phist='\[\e[36m\]\!\[\e[0m\]' # cyan
     ppwd='\[\e[35m\]\w\[\e[0m\]' # pink
-    pgit='\[\e[37m\]$(__git_ps1 " (%s)")\[\e[0m\]' # grey
-    pchar='\[\e[34m\]→\[\e[0m\]' # blue
+    pgit='\[\e[31m\]$(__git_ps1 " (%s)")\[\e[0m\]' # red
+    #pchar='\[\e[34m\]→\[\e[0m\]' # blue
+    pchar='\[\e[34m\]\$\[\e[0m\]' # blue
 
 #    PS1=$(printf "%*s\r%s\n\$ " "$(tput cols)" 'right' 'left')
 
-    export PS1="[$ptime] $phist $puser@$phost:$ppwd$pgit \$ "
+    export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit \$ "
 ###    export PS1=$(printf "%${COLUMNS}s\r%s \$ " "$puser@$phost:$ppwd$pgit" "[$ptime] $phist$pchar")
 #    export PS1="$puser@$phost:$ppwd$pgit\n[$ptime] $phist$pchar "
 #    export PS1="$puser@$phost:$ppwd \$ " # demo
@@ -32,8 +39,6 @@ function unset_prompt {
     fi
 }
 
-export GIT_PS1_SHOWSTASHSTATE=1
-export GIT_PS1_SHOWDIRTYSTATE=1
 set_ps1
 set_prompt
 
