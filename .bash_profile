@@ -62,10 +62,10 @@ export PATH=$HOME/bin:/opt/delivery-cli/bin:$MYPATH:$PATH
 parent_caller=$(ps -o comm= $PPID)
 if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.bash_aliases
-    . $HOME/.bash_prompt
     . $HOME/.git-completion.bash
-    . $HOME/.knife-completion.bash
     . $HOME/.hub-completion.bash
+    . $HOME/.knife-completion.bash
+    . $HOME/.bash_prompt
 
     # this is super-slow, so don't run it unless we need it
     if ! [[ "$PATH" =~ chefdk ]]; then

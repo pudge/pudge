@@ -26,7 +26,7 @@ function set_ps1 {
     #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
-    export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit $yellow\${?##0}$end\$ "
+    export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit $yellow\$(get_err)$end\$ "
 
 
 #    PS1=$(printf "%*s\r%s\n\$ " "$(tput cols)" 'right' 'left')
@@ -34,6 +34,14 @@ function set_ps1 {
 ###    export PS1=$(printf "%${COLUMNS}s\r%s \$ " "$puser@$phost:$ppwd$pgit" "[$ptime] $phist$pchar")
 #    export PS1="$puser@$phost:$ppwd$pgit\n[$ptime] $phist$pchar "
 #    export PS1="$puser@$phost:$ppwd \$ " # demo
+}
+
+function get_err {
+    local err=$?
+    # 130 == SIGINT
+    if [[ $err != 0 && $err != 130 ]]; then
+        echo -n $err
+    fi
 }
 
 function set_prompt {
@@ -52,6 +60,5 @@ function unset_prompt {
     fi
 }
 
-set_ps1
 set_prompt
-
+set_ps1
