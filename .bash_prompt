@@ -27,6 +27,7 @@ function set_ps1 {
     pchar="${blue}\$${end}"
 
     export PS1="$ptime|$phist $puser@$phost:$ppwd$pgit $yellow\$(get_err)$end\$ "
+    export DEMO_PS1="$puser@$phost:$ppwd$pgit \$ "
 
 
 #    PS1=$(printf "%*s\r%s\n\$ " "$(tput cols)" 'right' 'left')
@@ -40,7 +41,7 @@ function get_err {
     local err=$?
     # 130 == SIGINT
     if [[ $err != 0 && $err != 130 ]]; then
-        echo -n $err
+        echo -n "$err "
     fi
 }
 

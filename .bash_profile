@@ -65,6 +65,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.git-completion.bash
     . $HOME/.hub-completion.bash
     . $HOME/.knife-completion.bash
+    . $HOME/.git.bash
     . $HOME/.bash_prompt
 
     # this is super-slow, so don't run it unless we need it
