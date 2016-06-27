@@ -18,6 +18,10 @@ function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
 }
 
+function knife-prem {
+   knife "$@" -c ~/.chef/knife-prem.rb;
+}
+
 function git_only {
     opts=$(git rev-parse --no-revs "$@" 2>/dev/null)
     rev=$(git rev-parse --revs-only "$@" 2>/dev/null)
