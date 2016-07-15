@@ -19,7 +19,7 @@ export GITHUB_HOST=github.marchex.com
 
 if [[ $(uname) == 'Linux' ]]; then
     export EDITOR=vim
-    MYPATH=/site/marchex/bin
+    MYPATH=/site/marchex/bin:/site/devtools/maven/apache-maven-3.0.3/bin/
 
     if [ -x /site/marchex/bin/open_url ]; then
         export BROWSER=/site/marchex/bin/open_url
@@ -56,7 +56,7 @@ elif [[ $(uname) == 'Darwin' ]]; then
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
 fi
 
-export PATH=$HOME/bin:/opt/delivery-cli/bin:$PATH:$MYPATH
+export PATH=$HOME/bin:$MYPATH:$PATH
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
