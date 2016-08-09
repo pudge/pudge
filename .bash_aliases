@@ -1,7 +1,8 @@
 if [[ $(uname) == 'Darwin' ]]; then
     alias ll="ls -lhG"
     alias verbosemode='sudo nvram boot-args="-v"'
-    alias dnsflush='sudo dscacheutil -flushcache;sudo killall -HUP mDNSResponder'
+    # https://support.apple.com/en-us/HT202516
+    alias dnsflush='sudo killall -HUP mDNSResponder'
 else
     alias ll="ls -lh --color"
 fi
