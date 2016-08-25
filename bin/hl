@@ -1,0 +1,8 @@
+#!/usr/bin/perl -s
+our $i;
+my $mword = quotemeta(shift);
+$mword = "(?i)$mword" if $i;
+while (<>) {
+	s/($mword)/\e[31m\1\e[0m/g;
+	print;
+}

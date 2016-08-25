@@ -1,0 +1,48 @@
+#!/usr/bin/perl -s -l
+use warnings;
+use strict;
+
+use File::Temp;
+
+our($W, $n);
+
+my @aliases = (
+    [qr/^git /, 'hub ']
+);
+
+
+my($fh, $file) = tmpnam();
+print $fh '#!/bin/bash';
+print $fh 'set -e';
+
+my @cmds = <>;
+while (my $cmd = shift @cmds) {
+    chomp $cmd;
+    $cmd =~ s/\s+\#.*$//;
+
+    (my $print_cmd = $cmd) =~ s/'/'\\\''/g;
+    print $fh qq{echo '\$ $print_cmd'};
+    print $fh "read -n 1 -s" if !$W;
+
+    # special-case
+    for my $alias (@aliases) {
+        $cmd =~ s/$alias->[0]/$alias->[1]/g;
+    }
+
+    if ($n) {
+        print $fh qq{echo "$cmd"};
+    }
+    else {
+        print $fh $cmd;
+    }
+    print $fh "read -n 1 -s" if !$W && @cmds;
+}
+
+close $fh;
+chmod 0755, $file;
+system($file);
+
+END {
+    system('stty echo') if !$W;
+}
+

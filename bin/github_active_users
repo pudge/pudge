@@ -1,0 +1,2 @@
+#!/bin/bash
+github_api /users | jq .[].login | egrep -v 'ghost|tools-automation|chef-delivery' | xargs -IUSER github_api /users/USER | jq -r 'select(.suspended_at == null) | select(.type == "User") | .login'

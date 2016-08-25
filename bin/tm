@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+our @hosts = @ARGV;
+
+if ($ENV{TMUX} || $ENV{TMUX_PANE}) {
+    die "Already inside a tmux session, do not know what to do.\n";
+}
+
+use File::Temp 'tempfile';
+my($fh, $filename) = tempfile();
+
+my $session_name = "session-$$";
+print $fh qq{tmux new-session -d -s "$session_name"\n};
+
+my $i = 0;
+for my $host (@hosts) {
+    if ($i++) {
+        print $fh qq{tmux split-window -t "$session_name"\n};
+        print $fh qq{tmux select-layout -t "$session_name" tiled\n};
+    }
+    print $fh qq{tmux send-keys -t "$session_name" 'ssh $host' Enter\n};
+}
+if ($i < 5) {
+    print $fh qq{tmux select-layout -t "$session_name" even-horizontal\n};
+}
+print $fh qq{tmux set-window -t "$session_name" synchronize-panes on\n};
+print $fh qq{tmux select-pane -t "$session_name" -R\n};
+close $fh;
+system("bash $filename >/dev/null");
+
+printf STDOUT "\e]1;%s\a", $session_name;
+system(qq{tmux attach -t "$session_name"});

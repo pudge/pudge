@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+# USAGE: git-r-done
+# generally, do this after the branch has been merged to master and deleted
+#   remotely, such as after a GitHub PR
+# checks out master, updates master from origin, and deletes the old branch
+# safety checks to make sure you have no unstashed changes on the branch,
+#   and that master contains the branch
+use warnings;
+use strict;
+
+use Git;
+
+my $repo = Git->repository();
+
+chomp(my $branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
+die "Already on master, exiting\n"
+    if $branch eq 'master';
+
+git_cmd_try { $repo->command('diff', '--exit-code', '--quiet') }
+    "Unstashed changes found on branch '$branch', cannot continue";
+
+git_cmd_try { $repo->command_noisy('checkout', 'master') }
+    "Error, cannot continue (%s [%d])";
+
+git_cmd_try { $repo->command_noisy('pull', '--rebase', 'origin', 'master') }
+    "Error, cannot continue (%s [%d])";
+
+my $contains =
+    git_cmd_try { $repo->command('contains', "refs/heads/$branch") }
+    "Error, cannot continue (%s [%d])";
+die "master does not include '$branch', exiting\n"
+    if $contains !~ /^\*?\s+master$/m;
+
+git_cmd_try { $repo->command_noisy('branch', '-d', $branch) }
+    "Error, cannot continue (%s [%d])";

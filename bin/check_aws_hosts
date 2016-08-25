@@ -1,0 +1,75 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
+use Getopt::Long;
+use JSON::XS qw(decode_json encode_json);
+
+my($team, $group_by_project);
+GetOptions(
+    't|team=s'              => \$team,
+    'P|group_by_project'    => \$group_by_project
+);
+
+my $cmd = 
+my @instances;
+
+if (@ARGV) {
+    for my $id (<>) {
+        chomp $id;
+print $id, "\n";
+        for my $region ("us-west-2", "us-east-1") {
+            my $json = `aws ec2 describe-instances --region=$region --filters Name=instance-id,Values=\Q$id\E --query 'Reservations[0].Instances[0]'`;
+            push @instances, decode_json($json) if $json;
+        }
+    }
+}
+elsif ($team) {
+    my $team_name = $team;
+    for my $team_other (lc $team, ucfirst $team) {
+        if ($team ne $team_other) {
+            $team_name .= ",$team_other";
+        }
+    }
+
+    for my $region ("us-west-2", "us-east-1") {
+        for my $tag (qw(team Team)) {
+            my $json = `aws ec2 describe-instances --region=$region --filters Name=tag:$tag,Values=\Q$team_name\E --query 'Reservations[*].Instances[*]'`;
+            push @instances, map { @$_ } map { @$_ } decode_json($json) if $json;
+        }
+    }
+}
+else {
+    die "No instance IDs or teams provided\n";
+}
+
+for my $inst (@instances) {
+    my %tags = map { lc $_->{Key}, $_->{Value} } @{$inst->{Tags}};
+    $inst->{_tags} = \%tags;
+}
+
+my %data;
+for my $inst (sort { $a->{_tags}{name} cmp $b->{_tags}{name} } @instances) {
+    next if $inst->{State}{Name} eq 'terminated';
+    my $host = {
+        Team            => $inst->{_tags}{team},
+        Project         => $inst->{_tags}{project},
+        CreationDate    => $inst->{_tags}{creation_date},
+        Creator         => $inst->{_tags}{creator},
+        InstanceId      => $inst->{InstanceId},
+        AZ              => $inst->{Placement}{AvailabilityZone},
+        Type            => $inst->{InstanceType},
+        State           => $inst->{State}{Name},
+    };
+
+    if ($group_by_project) {
+        $data{$inst->{_tags}{project}}{$inst->{_tags}{name}} = $host;
+    }
+    else {
+        $data{$inst->{_tags}{name}} = $host;
+    }
+}
+
+print JSON::XS->new->canonical(1)->pretty(1)->encode(\%data);

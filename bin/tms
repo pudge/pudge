@@ -1,0 +1,2 @@
+#!/bin/bash
+if [[ ! $(tmux attach 2>/dev/null) ]]; then tmux; fi

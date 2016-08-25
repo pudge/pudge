@@ -1,0 +1,9 @@
+#!/usr/bin/perl -s
+use warnings;
+use strict;
+
+our $a;
+my @args = ('--contains', @ARGV);
+unshift @args, '-a' if $a;
+
+system('git', 'branch', @args);

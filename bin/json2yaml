@@ -1,0 +1,17 @@
+#!/site/perl/perl-5.10.1-1/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+use lib '/site/perllibs-pfc-shared/lib';
+use JSON::XS ();
+use YAML ();
+
+my $input = join '', <>;
+
+if ($0 =~ /yaml2json/) {
+    say JSON::XS->new->utf8->pretty->canonical->encode(YAML::Load($input));
+}
+else {
+    say YAML::Dump(JSON::XS::decode_json($input));
+}

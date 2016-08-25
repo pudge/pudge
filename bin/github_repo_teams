@@ -1,0 +1,174 @@
+#!/site/perl/perl-5.10.1-1/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+=pod
+
+=head1 NAME
+
+github_search - search GitHub code
+
+
+=head1 SYNOPSIS
+
+    $ export MARCHEX_GITHUB_TOKEN=TOKEN
+
+    # search all repos
+    $ github_search xyzzy
+    
+
+=head1 DESCRIPTION
+
+See L<https://help.github.com/enterprise/2.5/user/articles/searching-code/> for more information about searching code in GitHub.
+
+=over 4
+
+=item * Searches are case-insensitive
+
+=item * If there are more than 30 results and you're using an interactive shell, the program will ask you if you want to see the next page of results.  Otherwise, you will get only the first 30 results.
+
+=item * If the contents of the file do not contain the search term, only the path to the file is given in the output, without a diff.
+
+=item * URLs are tinified. L<http://tiny.marchex.com/>
+
+=item * This currently does not support other searches in GitHub, only code searches.
+
+=back
+
+
+=head1 REQUIREMENTS
+
+=over 4
+
+=item * Create personal access token on GitHub with scope "repo" (https://github.marchex.com/settings/tokens)
+
+You can save the token in the environment variable MARCHEX_GITHUB_TOKEN, or pass it in the command line.
+
+=back
+
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-h|--help>
+
+Prints brief help message and exits.
+
+=item B<-t|--token>
+
+Personal access token to use GitHub API.  Can use environment variable
+C<$MARCHEX_GITHUB_TOKEN> instead.
+
+=item B<-o|--org>
+
+If specified, restrict searches to this organization.
+
+=item B<-O|--open_url>
+
+Open the GitHub URL using the specified command (default: C<$BROWSER> or C<open_url>, can be overridden here).
+
+=item B<-P|--print_url>
+
+Open the GitHub URL to the command line.
+
+=item B<-u|--url>
+
+Print URL for each search result.
+
+=item B<-l|--list_only>
+
+Only list files with differences, do not print the differences.
+
+=item B<-T|--team>
+
+Restrict search to repos from specified team.  Can be set multiple times,
+e.g., C<-T tools -T mcm>.
+
+=item B<-f|--filter>
+
+Arbitrary search filters.  Can be set multiple times, e.g.,
+C<cacert -f extension:pem -f in:path>, or combined, e.g.,
+C<cacert -f 'extension:pem in:path'>.
+L<https://help.github.com/enterprise/2.5/user/articles/searching-code/>
+for more information.
+
+=item B<-i|--indexed_sort>
+
+Search by most recently indexed, instead of by "best match."
+
+=item B<-v|--verbose>
+
+Outputs the HTTP request and response to STDERR (so that you can get the
+output and still process the content with C<jq>).  One C<-v> shows just
+the headers, while two shows the content as well.
+
+=back
+
+=cut
+
+
+BEGIN {
+    use FindBin '$Bin';
+    use lib "$Bin/../lib/perl";
+}
+
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
+use Pod::Usage;
+
+use File::Temp 'tempfile';
+use Getopt::Long;
+use HTTP::Response;
+use JSON::XS qw(decode_json encode_json);
+use MIME::Base64;
+use URI::Escape;
+
+use Marchex::Client::GitHub;
+use Marchex::Client::Tiny;
+use Marchex::Color qw(color_str :colors);
+use Marchex::OpenURL 'open_url_with';
+
+my $gh = init();
+grep_teams();
+
+sub grep_teams {
+    my $teams = $gh->{api}->command(GET => "/orgs/$gh->{org}/teams");
+    for my $team (@$teams) {
+        my $repos = $gh->{api}->command(GET => "/teams/$team->{id}/repos");
+        if (grep { $_->{name} eq $gh->{repo} } @$repos) {
+            print $team->{slug}, "\n";
+        }
+    }
+}
+
+
+sub init {
+    my %opts;
+
+    Getopt::Long::Configure('bundling');
+    GetOptions(
+        'h|help'                => sub { pod2usage(-verbose => 2) },
+        't|token=s'             => \$opts{token},
+        'o|org=s'               => \$opts{org},
+        'O|open_url:s'          => \$opts{open_url},
+        'v|verbose+'            => \$opts{verbose}
+    ) or pod2usage(-verbose => 1);
+
+    $opts{token} //= $ENV{MARCHEX_GITHUB_TOKEN};
+
+    pod2usage(-verbose => 1, -message => "no personal token provided\n")
+        unless $opts{token};
+
+    $opts{org} //= 'marchex';
+
+    $opts{api} = Marchex::Client::GitHub->new(
+        verbose => $opts{verbose},
+        token   => $opts{token}
+    );
+
+    $opts{repo} = shift @ARGV;
+    @ARGV = ();
+
+    return(\%opts);
+}

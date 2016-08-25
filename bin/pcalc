@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+while (<>) {
+	chomp;
+	if ($x && m|^[*/+-]|) {
+		$_ = $x . $_;
+	}
+	print (($x = eval), "\n");
+}
