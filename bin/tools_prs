@@ -1,0 +1,1 @@
+github_api /search/issues -d sort=updated -d order=asc -d q='author:jcarter author:cnandor author:tflint is:open is:pr' | jq -r '.items[] | select(.pull_request != null) | .user.login + ": " + .title + "\n" + .created_at + "\n" + .html_url + "\n"'
