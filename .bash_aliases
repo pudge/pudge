@@ -20,9 +20,15 @@ function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
 }
 
-function knife-prem {
-   knife "$@" -c ~/.chef/knife-prem.rb;
+function knife-hosted {
+   knife "$@" --config ~/.chef/knife.rb;
 }
+export -f knife-hosted
+
+function knife-prem {
+   knife "$@" --config ~/.chef/knife-prem.rb;
+}
+export -f knife-prem
 
 function git_only {
     opts=$(git rev-parse --no-revs "$@" 2>/dev/null)

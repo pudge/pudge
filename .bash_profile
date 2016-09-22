@@ -36,12 +36,9 @@ if [[ $(uname) == 'Linux' ]]; then
             . /site/marchex/etc/profile.d/40-ssh_agent_start.sh
         fi
 
-        if [ -f /site/src/ansible/hacking/env-setup ]; then
-            . /site/src/ansible/hacking/env-setup -q
-        fi
-
         export JAVA_HOME=$SITE/jdk/jdk1.7.0_67
-        export PATH=$JAVA_HOME/bin:$PATH
+        MYPATH=$JAVA_HOME/bin:$MYPATH
+
     else
         renice +1 $$
     fi
@@ -57,6 +54,11 @@ elif [[ $(uname) == 'Darwin' ]]; then
 fi
 
 export PATH=$HOME/bin:$MYPATH
+
+if [ -f /site/src/ansible/hacking/env-setup ]; then
+    . /site/src/ansible/hacking/env-setup -q
+fi
+
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
