@@ -13,6 +13,7 @@
     st      = !git --no-pager status
 
     dc      = !git diff --color=always | less -R
+    diffc   = !git diff --cached
 
     lasttag = describe --tags --abbrev=0
     mod     = ls-files --modified
