@@ -9,6 +9,7 @@
     verbose = true
 [alias]
     pullr   = !git pull --rebase
+    pr      = pull-request
     cb      = !git checkout -b
     st      = !git --no-pager status
 
