@@ -15,6 +15,8 @@ alias fucking=sudo
 alias tcpd='sudo tcpdump -p -i any -s0 -v -w /tmp/$(hostname).$(date +%F-%T).pcap'
 alias git=hub
 alias ssg='ssh grax.sea.marchex.com'
+alias be='bundle exec'
+alias bkitchen='bundle exec kitchen'
 
 function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
