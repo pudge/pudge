@@ -17,6 +17,7 @@ alias git=hub
 alias ssg='ssh grax.sea.marchex.com'
 alias be='bundle exec'
 alias bkitchen='bundle exec kitchen'
+alias b2kitchen='KITCHEN_YAML=.kitchen.ec2.yml bundle exec kitchen'
 
 function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
