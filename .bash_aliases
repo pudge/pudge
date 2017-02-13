@@ -18,6 +18,9 @@ alias ssg='ssh grax.sea.marchex.com'
 alias be='bundle exec'
 alias bkitchen='bundle exec kitchen'
 alias b2kitchen='KITCHEN_YAML=.kitchen.ec2.yml bundle exec kitchen'
+alias gcg=github_changelog_generator
+alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
+
 
 function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
