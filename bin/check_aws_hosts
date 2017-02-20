@@ -7,22 +7,23 @@ use Data::Dumper; $Data::Dumper::Sortkeys=1;
 use Getopt::Long;
 use JSON::XS qw(decode_json encode_json);
 
-my($team, $group_by_project);
+my(@ids, $team, $group_by_project);
 GetOptions(
+    'i|ids=s@'              => \@ids,
     't|team=s'              => \$team,
     'P|group_by_project'    => \$group_by_project
 );
 
-my $cmd = 
-my @instances;
+our @instances;
+our @regions = ("us-west-2", "us-east-1");
+our $region;
 
-if (@ARGV) {
-    for my $id (<>) {
+if (@ids) {
+    for my $id (@ids) {
         chomp $id;
-print $id, "\n";
-        for my $region ("us-west-2", "us-east-1") {
-            my $json = `aws ec2 describe-instances --region=$region --filters Name=instance-id,Values=\Q$id\E --query 'Reservations[0].Instances[0]'`;
-            push @instances, decode_json($json) if $json;
+        for $region (@regions) {
+            my $json = aws_ec2("describe-instances --filters Name=instance-id,Values=\Q$id\E --query 'Reservations[0].Instances[0]'");
+            push @instances, $json if $json;
         }
     }
 }
@@ -34,10 +35,14 @@ elsif ($team) {
         }
     }
 
-    for my $region ("us-west-2", "us-east-1") {
+    for $region (@regions) {
         for my $tag (qw(team Team)) {
-            my $json = `aws ec2 describe-instances --region=$region --filters Name=tag:$tag,Values=\Q$team_name\E --query 'Reservations[*].Instances[*]'`;
-            push @instances, map { @$_ } map { @$_ } decode_json($json) if $json;
+            my $json = aws_ec2("describe-instances --filters Name=tag:$tag,Values=\Q$team_name\E --query 'Reservations[*].Instances[*]'");
+            if ($json) {
+                for my $data (map { @$_ } @$json) {
+                    push @instances, $data;
+                }
+            }
         }
     }
 }
@@ -48,6 +53,22 @@ else {
 for my $inst (@instances) {
     my %tags = map { lc $_->{Key}, $_->{Value} } @{$inst->{Tags}};
     $inst->{_tags} = \%tags;
+
+    for my $vol (@{$inst->{BlockDeviceMappings} || []}) {
+        my $id = $vol->{Ebs} ? $vol->{Ebs}{VolumeId} : '';
+        die Dumper $vol unless $id;
+        if ($id) {
+            ($region = $inst->{Placement}{AvailabilityZone}) =~ s/[a-z]$//;
+            my $vols = aws_ec2("describe-volumes --volume-ids $id");
+            die "No volumes for $id" unless $vols->{Volumes} && ref($vols->{Volumes}) eq 'ARRAY';
+            push @{$inst->{_volumes}}, @{$vols->{Volumes}};
+        }
+    }
+
+    for my $vol (@{$inst->{_volumes}}) {
+        my %tags = map { lc $_->{Key}, $_->{Value} } @{$vol->{Tags}};
+        $vol->{_tags} = \%tags;
+    }
 }
 
 my %data;
@@ -62,7 +83,16 @@ for my $inst (sort { $a->{_tags}{name} cmp $b->{_tags}{name} } @instances) {
         AZ              => $inst->{Placement}{AvailabilityZone},
         Type            => $inst->{InstanceType},
         State           => $inst->{State}{Name},
+        Volumes         => [ map {
+            {
+                Id              => $_->{VolumeId},
+                Size            => $_->{Size},
+                Team            => $_->{_tags}{team}
+            }
+        } @{$inst->{_volumes}} ]
     };
+
+#print Dumper $inst;
 
     if ($group_by_project) {
         $data{$inst->{_tags}{project}}{$inst->{_tags}{name}} = $host;
@@ -73,3 +103,30 @@ for my $inst (sort { $a->{_tags}{name} cmp $b->{_tags}{name} } @instances) {
 }
 
 print JSON::XS->new->canonical(1)->pretty(1)->encode(\%data);
+
+
+sub aws_ec2 {
+    my($cmd) = @_;
+
+    my $full_cmd = "aws ec2 --region $region $cmd";
+
+    my $json = `$full_cmd`;
+    my $err = $@;
+    if ($err) {
+        die "Cannot execute `$full_cmd`: $err";
+    }
+
+    if (length $json) {
+        my $data = eval {
+            decode_json($json);
+        };
+        my $jerr = $@;
+        if ($jerr) {
+            die "Cannot decode_json from `$full_cmd`: $err:\n$json\n\n-- \n\n";
+        }
+
+        return $data;
+    }
+
+    return undef;
+}

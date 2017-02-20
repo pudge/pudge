@@ -112,6 +112,8 @@ the headers, while two shows the content as well.
 BEGIN {
     use FindBin '$Bin';
     use lib "$Bin/../lib/perl";
+    use lib "/site/marchex/lib/perl";
+    use lib "/site/github-api-tools/lib";
 }
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
