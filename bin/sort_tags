@@ -26,6 +26,6 @@ sub sortfoo {
         return $cmp;
     }
     map {
-        [ $_, [ my @a = split '_' ] ]
+        [ $_, [ my @a = split /[_.]/ ] ]
     } @$list;
 }
