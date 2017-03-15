@@ -17,6 +17,7 @@
     diffc   = !git diff --cached
 
     lasttag = describe --tags --abbrev=0
+    tagl    = !git tag -l | sort_tags
     mod     = ls-files --modified
     br      = symbolic-ref HEAD
     rbr     = rev-parse --abbrev-ref --symbolic-full-name @{u}
