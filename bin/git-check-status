@@ -1,0 +1,18 @@
+#!/usr/local/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+use Marchex::Color qw(:colors color_str);
+
+opendir my $dh, (shift || '.');
+for my $dir (readdir $dh) {
+    next if $dir =~ /^\./ || ! -d $dir;
+    chdir $dir;
+    my @status = `git status -sb 2>/dev/null`;
+    if (@status && (@status > 1 || $status[0] !~ /^\W+\bmaster\b/)) {
+        print color_str($dir, BLUE), "\n";
+        print @status;
+    }
+    chdir '..';
+}
