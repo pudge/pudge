@@ -27,9 +27,14 @@ function psg {
 }
 
 function knife_hosted {
-    knife "$@" --config ~/.chef/knife.rb
+    knife "$@" --config ~/.chef/knife-hosted.rb
 }
 export -f knife_hosted
+
+function knife_ent {
+    knife "$@" --config ~/.chef/knife-ent.rb
+}
+export -f knife_ent
 
 function knife_prem {
     knife "$@" --config ~/.chef/knife-prem.rb
