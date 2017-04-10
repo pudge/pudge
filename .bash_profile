@@ -2,7 +2,6 @@
 if ! [[ $(hostname) == 'slugfest.sea' ]]; then
 
 umask 0002
-ulimit -n 4096
 
 shopt -s histappend
 export HISTFILESIZE=1000000
