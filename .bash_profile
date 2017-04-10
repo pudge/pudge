@@ -17,6 +17,7 @@ export TNS_ADMIN=$HOME
 export GITHUB_HOST=github.marchex.com
 
 if [[ $(uname) == 'Linux' ]]; then
+    ulimit -n 4096
     export EDITOR=vim
     MYPATH=/site/devtools/maven/apache-maven-3.0.3/bin/:$PATH:/site/marchex/bin
 
