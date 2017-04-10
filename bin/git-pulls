@@ -7,6 +7,7 @@ opendir my $dh, '.' or die $!;
 for my $dir (readdir $dh) {
     next if $dir =~ /^[._]/;
     next unless -d $dir;
+    next unless -d "$dir/.git";
     print "=====> $dir\n";
     chdir $dir or die $!;
     system 'git', 'pull', '--rebase';
