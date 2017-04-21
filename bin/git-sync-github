@@ -1,0 +1,25 @@
+#!/usr/local/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+sub do_system {
+    my(@args) = @_;
+    say "# @args";
+    system(@args) == 0
+        or die "system(@args) failed: $?";
+}
+
+opendir my $dh, '.' or die $!;
+for my $dir (readdir $dh) {
+    next if $dir =~ /^[._]/;
+    next unless -d $dir;
+    next unless -d "$dir/.git";
+    say "=====> $dir";
+    chdir $dir or die $!;
+    do_system 'git', 'pull', '--rebase';
+    do_system 'git', 'push', 'github';
+    do_system 'git', 'push', '--tags';
+    chdir '..' or die $!;
+}
+
