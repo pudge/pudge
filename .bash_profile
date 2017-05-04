@@ -14,7 +14,7 @@ export SITE=/site
 export DEV_ID=2
 export TNS_ADMIN=$HOME
 
-export GITHUB_HOST=github.marchex.com
+export GITHUB_HOST=github.com
 
 if [[ $(uname) == 'Linux' ]]; then
     ulimit -n 4096
@@ -68,12 +68,13 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.hub-completion.bash
     . $HOME/.knife-completion.bash
     . $HOME/.git.bash
+    . $HOME/.git_local
     . $HOME/.bash_prompt
 
     # this is super-slow, so don't run it unless we need it
-    if ! [[ "$PATH" =~ chefdk ]]; then
-        eval "$(/opt/chefdk/embedded/bin/chef shell-init bash)"
-    fi
+#     if ! [[ "$PATH" =~ chefdk ]]; then
+#         eval "$(/opt/chefdk/embedded/bin/chef shell-init bash)"
+#     fi
 
     complete -C '/usr/local/bin/aws_completer' aws
 

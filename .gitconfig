@@ -1,6 +1,6 @@
 [user]
     name    = Chris Nandor
-    email   = cnandor@marchex.com
+    email   = projects@pudge.net
 [core]
     excludesfile    = ~/.gitignore.default
 [push]

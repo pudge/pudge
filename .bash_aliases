@@ -7,6 +7,7 @@ else
     alias ll="ls -lh --color"
 fi
 
+alias vg=vagrant
 alias grep="egrep --color"
 alias whois="whois -h whois.geektools.com"
 alias cenodiff="cenoview -l foo.diff"
@@ -20,6 +21,7 @@ alias bkitchen='bundle exec kitchen'
 alias b2kitchen='KITCHEN_YAML=.kitchen.ec2.yml bundle exec kitchen'
 alias gcg=github_changelog_generator
 alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
+alias ap='ansible-playbook -v -i /opt/shiftboard/ansible/hosts /opt/shiftboard/ansible/site.yml --limit devbox'
 
 
 function psg {
