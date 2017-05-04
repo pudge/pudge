@@ -14,7 +14,9 @@ alias cenodiff="cenoview -l foo.diff"
 alias fixenv='$HOME/bin/fixenv.pl > $HOME/.fixenv;source $HOME/.fixenv'
 alias fucking=sudo
 alias tcpd='sudo tcpdump -p -i any -s0 -v -w /tmp/$(hostname).$(date +%F-%T).pcap'
-alias git=hub
+if [[ -x hub ]]; then
+    alias git=hub
+fi
 alias ssg='ssh grax.sea.marchex.com'
 alias be='bundle exec'
 alias bkitchen='bundle exec kitchen'

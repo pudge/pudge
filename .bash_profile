@@ -32,15 +32,15 @@ if [[ $(uname) == 'Linux' ]]; then
     fi
 
     if [[ $(hostname) == 'grax.sea' ]]; then
-        if [ -f /site/marchex/etc/profile.d/40-ssh_agent_start.sh ]; then
-            . /site/marchex/etc/profile.d/40-ssh_agent_start.sh
-        fi
-
         export JAVA_HOME=$SITE/jdk/jdk1.7.0_67
         MYPATH=$JAVA_HOME/bin:$MYPATH
 
     else
         renice +1 $$
+    fi
+
+    if [ -f ~/.ssh_agent_start.sh ]; then
+        . ~/.ssh_agent_start.sh
     fi
 
 elif [[ $(uname) == 'Darwin' ]]; then
