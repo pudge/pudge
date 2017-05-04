@@ -35,8 +35,8 @@ if [[ $(uname) == 'Linux' ]]; then
         export JAVA_HOME=$SITE/jdk/jdk1.7.0_67
         MYPATH=$JAVA_HOME/bin:$MYPATH
 
-    else
-        renice +1 $$
+    #else
+    #    renice +1 $$
     fi
 
     if [ -f ~/.ssh_agent_start.sh ]; then
