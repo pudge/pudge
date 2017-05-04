@@ -19,7 +19,7 @@ for my $dir (readdir $dh) {
     chdir $dir or die $!;
     do_system 'git', 'pull', '--rebase';
     do_system 'git', 'push', 'github';
-    do_system 'git', 'push', '--tags';
+    do_system 'git', 'push', 'github', '--tags';
     chdir '..' or die $!;
 }
 

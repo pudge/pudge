@@ -1,0 +1,2 @@
+#!/usr/bin/perl
+system 'bbedit', '--view-top', '--clean', '-t', 'Program Output', @ARGV;
