@@ -91,3 +91,12 @@ fi
 
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
 true
+
+
+##
+# Your previous /Users/chris.nandor/.bash_profile file was backed up as /Users/chris.nandor/.bash_profile.macports-saved_2017-05-06_at_21:49:41
+##
+
+# MacPorts Installer addition on 2017-05-06_at_21:49:41: adding an appropriate PATH variable for use with MacPorts.
+#export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+# Finished adapting your PATH environment variable for use with MacPorts.

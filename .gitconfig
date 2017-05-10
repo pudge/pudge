@@ -3,10 +3,6 @@
     email   = projects@pudge.net
 [core]
     excludesfile    = ~/.gitignore.default
-[push]
-    default = current
-[forward]
-    verbose = true
 [alias]
     pullr   = !git pull --rebase
     pr      = pull-request
@@ -73,9 +69,13 @@
 [merge]
 	ff = false
 [hub]
-	host = github.marchex.com
+	host = github.com
 	protocol = ssh
-#[filter "lfs"]
-#	clean = git-lfs clean %f
-#	smudge = git-lfs smudge %f
-#	required = true
+[remote "origin"]
+	fetch = +refs/tags/*:refs/tags/*
+[branch]
+	autosetuprebase = always
+[push]
+    default = current
+[forward]
+    verbose = true

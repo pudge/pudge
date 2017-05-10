@@ -14,7 +14,7 @@ alias cenodiff="cenoview -l foo.diff"
 alias fixenv='$HOME/bin/fixenv.pl > $HOME/.fixenv;source $HOME/.fixenv'
 alias fucking=sudo
 alias tcpd='sudo tcpdump -p -i any -s0 -v -w /tmp/$(hostname).$(date +%F-%T).pcap'
-if [[ -x hub ]]; then
+if [[ -x `which hub` ]]; then
     alias git=hub
 fi
 alias ssg='ssh grax.sea.marchex.com'
@@ -56,4 +56,3 @@ function git_only {
     git log $(git rev-parse --not --remotes --branches | grep -v $(git rev-parse $branch)) $branch $opts
 }
 export -f git_only
-
