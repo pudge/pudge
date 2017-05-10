@@ -19,6 +19,10 @@ export GITHUB_HOST=github.com
 if [[ $(uname) == 'Linux' ]]; then
     ulimit -n 4096
     export EDITOR=vim
+    if [[ -d /home/vagrant ]]; then
+        export EDITOR=ceno
+    fi
+
     MYPATH=/site/devtools/maven/apache-maven-3.0.3/bin/:$PATH:/site/marchex/bin
 
     if [ -x /site/marchex/bin/open_url ]; then
