@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+use Getopt::Long;
+
+my %opts;
+Getopt::Long::Configure('bundling');
+GetOptions(
+    'o|org=i'       => \$opts{org},
+    'M|module=s'    => \@{$opts{modules}}
+);
+
+$ENV{PERL5LIB} = '/usr/lib/shiftboard';
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
+
+my @args = ($^X, '-MSB');
+for my $m (@{$opts{modules}}) {
+    push @args, "-M$m";
+}
+
+push @args, '-MData::Dumper', '-e', '$Data::Dumper::Sortkeys=1;';
+if ($opts{org}) {
+    push @args, '-e', "\$cm::SS = $opts{org}; &cm::conf_shiftboard(\$cm::SS);";
+}
+
+push @args, '-e';
+
+say '# ', join ' ', @args, @ARGV;
+system(@args, @ARGV);
