@@ -6,3 +6,4 @@ To install I do something like:
 
    $ git clone git@github.com:pudge/pudge.git dotfiles
    $ perl -e 'for my $old (@ARGV) { (my $new = $old) =~ s|^dotfiles/||; next if $new eq ".git"; print "$old -> $new\n"; (-f $new || -l $new) && (unlink $new or die "Cannot unlink $new"); symlink "$ENV{HOME}/$old", $new or die "Cannot symlink $old to $new" }' dotfiles/.[a-zA-Z]* dotfiles/bin/*
+
