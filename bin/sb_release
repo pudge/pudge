@@ -1,12 +1,12 @@
 #!/bin/bash
 # modified from codon's code
 
-# usage: sb_release [-n name] [-l label] [-P] [-L] BRANCHES
+# usage: sb_release [-n name] [-l label] [-P] [-L] [BRANCHES]
 
 # this will:
 # * fetch the latest code and tags from origin
 # * check out the QA_APPROVED tag
-# * merge the branches in
+# * merge the branches in (current branch, if none provided)
 # * create a new tag, derived from $name (default: "release"), date,
 #   and count of existing tags
 # * optionally push tag (will prompt, or do automatically with -P)
@@ -44,6 +44,14 @@ while getopts ":n:l:PL" opt; do
 done
 shift $((OPTIND-1))
 branches=${@}
+
+if [[ -z "$branches" ]]; then
+    branches=`git rev-parse --abbrev-ref HEAD`
+fi
+if [[ "$branches" = 'master' ]]; then
+    echo "I don't think you want to do this to master"
+    exit 1
+fi
 
 function merge_branches() {
     for i in $branches
