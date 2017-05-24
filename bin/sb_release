@@ -1,7 +1,7 @@
 #!/bin/bash
 # modified from codon's code
 
-# usage: sb_release [-n name] [-l label] [-P] [-L] [BRANCHES]
+# usage: sb_release [-n name] [-l label] [-N] [-P] [-L] [BRANCHES]
 
 # this will:
 # * fetch the latest code and tags from origin
@@ -18,11 +18,12 @@ set -e
 tag=''
 name='release'
 label='staging'
-repo=$( git config --get remote.origin.url | perl -pe 's/^git\@github\.com:(.+?)(?:\.git)?$/$1/' )
+repo=$( git config --get remote.origin.url | perl -pe 's|^(?:ssh://)?git\@github\.com[:/](.+?)(?:\.git)?$|$1|' )
 do_label=''
 do_push=''
+notificate=1
 
-while getopts ":n:l:PL" opt; do
+while getopts ":n:l:PLN" opt; do
     case $opt in
         n)
             name=$OPTARG
@@ -35,6 +36,9 @@ while getopts ":n:l:PL" opt; do
             ;;
         P)
             do_push=1
+            ;;
+        N)
+            notificate=0
             ;;
         \?)
             echo "Invalid option: -$OPTARG" >&2
@@ -115,6 +119,24 @@ function add_label() {
     fi
 }
 
+function notify_qa() {
+    if [[ $notificate -eq 1 ]]; then
+        url=`cat $HOME/.sb_release_slack_url`
+        if [[ ! -z "$url" ]]; then
+            cat > /tmp/slack.$$ <<PAYLOAD || true
+payload={
+    "channel": "#qa",
+    "username": "$USER",
+    "text": "@deb ${repo#*/} $tag",
+    "icon_emoji": ":shiftboard:"
+}
+PAYLOAD
+            ( cat /tmp/slack.$$ | curl -s -m 5 --data-binary @- $url ) > /dev/null
+            rm /tmp/slack.$$
+        fi
+    fi
+}
+
 git fetch origin
 git fetch --tags origin
 git checkout QA_APPROVED
@@ -122,5 +144,7 @@ merge_branches
 sb_tag $name
 git tag $tag
 push_tag
+echo "# ${repo#*/} $tag"
 add_label
+notify_qa
 

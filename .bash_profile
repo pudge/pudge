@@ -90,6 +90,8 @@ fi
 fi
 
 test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
+test -e "${HOME}/.ssh-completion.bash" && source "${HOME}/.ssh-completion.bash"
+test -e "${HOME}/.shiftboard_api_completion.sh" && source "${HOME}/.shiftboard_api_completion.sh"
 true
 
 

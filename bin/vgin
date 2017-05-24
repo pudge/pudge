@@ -7,6 +7,7 @@ vagrant status default --machine-readable | grep -q state,running >/dev/null
 code=$?
 set -e
 if [[ "$code" != "0" ]]; then
+    echo "starting up vagrant"
     vagrant up
 fi
 vagrant ssh

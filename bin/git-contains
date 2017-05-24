@@ -7,3 +7,4 @@ my @args = ('--contains', @ARGV);
 unshift @args, '-a' if $a;
 
 system('git', 'branch', @args);
+system('git', 'tag', @args);

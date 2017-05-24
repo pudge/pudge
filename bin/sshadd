@@ -1,0 +1,2 @@
+#!/bin/bash
+ls ~/.ssh/id_* | grep -v '.pub$' | xargs ssh-add
