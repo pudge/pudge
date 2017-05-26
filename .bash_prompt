@@ -34,8 +34,8 @@ function set_ps1 {
 
     precmd="$ptime|$phist $puser@$phost:$ppwd"
     precmdd="$ppwd"
-    postcmd=" $yellow\$(get_err)$end\$ "
-    postcmdd=" \$ "
+    postcmd=" $yellow\$(get_err)$end$pchar "
+    postcmdd=" $pchar "
     #export PS1="$precmd$pgit$postcmd"
     #export DEMO_PS1="${magenta}\$(basename \w)${end}$pgit \$ "
 
