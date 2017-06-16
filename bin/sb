@@ -20,7 +20,7 @@ for my $m (@{$opts{modules}}) {
     push @args, "-M$m";
 }
 
-push @args, '-MData::Dumper', '-e', '$Data::Dumper::Sortkeys=1;';
+push @args, '-MData::Dumper', '-e', '$Data::Dumper::Sortkeys=1; $cm::BATCH_ERROR = 1;';
 if ($opts{org}) {
     push @args, '-e', "\$cm::SS = $opts{org}; &cm::conf_shiftboard(\$cm::SS);";
 }
