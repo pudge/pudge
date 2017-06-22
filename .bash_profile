@@ -14,6 +14,8 @@ export SITE=/site
 export DEV_ID=2
 export TNS_ADMIN=$HOME
 
+export SB=$HOME/src/shiftboard
+
 export GITHUB_HOST=github.com
 
 if [[ $(uname) == 'Linux' ]]; then

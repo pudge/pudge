@@ -16,17 +16,23 @@
 set -e
 
 tag=''
+approved='QA_APPROVED'
 name='release'
 label='staging'
 repo=$( git config --get remote.origin.url | perl -pe 's|^(?:ssh://)?git\@github\.com[:/](.+?)(?:\.git)?$|$1|' )
+repo_name=${repo#*/}
 do_label=''
 do_push=''
+preview=0
 notificate=1
 
-while getopts ":n:l:PLN" opt; do
+while getopts ":n:l:pPLN" opt; do
     case $opt in
         n)
             name=$OPTARG
+            ;;
+        p)
+            preview=1
             ;;
         l)
             label=$OPTARG
@@ -49,8 +55,19 @@ done
 shift $((OPTIND-1))
 branches=${@}
 
+if [[ $preview -eq 1 ]]; then
+    approved='QA_APPROVED_PREVIEW'
+    name='preview'
+    if [[ $repo_name == 'app' ]]; then
+        repo_name='app2'
+    else
+        repo_name="$repo_name (preview)"
+    fi
+fi
+
+current_branch=`git rev-parse --abbrev-ref HEAD`
 if [[ -z "$branches" ]]; then
-    branches=`git rev-parse --abbrev-ref HEAD`
+    branches=$current_branch
 fi
 if [[ "$branches" = 'master' ]]; then
     echo "I don't think you want to do this to master"
@@ -61,6 +78,13 @@ function merge_branches() {
     for i in $branches
     do
         echo "# merging origin/$i"
+        if [[ "$(git rev-parse $i)" != "$(git rev-parse origin/$i)" ]]; then
+            echo ""
+            echo "*************************************************"
+            echo "WARNING: $i and origin/$i do not match!"
+            echo "*************************************************"
+            echo ""
+        fi
         git merge --no-ff --no-edit origin/$i
     done
 }
@@ -127,7 +151,7 @@ function notify_qa() {
 payload={
     "channel": "#qa",
     "username": "$USER",
-    "text": "@deb ${repo#*/} $tag",
+    "text": "@deb $repo_name $tag",
     "icon_emoji": ":shiftboard:"
 }
 PAYLOAD
@@ -139,7 +163,7 @@ PAYLOAD
 
 git fetch origin
 git fetch --tags origin
-git checkout QA_APPROVED
+git checkout $approved
 merge_branches
 sb_tag $name
 git tag $tag
@@ -147,4 +171,5 @@ push_tag
 echo "# ${repo#*/} $tag"
 add_label
 notify_qa
+git checkout $current_branch
 

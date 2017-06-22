@@ -67,15 +67,18 @@
 [grep]
     patternType = perl
 [merge]
-	ff = false
+    ff = false
 [hub]
-	host = github.com
-	protocol = ssh
+    host = github.com
+    protocol = ssh
 [remote "origin"]
-	fetch = +refs/tags/*:refs/tags/*
+    fetch = +refs/tags/*:refs/tags/*
+    prune = true
 [branch]
-	autosetuprebase = always
+    autosetuprebase = always
 [push]
     default = current
 [forward]
     verbose = true
+[rebase]
+    stat = true
