@@ -5,7 +5,7 @@
     excludesfile    = ~/.gitignore.default
 [alias]
     pullr   = !git pull --rebase
-    pr      = pull-request
+    pro     = !hub pull-request -o
     cb      = !git checkout -b
     st      = !git --no-pager status
 
@@ -26,9 +26,9 @@
     top     = !git lg -8
 
     log1    = log --oneline
-    logs    = log --stat
-    logp    = log -p
-    logsp   = log --stat -p
+    logs    = log --stat --decorate
+    logp    = log --patch
+    logsp   = log --stat --patch --decorate
     logr    = log --raw
     logg    = log --graph --decorate
     logg1   = !git logg --oneline
