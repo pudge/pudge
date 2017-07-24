@@ -20,65 +20,83 @@
     repo    = config --get remote.origin.url
     only    = !git_only
 
-    lg      = log --pretty=format:'%h... %Cblue%an (%cr)%Creset %s'
-    mn      = !git lg origin/master..HEAD
+    lg      = log --pretty=pudge1 --date=short
+    lgs     = !git lg --numstat
+    mn      = !git lg $(git pbr)..HEAD
+    mns     = !git lgs $(git pbr)..HEAD
     th      = !git lg $(git rbr)..HEAD
+    ths     = !git lgs $(git rbr)..HEAD
     top     = !git lg -8
+    tops    = !git lgs -8
 
     log1    = log --oneline
-    logs    = log --stat --decorate
+    logs    = log --stat
     logp    = log --patch
-    logsp   = log --stat --patch --decorate
     logr    = log --raw
-    logg    = log --graph --decorate
+    logsp   = !git logs --patch
+    logsr   = !git logs --raw
+    logspr  = !git logs --patch --raw
+    logg    = log --graph
     logg1   = !git logg --oneline
 
-    mine    = log origin/master..HEAD
-    mine1   = !git log1 origin/master..HEAD
-    mines   = !git logs origin/master..HEAD
-    minep   = !git logp origin/master..HEAD
-    minesp  = !git logsp origin/master..HEAD
-    miner   = !git logr origin/master..HEAD
-    mineg   = !git logg origin/master..HEAD
-    mineg1  = !git logg1 origin/master..HEAD
+    mine    = !git log $(git pbr)..HEAD
+    mine1   = !git log1 $(git pbr)..HEAD
+    mines   = !git logs $(git pbr)..HEAD
+    minep   = !git logp $(git pbr)..HEAD
+    miner   = !git logr $(git pbr)..HEAD
+    minesp  = !git logsp $(git pbr)..HEAD
+    minesr  = !git logsr $(git pbr)..HEAD
+    minespr = !git logspr $(git pbr)..HEAD
+    mineg   = !git logg $(git pbr)..HEAD
+    mineg1  = !git logg1 $(git pbr)..HEAD
 
     this    = !git log $(git rbr)..HEAD
     this1   = !git log1 $(git rbr)..HEAD
     thiss   = !git logs $(git rbr)..HEAD
     thisp   = !git logp $(git rbr)..HEAD
-    thissp  = !git logsp $(git rbr)..HEAD
     thisr   = !git logr $(git rbr)..HEAD
+    thissp  = !git logsp $(git rbr)..HEAD
+    thissr  = !git logsr $(git rbr)..HEAD
+    thisspr = !git logspr $(git rbr)..HEAD
     thisg   = !git logg $(git rbr)..HEAD
     thisg1  = !git logg1 $(git rbr)..HEAD
 
     last    = log -1
-    last1   = !git log1 -1
+    last1   = last
     lasts   = !git logs -1
     lastp   = !git logp -1
-    lastsp  = !git logsp -1
     lastr   = !git logr -1
-    lastc   = log --pretty=format:%H -1
+    lastsp  = !git logsp -1
+    lastsr  = !git logsr -1
+    lastspr = !git logspr -1
+    lastc   = log --pretty=hash
+
+[log]
+    date            = iso-strict
+    decorate        = true
+[pretty]
+    pudge1          = format:%C(yellow)%h%Creset %<(12,trunc)%Cblue%an %ad%Creset %s%Cred%d%Creset
+    hash            = format:%H
+[format]
+    pretty          = medium
 [color]
-    branch      = auto
-    diff        = auto
-    interactive = auto
-    status      = auto
-    grep        = always
+    ui              = auto
+    grep            = always
 [grep]
-    patternType = perl
+    patternType     = perl
 [merge]
-    ff = false
+    ff              = false
 [hub]
     host = github.com
-    protocol = ssh
+    protocol        = ssh
 [remote "origin"]
-    fetch = +refs/tags/*:refs/tags/*
-    prune = true
+    fetch           = +refs/tags/*:refs/tags/*
+    prune           = true
 [branch]
     autosetuprebase = always
 [push]
-    default = current
+    default         = current
 [forward]
-    verbose = true
+    verbose         = true
 [rebase]
-    stat = true
+    stat            = true
