@@ -26,13 +26,16 @@ do_push=''
 preview=0
 notificate=1
 
-while getopts ":n:l:pPLN" opt; do
+while getopts ":n:l:a:pPLN" opt; do
     case $opt in
         n)
             name=$OPTARG
             ;;
         p)
             preview=1
+            ;;
+        a)
+            approved=$OPTARG
             ;;
         l)
             label=$OPTARG
