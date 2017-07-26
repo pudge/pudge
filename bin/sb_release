@@ -23,10 +23,11 @@ repo=$( git config --get remote.origin.url | perl -pe 's|^(?:ssh://)?git\@github
 repo_name=${repo#*/}
 do_label=''
 do_push=''
+do_force=''
 preview=0
 notificate=1
 
-while getopts ":n:l:a:pPLN" opt; do
+while getopts ":n:l:a:pFLPN" opt; do
     case $opt in
         n)
             name=$OPTARG
@@ -39,6 +40,9 @@ while getopts ":n:l:a:pPLN" opt; do
             ;;
         l)
             label=$OPTARG
+            ;;
+        F)
+            do_force=' --strategy-option=theirs'
             ;;
         L)
             do_label=1
@@ -88,7 +92,7 @@ function merge_branches() {
             echo "*************************************************"
             echo ""
         fi
-        git merge --no-ff --no-edit origin/$i
+        git merge --no-ff --no-edit --strategy=recursive$do_force origin/$i
     done
 }
 
