@@ -159,7 +159,8 @@ payload={
     "channel": "#qa",
     "username": "$USER",
     "text": "@deb $repo_name $tag",
-    "icon_emoji": ":shiftboard:"
+    "icon_emoji": ":shiftboard:",
+    "link_names": 1
 }
 PAYLOAD
             ( cat /tmp/slack.$$ | curl -s -m 5 --data-binary @- $url ) > /dev/null

@@ -100,3 +100,5 @@
     verbose         = true
 [rebase]
     stat            = true
+[rerere]
+	enabled = true
