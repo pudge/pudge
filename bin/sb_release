@@ -85,6 +85,7 @@ function merge_branches() {
     for i in $branches
     do
         echo "# merging origin/$i"
+        git merge --no-ff --no-edit --strategy=recursive$do_force origin/$i
         if [[ "$(git rev-parse $i)" != "$(git rev-parse origin/$i)" ]]; then
             echo ""
             echo "*************************************************"
@@ -92,7 +93,6 @@ function merge_branches() {
             echo "*************************************************"
             echo ""
         fi
-        git merge --no-ff --no-edit --strategy=recursive$do_force origin/$i
     done
 }
 
