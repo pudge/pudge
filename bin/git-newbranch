@@ -1,0 +1,11 @@
+#!/usr/local/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+my $desc = shift;
+chomp(my $name = shift || 'pudge' || `github_api user | jq -r .login`);
+
+my $branch = "$name/$desc";
+
+system 'git', 'checkout', '-b', $branch;

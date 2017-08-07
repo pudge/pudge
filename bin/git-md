@@ -1,0 +1,8 @@
+#!/bin/bash
+
+git fetch
+echo "Deleting branches merged to master ..."
+git branch --merged | sed 's/\*//' | grep -v '^\s*master$' | xargs -IBRANCH git branch -d BRANCH
+echo "Current local branches:"
+git branch
+

@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
+
+our $esc = qr{(?:\e\[\d*?m)?};
+
+use Git;
+my $repo = Git->repository();
+$repo->command('fetch');
+
+my $url = $repo->config('remote.origin.url');
+
+my $use_color = $repo->get_colorbool('color.ui');
+my $color_start = $use_color ? $repo->get_color('color.diff.commit', 'yellow') : '';
+my $color_end = $use_color ? $repo->get_color('', 'normal') || "\e[0m" : '';
+
+my $branches_orig = $repo->command('branch', ($use_color ? '--color=always' : ()));
+my @branches = map { s/^[\s*]+$esc(\S+)$esc$/$1/; $_ } $repo->command('branch');
+for my $branch (@branches) {
+    my %refs;
+    my %parts;
+    my @tags = $repo->command('tag', '--contains', $branch);
+    for my $tag (sort @tags) {
+        if ($tag =~ /^(?:PRODUCTION|QA_APPROVED|STAGING)$/) {
+            $refs{$tag} = $tag;
+        }
+        if ($tag =~ /^(PRODUCTION|QA_APPROVED|STAGING)(?:_PREVIEW)$/) {
+            if ($refs{$1}) {
+                $refs{$1} .= '*'; # denotes regular and preview
+            }
+            else {
+                $refs{$tag} = $tag;
+            }
+        }
+        if ($tag =~ /^((?:PRODUCTION|QA_APPROVED|STAGING)_\d{8})-(\d{6})$/) {
+            push @{$parts{$1}}, $2;
+        }
+        if ($tag =~ /^(?:(([a-z]+)-(\d{8}))-(\d+))$/) {
+            push @{$parts{$1}}, $4;
+        }
+    }
+
+    for my $key (sort keys %parts) {
+        if (@{$parts{$key}} == 1) {
+            $refs{$key} = "$key-$parts{$key}[0]";
+        }
+        else {
+            $refs{$key} = "$key-[" . join(',', sort @{$parts{$key}}) . ']';
+        }
+    }
+
+    $branches_orig =~ s{(\s$esc$branch$esc)$}{
+        "$1 : $color_start" . join("$color_end, $color_start", sort values %refs) . $color_end
+    }me if keys %refs;
+}
+
+print $branches_orig;
+
+__END__
