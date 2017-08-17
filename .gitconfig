@@ -87,7 +87,7 @@
 [merge]
     ff              = false
 [hub]
-    host = github.com
+    host            = github.com
     protocol        = ssh
 [remote "origin"]
     fetch           = +refs/tags/*:refs/tags/*
@@ -101,4 +101,4 @@
 [rebase]
     stat            = true
 [rerere]
-	enabled = true
+	enabled         = true

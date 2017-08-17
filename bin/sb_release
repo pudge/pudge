@@ -158,7 +158,7 @@ function notify_qa() {
 payload={
     "channel": "#qa",
     "username": "$USER",
-    "text": "@deb $repo_name $tag",
+    "text": "@deb \`$repo_name $tag\`",
     "icon_emoji": ":shiftboard:",
     "link_names": 1
 }
