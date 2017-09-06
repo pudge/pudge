@@ -1,10 +1,9 @@
 #!/usr/bin/perl
 use warnings;
 use strict;
-use feature ':5.10';
+use feature ':5.14';
 
 use Getopt::Long;
-
 my %opts;
 Getopt::Long::Configure('bundling');
 GetOptions(
@@ -19,21 +18,23 @@ for my $m (@{$opts{modules}}) {
     push @args, "-M$m";
 }
 
-push @args, '-MData::Dumper', '-e', '$Data::Dumper::Sortkeys=1; $cm::BATCH_ERROR = 1;';
+push @args, '-MData::Dumper', '-E', '$Data::Dumper::Sortkeys=1; $cm::BATCH_ERROR = 1;';
 if ($opts{org}) {
-    push @args, '-e', "\$cm::SS = $opts{org}; &cm::conf_shiftboard(\$cm::SS);";
+    push @args, '-E', "\$cm::SS = $opts{org}; &cm::conf_shiftboard(\$cm::SS);";
 }
 
-if ($ARGV[0] && $ARGV[0] eq '-') {
-    shift @ARGV;
-    for (@ARGV) {
-        push @args, '-e', "do q{$_}";
+my $input;
+for my $arg (@ARGV) {
+    if ($arg eq '-') {
+        $input = 1;
+    }
+    elsif ($input) {
+        push @args, '-E', "do q{$arg}";
+    }
+    else {
+        push @args, '-E', $arg;
     }
 }
-elsif (@ARGV) {
-    push @args, '-e', @ARGV;
-}
-
 
 say '# ', join ' ', map {
     (my $foo = $_) =~ s/'/'\\''/g;
