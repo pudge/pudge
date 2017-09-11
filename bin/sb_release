@@ -106,8 +106,11 @@ function sb_tag() {
 function diff_tags() {
     echo "#### Differences to STAGING since $approved:"
     git log --oneline --cherry-mark $approved..STAGING
-    echo "#### Changes to add to STAGING:"
-    git log --oneline --cherry-mark $approved..HEAD
+    for i in $branches
+    do
+        echo "#### Changes to add to STAGING from $i:"
+        git log --oneline --cherry-mark $approved..$i
+    done
     echo -n "Continue? "
     read resp
     if ! [[ "${resp}" =~ ^[Yy] ]]; then
