@@ -103,6 +103,18 @@ function sb_tag() {
     tag="${basetag}-${count}"
 }
 
+function diff_tags() {
+    echo "#### Differences to STAGING since $approved:"
+    git log --oneline --cherry-mark $approved..STAGING
+    echo "#### Changes to add to STAGING:"
+    git log --oneline --cherry-mark $approved..HEAD
+    echo -n "Continue? "
+    read resp
+    if ! [[ "${resp}" =~ ^[Yy] ]]; then
+        exit
+    fi
+}
+
 function push_tag() {
     if [[ -z "$do_push" ]]; then
         echo -n "Push tag $tag? "
@@ -171,6 +183,7 @@ PAYLOAD
 
 git fetch origin
 git fetch --tags origin
+diff_tags
 git checkout $approved
 merge_branches
 sb_tag $name
