@@ -82,18 +82,33 @@ if [[ "$branches" = 'master' ]]; then
 fi
 
 function merge_branches() {
+    local fail=0
+    local l_sha=''
+    local r_sha=''
     for i in $branches
     do
+        set -e
         echo "# merging origin/$i"
         git merge --no-ff --no-edit --strategy=recursive$do_force origin/$i
-        if [[ "$(git rev-parse $i)" != "$(git rev-parse origin/$i)" ]]; then
+
+        r_sha=$(git rev-parse origin/$i)
+
+        set +e
+        l_sha=$(git rev-parse $i 2>/dev/null)
+        if [[ $? == 0 && "$l_sha" != "$r_sha" ]]; then
             echo ""
             echo "*************************************************"
-            echo "WARNING: $i and origin/$i do not match!"
+            echo "WARNING: $i ($l_sha) and origin/$i ($r_sha) do not match!"
             echo "*************************************************"
             echo ""
+            fail=1
         fi
     done
+
+    set -e
+    if [[ $fail != 0 ]]; then
+        exit 1;
+    fi
 }
 
 function sb_tag() {
@@ -109,7 +124,7 @@ function diff_tags() {
     for i in $branches
     do
         echo "#### Changes to add to STAGING from $i:"
-        git log --oneline --cherry-mark $approved..$i
+        git log --oneline --cherry-mark $approved..origin/$i
     done
     echo -n "Continue? "
     read resp
