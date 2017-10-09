@@ -1,12 +1,13 @@
 #!/bin/bash
 # modified from codon's code
 
-# usage: sb_release [-n name] [-l label] [-N] [-P] [-L] [BRANCHES]
+# usage: sb_release [-n name] [-l label] [-N] [-P] [-L] [-K] [BRANCHES]
 
 # this will:
 # * fetch the latest code and tags from origin
 # * check out the QA_APPROVED tag
 # * merge the branches in (current branch, if none provided)
+#   * always add in "petty_changes" branch, unless -K
 # * create a new tag, derived from $name (default: "release"), date,
 #   and count of existing tags
 # * optionally push tag (will prompt, or do automatically with -P)
@@ -24,10 +25,11 @@ repo_name=${repo#*/}
 do_label=''
 do_push=''
 do_force=''
+do_petty=1
 preview=0
 notificate=1
 
-while getopts ":n:l:a:pFLPN" opt; do
+while getopts ":n:l:a:pFLPKN" opt; do
     case $opt in
         n)
             name=$OPTARG
@@ -49,6 +51,9 @@ while getopts ":n:l:a:pFLPN" opt; do
             ;;
         P)
             do_push=1
+            ;;
+        K)
+            do_petty=0
             ;;
         N)
             notificate=0
@@ -79,6 +84,10 @@ fi
 if [[ "$branches" = 'master' ]]; then
     echo "I don't think you want to do this to master"
     exit 1
+fi
+
+if [[ $do_petty -eq 1 ]]; then
+    branches="$branches petty_changes"
 fi
 
 function merge_branches() {
@@ -173,8 +182,10 @@ function add_label() {
         if [[ ! -z "${do_label}" ]]; then
             for i in $branches
             do
-                echo "# Updating $i to '$label'"
-                github_label $i
+                if [[ "$i" != 'petty_changes' ]]; then
+                    echo "# Updating $i to '$label'"
+                    github_label $i
+                fi
             done
         fi
     fi

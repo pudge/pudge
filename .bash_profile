@@ -59,7 +59,7 @@ elif [[ $(uname) == 'Darwin' ]]; then
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
 fi
 
-export PATH=$HOME/bin:$MYPATH
+export PATH=$HOME/bin:$MYPATH:$HOME/.yarn/bin
 
 if [ -f /site/src/ansible/hacking/env-setup ]; then
     . /site/src/ansible/hacking/env-setup -q

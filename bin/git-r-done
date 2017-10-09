@@ -12,9 +12,13 @@ use Git;
 
 my $repo = Git->repository();
 
-chomp(my $branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
-die "Already on master, exiting\n"
-    if $branch eq 'master';
+my $branch = shift;
+
+unless ($branch) {
+    chomp($branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
+}
+
+die "Can't prune master, exiting\n" if $branch eq 'master';
 
 git_cmd_try { $repo->command('diff', '--exit-code', '--quiet') }
     "Unstashed changes found on branch '$branch', cannot continue";

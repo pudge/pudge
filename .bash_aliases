@@ -3,6 +3,7 @@ if [[ $(uname) == 'Darwin' ]]; then
     alias verbosemode='sudo nvram boot-args="-v"'
     # https://support.apple.com/en-us/HT202516
     alias dnsflush='sudo killall -HUP mDNSResponder'
+    alias markoff='open -a Markoff'
 else
     alias ll="ls -lh --color"
 fi
