@@ -18,7 +18,7 @@ if [ $EUID -ne 0 ] && [ $(ps -p $(ps -p $$ -o ppid=) -o ucmd=) != "tmux" ] ; the
         chmod 600 "${SSH_ENV}"
         . "${SSH_ENV}" > /dev/null
         # add new keys
-        /usr/bin/ssh-add ${HOME}/.ssh/{identity,*dsa,*rsa,*ed22519,${USER}} 2>/dev/null
+        /usr/bin/ssh-add ${HOME}/.ssh/{identity,*dsa,*rsa,*ed25519,${USER}} 2>/dev/null
     }
 
     # Source SSH settings, if applicable
