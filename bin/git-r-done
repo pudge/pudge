@@ -37,3 +37,6 @@ die "master does not include '$branch', exiting\n"
 
 git_cmd_try { $repo->command_noisy('branch', '-d', $branch) }
     "Error, cannot continue (%s [%d])";
+
+git_cmd_try { $repo->command_noisy('push', '-d', 'origin', $branch) }
+    "Error, cannot continue (%s [%d])";
