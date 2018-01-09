@@ -14,12 +14,14 @@ sub sortfoo {
         my $brr = $b->[1];
         my $cmp = 0;
         for my $i (0 .. $#{$arr}) {
-            if ($arr->[$i] =~ /\D/ || $brr->[$i] =~ /\D/) {
-                $cmp = $arr->[$i] cmp $brr->[$i];
+            my $aa = $arr->[$i] // '';
+            my $bb = $brr->[$i] // '';
+            if (!length($aa) || !length($bb) || $aa =~ /\D/ || $bb =~ /\D/) {
+                $cmp = $aa cmp $bb;
                 last if $cmp;
             }
             else {
-                $cmp = $arr->[$i] <=> $brr->[$i];
+                $cmp = $aa <=> $bb;
                 last if $cmp;
             }
         }

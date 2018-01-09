@@ -219,7 +219,7 @@ sb_tag $name
 git tag $tag
 push_tag
 echo "# ${repo#*/} $tag"
-add_label
+#add_label
 notify_qa
 git checkout $current_branch
 
