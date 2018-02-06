@@ -102,3 +102,5 @@
     stat            = true
 [rerere]
 	enabled         = true
+[init]
+	templatedir     = ~/.git-templates
