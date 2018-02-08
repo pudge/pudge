@@ -21,20 +21,20 @@ function set_ps1 {
     white='\[\e[37m\]'
     end='\[\e[0m\]'
 
-    ptime='' #"${cyan}\t${end}|"
+    #ptime="${cyan}\t${end}|"
     puser='\u'
     phost=$(hostname -f | cut -d . -f 1,2)
-    phist='' #"${yellow}\!${end} "
+    #phist="${yellow}\!${end} "
     ppwd="${magenta}\w${end}"
     ppwdd="${magenta}\$(basename \w)${end}"
-    pgit="${red}"'$(__git_ps1 " (%s)")'"${end}"
+    #pgit="${red}"'$(__git_ps1 " (%s)")'"${end}"
     #pgit='$(__git_ps1 " (%s)")'
     #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
     precmd="$ptime$phist$puser@$phost:$ppwd"
     precmdd="$ppwd"
-    postcmd=" $yellow\$(get_err)$end$pchar "
+    postcmd=" $pchar " #" $yellow\$(get_err)$end$pchar "
     postcmdd=" $pchar "
     #export PS1="$precmd$pgit$postcmd"
     #export DEMO_PS1="${magenta}\$(basename \w)${end}$pgit \$ "
