@@ -104,3 +104,10 @@
 	enabled         = true
 [init]
 	templatedir     = ~/.git-templates
+
+[diff]
+    tool = "bbdiff"
+[difftool]
+    prompt = false
+[difftool "bbdiff"]
+    cmd = /usr/local/bin/bbdiff --wait --resume "$LOCAL" "$REMOTE"

@@ -51,7 +51,7 @@ if [[ $(uname) == 'Linux' ]]; then
 
 elif [[ $(uname) == 'Darwin' ]]; then
     export EDITOR=bbeditw
-    MYPATH=$PATH:/usr/local/src/marchex/marchex/bin
+    MYPATH=$PATH:/usr/local/mariadb/server/bin:/usr/local/src/marchex/marchex/bin
 
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
     export COPYFILE_DISABLE=1
