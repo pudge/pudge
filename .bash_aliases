@@ -24,8 +24,10 @@ alias bkitchen='bundle exec kitchen'
 alias b2kitchen='KITCHEN_YAML=.kitchen.ec2.yml bundle exec kitchen'
 alias gcg=github_changelog_generator
 alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
-alias ap='ansible-playbook -v -i /opt/shiftboard/ansible/hosts /opt/shiftboard/ansible/site.yml --limit devbox'
-
+alias ap='ansible-playbook -v -i /opt/shiftboard/ansible/hosts /opt/shiftboard/ansible/site.yml --limit servolabox'
+alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --sync-only"
+alias sb_dbr="bash $SB/ansible/roles/servola_db/files/db_refresh --refresh-only"
+alias sb_dbf="bash $SB/ansible/roles/servola_db/files/db_refresh"
 
 function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
