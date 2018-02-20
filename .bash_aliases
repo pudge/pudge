@@ -26,7 +26,7 @@ alias gcg=github_changelog_generator
 alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
 
 alias ap='ansible-playbook -v --skip-tags=vault -i /opt/shiftboard/ansible/hosts /opt/shiftboard/ansible/site.yml --limit servolabox'
-alias sb_db="MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2"
+alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
 alias tail_servola="sudo tail -n0 -F /var/log/shiftboard/*log /var/log/apache2/*log"
 alias ops_update="git -C /git/ops/ pull --ff-only"
 
