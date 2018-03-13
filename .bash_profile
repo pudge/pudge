@@ -97,6 +97,22 @@ test -e "${HOME}/.shiftboard_api_completion.sh" && source "${HOME}/.shiftboard_a
 true
 
 
+function set_iterm_profile {
+    export OLD_ITERM_PROFILE=$ITERM_PROFILE
+    _set_iterm_profile "$1"
+}
+
+function reset_iterm_profile {
+    if [[ -z "$OLD_ITERM_PROFILE" ]]; then
+        OLD_ITERM_PROFILE=$ITERM_PROFILE
+    fi
+    _set_iterm_profile "$OLD_ITERM_PROFILE"
+}
+
+function _set_iterm_profile {
+    echo -e "\033]50;SetProfile=${1}\a"
+}
+
 ##
 # Your previous /Users/chris.nandor/.bash_profile file was backed up as /Users/chris.nandor/.bash_profile.macports-saved_2017-05-06_at_21:49:41
 ##

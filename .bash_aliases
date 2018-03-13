@@ -32,9 +32,9 @@ alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -
 alias tail_servola="sudo tail -n0 -F /var/log/shiftboard/*log /var/log/apache2/*log"
 alias ops_update="git -C /git/ops/ pull --ff-only"
 
-alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --sync-only"
-alias sb_dbr="bash $SB/ansible/roles/servola_db/files/db_refresh --refresh-only"
-alias sb_dbf="bash $SB/ansible/roles/servola_db/files/db_refresh"
+alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --full --sync-only"
+alias sb_dbr="bash $SB/ansible/roles/servola_db/files/db_refresh --full --refresh-only"
+alias sb_dbf="bash $SB/ansible/roles/servola_db/files/db_refresh --full"
 
 function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
