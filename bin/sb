@@ -29,7 +29,7 @@ for my $arg (@ARGV) {
         $input = 1;
     }
     elsif ($input) {
-        push @args, '-E', "do q{$arg}";
+        push @args, '-E', "do q{$arg}; die \$@ if \$@;";
     }
     else {
         push @args, '-E', $arg;
