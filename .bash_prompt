@@ -39,7 +39,8 @@ function set_ps1 {
     #export PS1="$precmd$pgit$postcmd"
     #export DEMO_PS1="${magenta}\$(basename \w)${end}$pgit \$ "
 
-    export wintitle="echo -ne \"\033];${USER}@${HOSTNAME%.*.*}:${PWD/#$HOME/~}: \007\""
+    local wintitle0='$( if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/shiftboard/") ]]; then echo "${PWD/#$HOME\/src\/shiftboard\//}"; else echo "${USER}@${HOSTNAME%.*.*}:${PWD/#$HOME/~}"; fi )'
+    export wintitle="echo -ne \"\033];$wintitle0: \007\""
     export PROMPT_COMMAND="__git_ps1 '$precmd' '$postcmd'; $wintitle"
     export DEMO_PROMPT_COMMAND="__git_ps1 '$precmdd' '$postcmdd'; $wintitle"
 }
