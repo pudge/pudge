@@ -17,6 +17,8 @@ export TNS_ADMIN=$HOME
 export SB=$HOME/src/shiftboard
 
 export GITHUB_HOST=github.com
+export PAGER=less
+
 
 if [[ $(uname) == 'Linux' ]]; then
     ulimit -n 4096

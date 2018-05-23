@@ -41,8 +41,8 @@ function set_ps1 {
 
     local wintitle0='$( if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/shiftboard/") ]]; then echo "${PWD/#$HOME\/src\/shiftboard\//}"; else echo "${USER}@${HOSTNAME%.*.*}:${PWD/#$HOME/~}"; fi )'
     export wintitle="echo -ne \"\033];$wintitle0: \007\""
-    export PROMPT_COMMAND="__git_ps1 '$precmd' '$postcmd'; $wintitle"
-    export DEMO_PROMPT_COMMAND="__git_ps1 '$precmdd' '$postcmdd'; $wintitle"
+    export PROMPT_COMMAND="history -a; __git_ps1 '$precmd' '$postcmd'; $wintitle"
+    export DEMO_PROMPT_COMMAND="history -a; __git_ps1 '$precmdd' '$postcmdd'; $wintitle"
 }
 
 function get_err {
