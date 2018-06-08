@@ -28,8 +28,12 @@ for my $arg (@ARGV) {
     if ($arg eq '-') {
         $input = 1;
     }
-    elsif ($input) {
+    elsif ($input == 1) {
         push @args, '-E', "do q{$arg}; die \$@ if \$@;";
+        $input = 2;
+    }
+    elsif ($input == 2) {
+        push @args, $arg;
     }
     else {
         push @args, '-E', $arg;
