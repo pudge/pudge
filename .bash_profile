@@ -78,6 +78,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.git.bash
     . $HOME/.bash_prompt
     test -e "${HOME}/.git_local"                        && source "${HOME}/.git_local"
+    test -e "${HOME}/.bash_local"                       && source "${HOME}/.bash_local"
     test -e "${HOME}/.iterm2_shell_integration.bash"    && source "${HOME}/.iterm2_shell_integration.bash"
     test -e "${HOME}/.ssh-completion.bash"              && source "${HOME}/.ssh-completion.bash"
     test -e "${HOME}/.shiftboard_api_completion.sh"     && source "${HOME}/.shiftboard_api_completion.sh"
