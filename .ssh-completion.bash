@@ -3,13 +3,13 @@
 comp_ssh_hosts=''
 _comp_ssh_hosts ()
 {
-    comp_ssh_hosts=`cat ~/.ssh/known_hosts | \
+    comp_ssh_hosts=`test -e ~/.ssh/known_hosts && cat ~/.ssh/known_hosts | \
                     cut -f 1 -d ' ' | \
                     sed -e s/,.*//g | \
                     grep -v ^# | \
                     uniq | \
                     grep -v "\[" ;
-            cat ~/.ssh/config | \
+            test -e ~/.ssh/config && cat ~/.ssh/config | \
                     grep "^Host " | \
                     awk '{print $2}' | \
                     grep -v '\*'`
