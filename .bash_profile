@@ -76,8 +76,11 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     . $HOME/.hub-completion.bash
     . $HOME/.knife-completion.bash
     . $HOME/.git.bash
-    . $HOME/.git_local
     . $HOME/.bash_prompt
+    test -e "${HOME}/.git_local"                        && source "${HOME}/.git_local"
+    test -e "${HOME}/.iterm2_shell_integration.bash"    && source "${HOME}/.iterm2_shell_integration.bash"
+    test -e "${HOME}/.ssh-completion.bash"              && source "${HOME}/.ssh-completion.bash"
+    test -e "${HOME}/.shiftboard_api_completion.sh"     && source "${HOME}/.shiftboard_api_completion.sh"
 
     # this is super-slow, so don't run it unless we need it
 #     if ! [[ "$PATH" =~ chefdk ]]; then
@@ -93,9 +96,6 @@ fi
 
 fi
 
-test -e "${HOME}/.iterm2_shell_integration.bash" && source "${HOME}/.iterm2_shell_integration.bash"
-test -e "${HOME}/.ssh-completion.bash" && source "${HOME}/.ssh-completion.bash"
-test -e "${HOME}/.shiftboard_api_completion.sh" && source "${HOME}/.shiftboard_api_completion.sh"
 true
 
 

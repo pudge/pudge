@@ -101,7 +101,7 @@
 [rebase]
     stat            = true
 [rerere]
-	enabled         = true
+	enabled         = false
 [init]
 	templatedir     = ~/.git-templates
 
