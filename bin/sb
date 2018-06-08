@@ -13,7 +13,7 @@ GetOptions(
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
 
-my @args = ('sudo', 'PERL5LIB=/usr/lib/shiftboard', $^X, '-MSB');
+my @args = ('sudo', "PERL5LIB=/usr/lib/shiftboard:$ENV{PERL5LIB}", $^X, '-MSB2::Logger', '-MSB');
 for my $m (@{$opts{modules}}) {
     push @args, "-M$m";
 }
