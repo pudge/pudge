@@ -7,7 +7,7 @@
 # this will not run under tmux; hopefully, it ran before you ran tmux and
 # inherited the environment
 
-if [ $EUID -ne 0 ] && [ $(ps -p $(ps -p $$ -o ppid=) -o ucmd=) != "tmux" ] ; then
+if [ $EUID -ne 0 ] && [ $(ps -p $(ps -p $$ -o ppid=) -o ucmd=) != "tmux" ] && [ -z "${SSH_AUTH_SOCK}" ]; then
     unset SSH_AGENT_PID
     SSH_ENV="$HOME/.ssh/environment"
 
@@ -26,8 +26,7 @@ if [ $EUID -ne 0 ] && [ $(ps -p $(ps -p $$ -o ppid=) -o ucmd=) != "tmux" ] ; the
         . "${SSH_ENV}" > /dev/null
 
         # if no saved PID, or agent not found with saved PID, or agent doesn't have any keys ... start a new one
-        if [ -z "${SSH_AUTH_SOCK}" ] ||
-           [ -z "${SSH_AGENT_PID}" ] ||
+        if [ -z "${SSH_AGENT_PID}" ] ||
            [ $(ps -p ${SSH_AGENT_PID} | grep ssh-agent$ | wc -l) -eq 0 ] ||
            [ $(ssh-add -l 2>/dev/null | grep '^[0-9]' | wc -l) -eq 0 ]; then
             start_agent;
