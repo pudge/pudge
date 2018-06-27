@@ -29,7 +29,8 @@ if (!@sorted) {
     exit -1;
 }
 if (@sorted > 1) {
-    say join "\n", @sorted;
+    my $c = 0;
+    say join "\n", map { ($c++ ? '  ' : '* ') . $_  } @sorted;
 }
 
 system 'git', 'checkout', $sorted[0];
