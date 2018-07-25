@@ -15,6 +15,7 @@ export DEV_ID=2
 export TNS_ADMIN=$HOME
 
 export SB=$HOME/src/shiftboard
+export SB_PRISTINE=$HOME/.ghd/src/shiftboard
 
 export GITHUB_HOST=github.com
 export PAGER=less
