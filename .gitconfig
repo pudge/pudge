@@ -3,11 +3,14 @@
     email   = projects@pudge.net
 [core]
     excludesfile    = ~/.gitignore.default
+    hooksPath       = ~/.githooks
 [alias]
+    pushf   = !git push --force-with-lease
     pullr   = !git pull --rebase
     pro     = !hub pull-request -o
     cb      = !git checkout -b
     st      = !git --no-pager status
+    ss      = !git stash save
 
     dc      = !git diff --color=always | less -R
     diffc   = !git diff --cached
