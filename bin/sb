@@ -7,11 +7,13 @@ use Getopt::Long;
 my %opts;
 Getopt::Long::Configure('bundling');
 GetOptions(
+    'd|dbh'         => \$opts{dbh},
     'o|org=i'       => \$opts{org},
     'M|module=s'    => \@{$opts{modules}}
 );
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
+$ENV{PERL5LIB} //= '';
 
 my @args = ('sudo', "PERL5LIB=/usr/lib/shiftboard:$ENV{PERL5LIB}", $^X, '-MSB2::Logger', '-MSB');
 for my $m (@{$opts{modules}}) {
@@ -22,17 +24,20 @@ push @args, '-MData::Dumper', '-E', '$Data::Dumper::Sortkeys=1; $cm::BATCH_ERROR
 if ($opts{org}) {
     push @args, '-E', "\$cm::SS = $opts{org}; &cm::conf_shiftboard(\$cm::SS);";
 }
+if ($opts{dbh}) {
+    push @args, '-E', "\$dbh = cm::connect_db();";
+}
 
 my $input;
 for my $arg (@ARGV) {
     if ($arg eq '-') {
         $input = 1;
     }
-    elsif ($input == 1) {
+    elsif ($input && $input == 1) {
         push @args, '-E', "do q{$arg}; die \$@ if \$@;";
         $input = 2;
     }
-    elsif ($input == 2) {
+    elsif ($input && $input == 2) {
         push @args, $arg;
     }
     else {
