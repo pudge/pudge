@@ -1,0 +1,45 @@
+#!/usr/local/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+my $jira = shift;
+chomp(my $name = shift || 'pudge' || `github_api user | jq -r .login`);
+
+my @branches = `git branch -a | grep -i dev-$jira 2>/dev/null`;
+my %branches;
+for (@branches) {
+    chomp;
+    s/^\s*\*//;
+    s/^\s+//;
+    s/\s+$//;
+    s|remotes/origin/||;
+    $branches{$_}++;
+}
+
+my @sorted = sort {
+    sort_bool(sub { $_[0] =~ m|^\Q$name\E/| })
+        ||
+    $a cmp $b
+} keys %branches;
+
+
+if (!@sorted) {
+    say STDERR "No branches found.";
+    exit -1;
+}
+if (@sorted > 1) {
+    say STDERR "Too many branches found:";
+    my $c = 0;
+    say STDERR join "\n", map { ($c++ ? '  ' : '* ') . $_  } @sorted;
+    exit -1;
+}
+
+say $sorted[0];
+
+sub sort_bool {
+    my($bool) = @_;
+    $bool->($a) ? -1 : 0 || $bool->($b) ? 1 : 0
+}
+
+__END__
