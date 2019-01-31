@@ -83,6 +83,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
     test -e "${HOME}/.iterm2_shell_integration.bash"    && source "${HOME}/.iterm2_shell_integration.bash"
     test -e "${HOME}/.ssh-completion.bash"              && source "${HOME}/.ssh-completion.bash"
     test -e "${HOME}/.shiftboard_api_completion.sh"     && source "${HOME}/.shiftboard_api_completion.sh"
+    test -e "${HOME}/.shiftboard_tool_completion.sh"    && source "${HOME}/.shiftboard_tool_completion.sh"
 
     # this is super-slow, so don't run it unless we need it
 #     if ! [[ "$PATH" =~ chefdk ]]; then

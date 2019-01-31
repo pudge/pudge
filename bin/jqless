@@ -1,4 +1,6 @@
 #!/usr/bin/perl
 use 5.018;
 my $args = join ' ', map quotemeta, (@ARGV ? @ARGV : '.');
-system("jq -C $args | less -R");
+my $ex = "jq -C $args | less -R";
+say $ex;
+system($ex);

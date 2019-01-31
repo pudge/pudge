@@ -1,8 +1,9 @@
-#!/usr/local/bin/perl
+#!/usr/local/bin/perl -s
 use warnings;
 use strict;
 use feature ':5.10';
 
+our $o;
 my $jira = shift;
 chomp(my $name = shift || 'pudge' || `github_api user | jq -r .login`);
 
@@ -14,6 +15,8 @@ for (@branches) {
     s/^\s+//;
     s/\s+$//;
     s|remotes/origin/||;
+    next unless m|^\w+/dev-$jira|;
+    $_ = 'origin/' . $_ if $o;
     $branches{$_}++;
 }
 
