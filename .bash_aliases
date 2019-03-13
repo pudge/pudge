@@ -47,17 +47,17 @@ function psg {
 function knife_hosted {
     knife "$@" --config ~/.chef/knife-hosted.rb
 }
-export -f knife_hosted
+#export -f knife_hosted
 
 function knife_ent {
     knife "$@" --config ~/.chef/knife-ent.rb
 }
-export -f knife_ent
+#export -f knife_ent
 
 function knife_prem {
     knife "$@" --config ~/.chef/knife-prem.rb
 }
-export -f knife_prem
+#export -f knife_prem
 
 function git_only {
     opts=$(git rev-parse --no-revs "$@" 2>/dev/null)
@@ -69,4 +69,4 @@ function git_only {
     fi
     git log $(git rev-parse --not --remotes --branches | grep -v $(git rev-parse $branch)) $branch $opts
 }
-export -f git_only
+#export -f git_only

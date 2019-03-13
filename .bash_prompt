@@ -34,7 +34,7 @@ function set_ps1 {
 
     precmd="$ptime$phist$puser@$phost:$ppwd"
     precmdd="$ppwd"
-    postcmd=" $pchar " #" $yellow\$(get_err)$end$pchar "
+    postcmd="\$(_track_time) $pchar " #" $yellow\$(get_err)$end$pchar "
     postcmdd=" $pchar "
     #export PS1="$precmd$pgit$postcmd"
     #export DEMO_PS1="${magenta}\$(basename \w)${end}$pgit \$ "
@@ -43,6 +43,12 @@ function set_ps1 {
     export wintitle="echo -ne \"\033];$wintitle0: \007\""
     export PROMPT_COMMAND="history -a; __git_ps1 '$precmd' '$postcmd'; $wintitle"
     export DEMO_PROMPT_COMMAND="history -a; __git_ps1 '$precmdd' '$postcmdd'; $wintitle"
+}
+
+function _track_time {
+    if [[ -s "$HOME/.sb_track_time" ]]; then
+        echo ' ⏱ ';
+    fi
 }
 
 function get_err {
