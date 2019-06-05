@@ -11,6 +11,7 @@
     cb      = !git checkout -b
     st      = !git --no-pager status
     ss      = !git stash save
+    sta     = !git for-each-ref --format='%(refname:short)%(upstream:trackshort) %(upstream:track)' refs/heads
 
     dc      = !git diff --color=always | less -R
     diffc   = !git diff --cached

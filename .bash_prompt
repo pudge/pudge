@@ -48,6 +48,7 @@ function set_ps1 {
 function _track_time {
     if [[ -s "$HOME/.sb_track_time" ]]; then
         echo ' ⏱ ';
+        #echo -e ' \033[5m⏱\033[0m ';
     fi
 }
 
