@@ -16,9 +16,9 @@ sub verse1 {
     $I = !open BOOK;                    # I’m not an open book
     #C   D
     $I = not defined;                   # I am not defined
-    #G           Am7
+    #Em7         C
     eval { $_ while $I = wait }         # eval it while I wait
-    #C      D
+    #Am7      D             C D
     until ('inf' == time);              # until the end of time
 }
 
@@ -44,12 +44,12 @@ sub chorus {
         bless my $soul = {};                # bless my soul
         #A7m    C
         tell my $mind;                      # tell my mind
-        #A7m    C
+        #A7m    C       Em7 (D last time)
         seek my $heart, 0, 0;               # seek my heart, oh oh
     }
 
     if ($end == 1) {
-        #Em7
+        #C
         for (times) {                       # for all times
             #D
             if ($I) { last }                # if I last
