@@ -13,23 +13,29 @@ fi
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
 if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
-    . $HOME/.bash_aliases
-    . $HOME/.git-completion.bash
-    . $HOME/.hub-completion.bash
-    . $HOME/.knife-completion.bash
-    . $HOME/.git.bash
-    . $HOME/.bash_prompt
-    test -e "${HOME}/.git_local"                        && source "${HOME}/.git_local"
-    test -e "${HOME}/.bash_local"                       && source "${HOME}/.bash_local"
-    test -e "${HOME}/.iterm2_shell_integration.bash"    && source "${HOME}/.iterm2_shell_integration.bash"
-    test -e "${HOME}/.ssh-completion.bash"              && source "${HOME}/.ssh-completion.bash"
-    test -e "${HOME}/.shiftboard_api_completion.sh"     && source "${HOME}/.shiftboard_api_completion.sh"
-    test -e "${HOME}/.shiftboard_tool_completion.sh"    && source "${HOME}/.shiftboard_tool_completion.sh"
+    test -r "${HOME}/.bash_aliases"                             && source "${HOME}/.bash_aliases"
+    test -r "${HOME}/.bash_prompt"                              && source "${HOME}/.bash_prompt"
+    test -r "${HOME}/.iterm2_shell_integration.bash"            && source "${HOME}/.iterm2_shell_integration.bash"
+    test -r "${HOME}/.git.bash"                                 && source "${HOME}/.git.bash"
+    test -r "${HOME}/.git_local"                                && source "${HOME}/.git_local"
+    test -r "${HOME}/.bash_local"                               && source "${HOME}/.bash_local"
 
-    complete -C '/usr/local/bin/aws_completer' aws
+    test -r "/usr/local/etc/profile.d/bash_completion.sh"       && source "/usr/local/etc/profile.d/bash_completion.sh"
+    test -r "${HOME}/.git-completion.bash"                      && source "${HOME}/.git-completion.bash"
+    test -r "${HOME}/.hub-completion.bash"                      && source "${HOME}/.hub-completion.bash"
+#     test -r "${HOME}/.knife-completion.bash"                    && source "${HOME}/.knife-completion.bash"
+#     test -r "${HOME}/.ssh-completion.bash"                      && source "${HOME}/.ssh-completion.bash"
+#     test -r "${HOME}/.shiftboard_api_completion.sh"             && source "${HOME}/.shiftboard_api_completion.sh"
+#     test -r "${HOME}/.shiftboard_tool_completion.sh"            && source "${HOME}/.shiftboard_tool_completion.sh"
+    test -r "${HOME}/.smartcd_config.sh"                        && source "${HOME}/.smartcd_config.sh"
 
-    if [[ -r "$HOME/.smartcd_config" ]]; then
-        . ~/.smartcd_config
+#     complete -C '/usr/local/bin/aws_completer' aws
+
+    if [[ -r "${HOME}/.complete-shell/src/complete-shell/.rc" ]]; then
+        source "${HOME}/.complete-shell/src/complete-shell/.rc"
+        for f in "${HOME}/.complete-shell/bash-completion/completions/"*; do
+            source $f
+        done
     fi
 fi
 

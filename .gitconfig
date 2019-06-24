@@ -36,10 +36,7 @@
     log1    = log --oneline
     logs    = log --stat
     logp    = log --patch
-    logr    = log --raw
     logsp   = !git logs --patch
-    logsr   = !git logs --raw
-    logspr  = !git logs --patch --raw
     logg    = log --graph
     logg1   = !git logg --oneline
 
@@ -47,10 +44,7 @@
     mine1   = !git log1 $(git pbr)..HEAD
     mines   = !git logs $(git pbr)..HEAD
     minep   = !git logp $(git pbr)..HEAD
-    miner   = !git logr $(git pbr)..HEAD
     minesp  = !git logsp $(git pbr)..HEAD
-    minesr  = !git logsr $(git pbr)..HEAD
-    minespr = !git logspr $(git pbr)..HEAD
     mineg   = !git logg $(git pbr)..HEAD
     mineg1  = !git logg1 $(git pbr)..HEAD
 
@@ -58,10 +52,7 @@
     this1   = !git log1 $(git rbr)..HEAD
     thiss   = !git logs $(git rbr)..HEAD
     thisp   = !git logp $(git rbr)..HEAD
-    thisr   = !git logr $(git rbr)..HEAD
     thissp  = !git logsp $(git rbr)..HEAD
-    thissr  = !git logsr $(git rbr)..HEAD
-    thisspr = !git logspr $(git rbr)..HEAD
     thisg   = !git logg $(git rbr)..HEAD
     thisg1  = !git logg1 $(git rbr)..HEAD
 
@@ -69,10 +60,7 @@
     last1   = last
     lasts   = !git logs -1
     lastp   = !git logp -1
-    lastr   = !git logr -1
     lastsp  = !git logsp -1
-    lastsr  = !git logsr -1
-    lastspr = !git logspr -1
     lastc   = log --pretty=hash
 
 [log]

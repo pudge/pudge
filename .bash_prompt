@@ -21,10 +21,13 @@ function set_ps1 {
     white='\[\e[37m\]'
     end='\[\e[0m\]'
 
-    #ptime="${cyan}\t${end}|"
+    ptime="${cyan}$(date +'%a %Y-%m-%dT%H:%M:%S')${end} "
     puser='\u'
     phost=$(hostname -f | cut -d . -f 1,2)
-    #phist="${yellow}\!${end} "
+    if [[ $phost == 'chris-nandor' ]]; then
+        phost=williams
+    fi
+    phist="${yellow}\!${end} "
     ppwd="${magenta}\w${end}"
     ppwdd="${magenta}\$(basename \w)${end}"
     #pgit="${red}"'$(__git_ps1 " (%s)")'"${end}"
@@ -32,22 +35,22 @@ function set_ps1 {
     #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
-    precmd="$ptime$phist$puser@$phost:$ppwd"
+    precmd="\n\$(iterm2_prompt_mark)$ptime$puser@$phost:$ppwd"
     precmdd="$ppwd"
-    postcmd="\$(_track_time) $pchar " #" $yellow\$(get_err)$end$pchar "
+    postcmd="\n$phist\$(_track_time_prompt)$pchar " #" $yellow\$(get_err)$end$pchar "
     postcmdd=" $pchar "
     #export PS1="$precmd$pgit$postcmd"
     #export DEMO_PS1="${magenta}\$(basename \w)${end}$pgit \$ "
 
-    local wintitle0='$( if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/shiftboard/") ]]; then echo "${PWD/#$HOME\/src\/shiftboard\//}"; else echo "${USER}@${HOSTNAME%.*.*}:${PWD/#$HOME/~}"; fi )'
+    local wintitle0='$( if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/shiftboard/") ]]; then echo -n "${PWD/#$HOME\/src\/shiftboard\//}"; else echo -n "${USER}@${HOSTNAME%.*.*}:${PWD/#$HOME/~}"; fi )'
     export wintitle="echo -ne \"\033];$wintitle0: \007\""
     export PROMPT_COMMAND="history -a; __git_ps1 '$precmd' '$postcmd'; $wintitle"
     export DEMO_PROMPT_COMMAND="history -a; __git_ps1 '$precmdd' '$postcmdd'; $wintitle"
 }
 
-function _track_time {
+function _track_time_prompt {
     if [[ -s "$HOME/.sb_track_time" ]]; then
-        echo ' ⏱ ';
+        echo -n '⏱ ';
         #echo -e ' \033[5m⏱\033[0m ';
     fi
 }

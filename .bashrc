@@ -45,3 +45,5 @@ elif [[ $(uname) == 'Darwin' ]]; then
 fi
 
 export PATH=$HOME/bin:/opt/bin:$MYPATH:$HOME/.yarn/bin
+
+[ -f ~/.fzf.bash ] && source ~/.fzf.bash

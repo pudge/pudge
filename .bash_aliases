@@ -39,6 +39,8 @@ alias sb_dbf="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log"
 alias tt=track_time
 alias jb=jira_branch
 alias jo=jira_open
+alias cs=complete-shell
+alias api_client=$SB/app/tools/api_client.pl
 
 function psg {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
