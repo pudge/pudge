@@ -27,7 +27,7 @@ function set_ps1 {
     if [[ $phost == 'chris-nandor' ]]; then
         phost=williams
     fi
-    phist="${yellow}\!${end} "
+    phist="${yellow}\!${end}"
     ppwd="${magenta}\w${end}"
     ppwdd="${magenta}\$(basename \w)${end}"
     #pgit="${red}"'$(__git_ps1 " (%s)")'"${end}"
@@ -35,9 +35,9 @@ function set_ps1 {
     #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
-    precmd="\n\$(iterm2_prompt_mark)$ptime$puser@$phost:$ppwd"
+    precmd="\n\$(iterm2_prompt_mark)$ptime$puser@$phost:$ppwd\$(_track_time_prompt)\n$phist"
     precmdd="$ppwd"
-    postcmd="\n$phist\$(_track_time_prompt)$pchar " #" $yellow\$(get_err)$end$pchar "
+    postcmd=" $pchar " #" $yellow\$(get_err)$end$pchar "
     postcmdd=" $pchar "
     #export PS1="$precmd$pgit$postcmd"
     #export DEMO_PS1="${magenta}\$(basename \w)${end}$pgit \$ "
@@ -50,7 +50,7 @@ function set_ps1 {
 
 function _track_time_prompt {
     if [[ -s "$HOME/.sb_track_time" ]]; then
-        echo -n '⏱ ';
+        echo -n ' ⏱ ';
         #echo -e ' \033[5m⏱\033[0m ';
     fi
 }
