@@ -12,10 +12,10 @@ fi
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
-if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ BBEdit$ ]]; then
+if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
     test -r "${HOME}/.bash_aliases"                             && source "${HOME}/.bash_aliases"
-    test -r "${HOME}/.bash_prompt"                              && source "${HOME}/.bash_prompt"
     test -r "${HOME}/.iterm2_shell_integration.bash"            && source "${HOME}/.iterm2_shell_integration.bash"
+    test -r "${HOME}/.bash_prompt"                              && source "${HOME}/.bash_prompt"
     test -r "${HOME}/.git.bash"                                 && source "${HOME}/.git.bash"
     test -r "${HOME}/.git_local"                                && source "${HOME}/.git_local"
     test -r "${HOME}/.bash_local"                               && source "${HOME}/.bash_local"

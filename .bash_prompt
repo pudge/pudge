@@ -35,7 +35,7 @@ function set_ps1 {
     #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
-    precmd="\n\$(iterm2_prompt_mark)$ptime$puser@$phost:$ppwd\$(_track_time_prompt)\n$phist"
+    precmd="\n\[$(_my_iterm2_prompt_mark)\]$ptime$puser@$phost:$ppwd\$(_track_time_prompt)\n$phist"
     precmdd="$ppwd"
     postcmd=" $pchar " #" $yellow\$(get_err)$end$pchar "
     postcmdd=" $pchar "
@@ -46,6 +46,12 @@ function set_ps1 {
     export wintitle="echo -ne \"\033];$wintitle0: \007\""
     export PROMPT_COMMAND="history -a; __git_ps1 '$precmd' '$postcmd'; $wintitle"
     export DEMO_PROMPT_COMMAND="history -a; __git_ps1 '$precmdd' '$postcmdd'; $wintitle"
+}
+
+function _my_iterm2_prompt_mark {
+    if [[ ! -z "$(type -t iterm2_prompt_mark)" ]]; then
+        echo $(iterm2_prompt_mark)
+    fi
 }
 
 function _track_time_prompt {
