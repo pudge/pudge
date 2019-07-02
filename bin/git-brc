@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+use warnings;
+use 5.018;
+
+use Git;
+
+my $repo = Git->repository();
+my $color_re = qr/(?:\c[\[\d*m)?/;
+my $branch_re = qr/^(\*)? +$color_re(\w+) +$color_re([\w\/-]+)$color_re([<>=]+)?(?: $color_re(.+?))?$color_re$/;
+
+chomp(my $current_branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
+
+git_cmd_try { $repo->command_noisy('fetch') }
+    'Error, cannot continue (%s [%d])';
+
+update_locals();
+git_r_done();
+report();
+
+sub update_locals {
+    do_branches('Updating local branches from remote', sub {
+        my($branch_line, $current, $sha, $branch, $status) = @_;
+        if ($status && $status eq '<') {
+            if ($current_branch eq $branch) {
+                eval { $repo->command_noisy('merge', '--ff-only', 'FETCH_HEAD') };
+            }
+            else {
+                eval { $repo->command_noisy('fetch', 'origin', "$branch:$branch") };
+            }
+        }
+    });
+}
+
+sub git_r_done {
+    do_branches('Deleting merged branches', sub {
+        my($branch_line, $current, $sha, $branch, $status) = @_;
+        if (merged($branch, $status)) {
+            git_cmd_try { $repo->command('r-done', $branch) }
+                'Error, cannot continue (%s [%d])';
+        }
+    });
+}
+
+sub report {
+    do_branches('Branches', sub {
+        my($branch_line, $current, $sha, $branch, $status) = @_;
+        say $branch_line;
+    });
+}
+
+sub do_branches {
+    my($name, $iter) = @_;
+    # the `sta` alias is in my .gitconfig and looks like:
+    # sta = !git for-each-ref --color=always --format='%(HEAD) %(refname:short)%(color:red)%(upstream:trackshort) %(color:yellow)%(upstream:track)' refs/heads
+    my @branches = git_cmd_try { $repo->command('sta') }
+        'Error, cannot continue (%s [%d])';
+
+    my $said = 0;
+    for my $branch_line (@branches) {
+        say "$name:" unless $said++;
+        $_ //= '' for (my($current, $sha, $branch, $status) = ($branch_line =~ $branch_re));
+        $iter->($branch_line, $current, $sha, $branch, $status);
+    }
+
+    say '';
+}
+
+sub merged {
+    my($branch, $status) = @_;
+    if ($status && $branch =~ m!^pudge/!) {
+        my $contains = git_cmd_try { $repo->command('branch', '--all', '--contains', "refs/heads/$branch") }
+            'Error, cannot continue (%s [%d])';
+        if ($contains =~ m!^\*?\s+remotes/origin/master$!m) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
