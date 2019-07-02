@@ -21,7 +21,7 @@ function set_ps1 {
     white='\[\e[37m\]'
     end='\[\e[0m\]'
 
-    ptime="${cyan}$(date +'%a %Y-%m-%dT%H:%M:%S')${end} "
+    ptime="${cyan}\$(_my_date)${end} "
     puser='\u'
     phost=$(hostname -f | cut -d . -f 1,2)
     if [[ $phost == 'chris-nandor' ]]; then
@@ -35,7 +35,8 @@ function set_ps1 {
     #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
-    precmd="\n\[$(_my_iterm2_prompt_mark)\]$ptime$puser@$phost:$ppwd\$(_track_time_prompt)\n$phist"
+    hostmarks="$red$(_host_marks)$end"
+    precmd="\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\n$hostmarks$phist"
     precmdd="$ppwd"
     postcmd=" $pchar " #" $yellow\$(get_err)$end$pchar "
     postcmdd=" $pchar "
@@ -48,16 +49,30 @@ function set_ps1 {
     export DEMO_PROMPT_COMMAND="history -a; __git_ps1 '$precmdd' '$postcmdd'; $wintitle"
 }
 
-function _my_iterm2_prompt_mark {
-    if [[ ! -z "$(type -t iterm2_prompt_mark)" ]]; then
-        echo $(iterm2_prompt_mark)
+function _my_date {
+    date +'%a %Y-%m-%dT%H:%M:%S'
+}
+
+function _dyn_marks {
+    if [[ -s "$HOME/.sb_track_time" ]]; then
+        echo -n ' ⏱ ';
     fi
 }
 
-function _track_time_prompt {
-    if [[ -s "$HOME/.sb_track_time" ]]; then
-        echo -n ' ⏱ ';
-        #echo -e ' \033[5m⏱\033[0m ';
+function iterm2_prompt_mark {
+    echo -n ''
+}
+
+function _host_marks {
+    local hostf=$(hostname -f)
+    if [[ $hostf =~ \.shiftboard\.com$ ]]; then
+        echo -n ' '
+        if [[ $hostf =~ \.stg\.shiftboard\.com$ ]]; then
+            echo -n '🅢 🅣 🅖'; # $STG
+        else
+            echo -n '🅟 🅡 🅞 🅓'; # PROD
+        fi
+        echo -n ' ☢️  '
     fi
 }
 

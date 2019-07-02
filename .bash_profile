@@ -14,7 +14,6 @@ fi
 parent_caller=$(ps -o comm= $PPID)
 if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
     test -r "${HOME}/.bash_aliases"                             && source "${HOME}/.bash_aliases"
-    test -r "${HOME}/.iterm2_shell_integration.bash"            && source "${HOME}/.iterm2_shell_integration.bash"
     test -r "${HOME}/.bash_prompt"                              && source "${HOME}/.bash_prompt"
     test -r "${HOME}/.git.bash"                                 && source "${HOME}/.git.bash"
     test -r "${HOME}/.git_local"                                && source "${HOME}/.git_local"
@@ -38,6 +37,8 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
             source $f
         done
     fi
+
+    test -r "${HOME}/.iterm2_shell_integration.bash"            && source "${HOME}/.iterm2_shell_integration.bash"
 fi
 
 true
