@@ -28,10 +28,6 @@ if [[ $(uname) == 'Linux' ]]; then
         export BROWSER=/site/marchex/bin/open_url
     fi
 
-    if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
-        . /etc/bash_completion
-    fi
-
     # renice +1 $$
 
 elif [[ $(uname) == 'Darwin' ]]; then
@@ -45,5 +41,3 @@ elif [[ $(uname) == 'Darwin' ]]; then
 fi
 
 export PATH=$HOME/bin:/opt/bin:$MYPATH:$HOME/.yarn/bin
-
-[ -f ~/.fzf.bash ] && source ~/.fzf.bash

@@ -1,13 +1,36 @@
 function set_ps1 {
-    . $HOME/.git-prompt.sh
-    export GIT_PS1_SHOWSTASHSTATE=1
-    export GIT_PS1_SHOWDIRTYSTATE=1
-    export GIT_PS1_SHOWUNTRACKEDFILES=1
-    export GIT_PS1_SHOWUPSTREAM='auto'
-    export GIT_PS1_HIDE_IF_PWD_IGNORED=1
-    export GIT_PS1_SHOWCOLORHINTS=1
-    #export GIT_PS1_STATESEPARATOR='~'
-    export GIT_PS1_DESCRIBE_STYLE=branch
+    if [ -r "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
+        MYGITPROMPT=bash-git-prompt
+        # Set config variables first
+        GIT_PROMPT_ONLY_IN_REPO=1
+        GIT_PROMPT_FETCH_REMOTE_STATUS=0   # uncomment to avoid fetching remote status
+        GIT_PROMPT_IGNORE_SUBMODULES=1 # uncomment to avoid searching for changed files in submodules
+        # GIT_PROMPT_WITH_VIRTUAL_ENV=0 # uncomment to avoid setting virtual environment infos for node/python/conda environments
+
+        GIT_PROMPT_SHOW_UPSTREAM=0 # uncomment to show upstream tracking branch
+        GIT_PROMPT_SHOW_UNTRACKED_FILES=all # can be no, normal or all; determines counting of untracked files
+        GIT_PROMPT_SHOW_CHANGED_FILES_COUNT=1 # uncomment to avoid printing the number of changed files
+
+        # as last entry source the gitprompt script
+        # GIT_PROMPT_THEME=Custom # use custom theme specified in file GIT_PROMPT_THEME_FILE (default ~/.git-prompt-colors.sh)
+        GIT_PROMPT_THEME_FILE=~/.git-prompt-colors.sh
+
+        source $HOME/.bash-git-prompt/gitprompt.sh
+
+    elif [ -r "$HOME/.git-prompt.sh" ]; then
+        MYGITPROMPT=git-prompt
+        GIT_PS1_SHOWSTASHSTATE=1
+        GIT_PS1_SHOWDIRTYSTATE=1
+        GIT_PS1_SHOWUNTRACKEDFILES=1
+        GIT_PS1_SHOWUPSTREAM='auto'
+        GIT_PS1_HIDE_IF_PWD_IGNORED=1
+        GIT_PS1_SHOWCOLORHINTS=1
+        #GIT_PS1_STATESEPARATOR='~'
+        GIT_PS1_DESCRIBE_STYLE=branch
+
+        source $HOME/.git-prompt.sh
+    fi
+
 
     local ptime puser phost phist ppwd pgit pchar
     local black red green yellow blue magenta cyan white end
@@ -27,26 +50,37 @@ function set_ps1 {
     if [[ $phost == 'chris-nandor' ]]; then
         phost=williams
     fi
+    export PHOST=$phost
     phist="${yellow}\!${end}"
     ppwd="${magenta}\w${end}"
-    ppwdd="${magenta}\$(basename \w)${end}"
-    #pgit="${red}"'$(__git_ps1 " (%s)")'"${end}"
-    #pgit='$(__git_ps1 " (%s)")'
-    #pchar="${blue}→${end}"
     pchar="${blue}\$${end}"
 
     hostmarks="$red$(_host_marks)$end"
     precmd="\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\n$hostmarks$phist"
-    precmdd="$ppwd"
     postcmd=" $pchar " #" $yellow\$(get_err)$end$pchar "
-    postcmdd=" $pchar "
-    #export PS1="$precmd$pgit$postcmd"
-    #export DEMO_PS1="${magenta}\$(basename \w)${end}$pgit \$ "
 
-    local wintitle0='$( if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/shiftboard/") ]]; then echo -n "${PWD/#$HOME\/src\/shiftboard\//}"; else echo -n "${USER}@${HOSTNAME%.*.*}:${PWD/#$HOME/~}"; fi )'
-    export wintitle="echo -ne \"\033];$wintitle0: \007\""
-    export PROMPT_COMMAND="history -a; __git_ps1 '$precmd' '$postcmd'; $wintitle"
-    export DEMO_PROMPT_COMMAND="history -a; __git_ps1 '$precmdd' '$postcmdd'; $wintitle"
+    GIT_PROMPT_START="\$(prompt_command)$precmd"
+    GIT_PROMPT_END=$postcmd
+
+    if [[ $MYGITPROMPT == 'git-prompt' ]]; then
+        __git_ps1 "$GIT_PROMPT_START" "$postcmd"
+    fi
+
+#     export PROMPT_COMMAND="history -a; __git_ps1 '$precmd' '$postcmd'; $wintitle"
+}
+
+function prompt_command {
+    history -a;
+    wintitle;
+}
+
+function wintitle {
+    if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/shiftboard/") ]]; then
+        echo -ne "\033]0;${PWD/#$HOME\/src\/shiftboard\//}: \007";
+    else
+        echo -ne "\033]0;${USER}@${PHOST}:${PWD/#$HOME/~}: \007";
+    fi
+
 }
 
 function _my_date {
@@ -84,5 +118,4 @@ function get_err {
     fi
 }
 
-source ~/.git-prompt.bash
 set_ps1

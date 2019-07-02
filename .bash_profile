@@ -23,6 +23,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
     test -r "${HOME}/.git-completion.bash"                      && source "${HOME}/.git-completion.bash"
     test -r "${HOME}/.hub-completion.bash"                      && source "${HOME}/.hub-completion.bash"
     test -r "${HOME}/.smartcd_config.sh"                        && source "${HOME}/.smartcd_config.sh"
+    test -r "${HOME}/.fzf.bash"                                 && source "${HOME}/.fzf.bash"
 
 #     test -r "${HOME}/.knife-completion.bash"                    && source "${HOME}/.knife-completion.bash"
 #     test -r "${HOME}/.ssh-completion.bash"                      && source "${HOME}/.ssh-completion.bash"
@@ -30,12 +31,8 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
 #     test -r "${HOME}/.shiftboard_tool_completion.sh"            && source "${HOME}/.shiftboard_tool_completion.sh"
 #     complete -C '/usr/local/bin/aws_completer' aws
 
-#     export BASH_COMPLETION_COMPAT_DIR="/usr/local/etc/bash_completion.d"
     if [[ -r "${HOME}/.complete-shell/src/complete-shell/.rc" ]]; then
         source "${HOME}/.complete-shell/src/complete-shell/.rc"
-        for f in "${HOME}/.complete-shell/bash-completion/completions/"*; do
-            source $f
-        done
     fi
 
     test -r "${HOME}/.iterm2_shell_integration.bash"            && source "${HOME}/.iterm2_shell_integration.bash"
