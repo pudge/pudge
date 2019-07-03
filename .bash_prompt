@@ -66,13 +66,8 @@ function set_ps1 {
         __git_ps1 "$GIT_PROMPT_START" "$GIT_PROMPT_END"
     fi
 
-    PS1="\$(save_exit_status)$precmd\$(show_exit_status)$postcmd"
+    PS1="$precmd\$(show_exit_status)$postcmd"
     OLD_GITPROMPT="$PS1"
-}
-
-function save_exit_status {
-    export MY_LAST_EXIT_STATUS="$?"
-    echo -n "${MY_LAST_EXIT_STATUS}" > /tmp/wtfpromptexitstatus
 }
 
 function prompt_command {
@@ -117,14 +112,17 @@ function _host_marks {
 }
 
 function show_exit_status {
-    local exit_status="$MY_LAST_EXIT_STATUS"
+    local es="$__bp_last_ret_value"
 
-    if [[ -z "$exit_status" && -r /tmp/wtfpromptexitstatus ]]; then
-        exit_status=$(cat /tmp/wtfpromptexitstatus)
+    # format from bash-git-prompt
+    type gp_format_exit_status >/dev/null 2>&1
+    if [[ "$?" -eq 0 ]]; then
+        es=$(gp_format_exit_status $es)
     fi
+
     # 130 == SIGINT
-    if [[ $exit_status != '' && $exit_status != '0' && $exit_status != '130' ]]; then
-        echo -ne " \e[31;1m✘ $exit_status\e[0m"
+    if [[ $es != '' && $es != '0' ]]; then
+        echo -ne " \e[31;1m✘ $es\e[0m"
     else
         echo -ne " \e[32;1m✔\e[0m"
     fi
