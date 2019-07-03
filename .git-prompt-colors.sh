@@ -12,7 +12,7 @@ override_git_prompt_colors() {
 
     GIT_PROMPT_BRANCH="${Blue}"        # the git branch that is active in the current directory
     GIT_PROMPT_MASTER_BRANCH="${Green}" # used if the git branch that is active in the current directory is $GIT_PROMPT_MASTER_BRANCHES
-    GIT_PROMPT_STAGED=" ${Blue}●"           # the number of staged files/directories
+    GIT_PROMPT_STAGED=" ${Green}●"           # the number of staged files/directories
     GIT_PROMPT_CONFLICTS=" ${Red}✖"       # the number of files in conflict
     GIT_PROMPT_CHANGED=" ${Cyan}✚"        # the number of changed files
 
