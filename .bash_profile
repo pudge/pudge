@@ -35,6 +35,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
         source "${HOME}/.complete-shell/src/complete-shell/.rc"
     fi
 
+    export ITERM_ENABLE_SHELL_INTEGRATION_WITH_TMUX=1
     test -r "${HOME}/.iterm2_shell_integration.bash"            && source "${HOME}/.iterm2_shell_integration.bash"
 fi
 
