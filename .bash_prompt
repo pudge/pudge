@@ -56,17 +56,23 @@ function set_ps1 {
     pchar="${blue}\$${end}"
 
     hostmarks="$red$(_host_marks)$end"
-    precmd="\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\n$hostmarks$phist"
-    postcmd=" $pchar " #" $yellow\$(get_err)$end$pchar "
+    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\n$hostmarks$phist"
+    postcmd=" $pchar " #$yellow\$(get_err)$end$pchar "
 
-    GIT_PROMPT_START="\$(prompt_command)$precmd"
-    GIT_PROMPT_END=$postcmd
+    GIT_PROMPT_START="$precmd"
+    GIT_PROMPT_END="$postcmd"
 
     if [[ $MYGITPROMPT == 'git-prompt' ]]; then
-        __git_ps1 "$GIT_PROMPT_START" "$postcmd"
+        __git_ps1 "$GIT_PROMPT_START" "$GIT_PROMPT_END"
     fi
 
-#     export PROMPT_COMMAND="history -a; __git_ps1 '$precmd' '$postcmd'; $wintitle"
+    PS1="\$(save_exit_status)$precmd\$(show_exit_status)$postcmd"
+    OLD_GITPROMPT="$PS1"
+}
+
+function save_exit_status {
+    export MY_LAST_EXIT_STATUS="$?"
+    echo -n "${MY_LAST_EXIT_STATUS}" > /tmp/wtfpromptexitstatus
 }
 
 function prompt_command {
@@ -110,11 +116,17 @@ function _host_marks {
     fi
 }
 
-function get_err {
-    local err=$?
+function show_exit_status {
+    local exit_status="$MY_LAST_EXIT_STATUS"
+
+    if [[ -z "$exit_status" && -r /tmp/wtfpromptexitstatus ]]; then
+        exit_status=$(cat /tmp/wtfpromptexitstatus)
+    fi
     # 130 == SIGINT
-    if [[ $err != 0 && $err != 130 ]]; then
-        echo -n "$err "
+    if [[ $exit_status != '' && $exit_status != '0' && $exit_status != '130' ]]; then
+        echo -ne " \e[31;1m✘ $exit_status\e[0m"
+    else
+        echo -ne " \e[32;1m✔\e[0m"
     fi
 }
 

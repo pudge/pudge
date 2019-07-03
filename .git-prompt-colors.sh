@@ -7,7 +7,7 @@ override_git_prompt_colors() {
 
     # These are the color definitions used by gitprompt.sh
     GIT_PROMPT_PREFIX='('                 # start of the git info string
-    GIT_PROMPT_SUFFIX=')'                 # the end of the git info string
+    GIT_PROMPT_SUFFIX=')_LAST_COMMAND_INDICATOR_'                 # the end of the git info string
     GIT_PROMPT_SEPARATOR=''              # separates each item
 
     GIT_PROMPT_BRANCH="${Blue}"        # the git branch that is active in the current directory
@@ -17,8 +17,8 @@ override_git_prompt_colors() {
     GIT_PROMPT_CHANGED=" ${Cyan}✚"        # the number of changed files
 
     GIT_PROMPT_REMOTE=" "                 # the remote branch name (if any) and the symbols for ahead and behind
-    GIT_PROMPT_UNTRACKED=" ${Yellow}…"       # the number of untracked files/dirs
-    GIT_PROMPT_STASHED=" ${BoldMagenta}⚑"    # the number of stashed files/dir
+    GIT_PROMPT_UNTRACKED=" ${Yellow}¿"       # the number of untracked files/dirs
+    GIT_PROMPT_STASHED=" ${Magenta}⚑"    # the number of stashed files/dir
     GIT_PROMPT_CLEAN=" ${BoldGreen}✔"      # a colored flag indicating a "clean" repo
 
     # For the command indicator, the placeholder _LAST_COMMAND_STATE_
@@ -27,8 +27,8 @@ override_git_prompt_colors() {
     # GIT_PROMPT_COMMAND_OK="${Green}✔-_LAST_COMMAND_STATE_ "    # indicator if the last command returned with an exit code of 0
     # GIT_PROMPT_COMMAND_FAIL="${Red}✘-_LAST_COMMAND_STATE_ "    # indicator if the last command returned with an exit code of other than 0
 
-    GIT_PROMPT_COMMAND_OK="${Green}✔"    # indicator if the last command returned with an exit code of 0
-    GIT_PROMPT_COMMAND_FAIL="${Red}✘-_LAST_COMMAND_STATE_"    # indicator if the last command returned with an exit code of other than 0
+    GIT_PROMPT_COMMAND_OK=" ${BoldGreen}✔"    # indicator if the last command returned with an exit code of 0
+    GIT_PROMPT_COMMAND_FAIL=" ${BoldRed}✘ _LAST_COMMAND_STATE_"    # indicator if the last command returned with an exit code of other than 0
 
     # template for displaying the current virtual environment
     # use the placeholder _VIRTUALENV_ will be replaced with
