@@ -5,15 +5,15 @@ use warnings;
 use File::Spec::Functions qw(catdir tmpdir);
 use File::Find;
 
-my $ps = `ps auxw | grep ssh-agent`;
-my($pid) = $ps =~ /^\S+\s+(\d+).+\bssh-agent$/m;
+my $ps = `ps auxw | grep -v grep | grep ssh-agent`;
+my($pid) = $ps =~ /^\S+\s+(\d+).+\bssh-agent(?: -l)?$/m;
 
-die "No PID found for ssh-agent" unless $pid;
+die "No PID found for ssh-agent:\n$ps" unless $pid;
 
 my $lsof = `lsof -p $pid`;
-my($tmpfile) = $lsof =~ /^\S+\s+$pid.+\s(\S+\bagent.\d+)$/m;
+my($tmpfile) = $lsof =~ /^\S+\s+$pid.+\sunix\s.+\s(\S+(?:\bagent.\d+|\/Listeners))$/m;
 
-die "No tmp file found for ssh-agent $pid" unless $pid;
+die "No tmp file found for ssh-agent $pid:\n$lsof" unless $tmpfile;
 
 print <<EOT;
 SSH_AUTH_SOCK=$tmpfile; export SSH_AUTH_SOCK;
