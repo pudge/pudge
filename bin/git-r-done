@@ -23,12 +23,6 @@ if ($branch eq $current_branch) {
         "Unstashed changes found on branch '$current_branch', cannot continue";
 }
 
-# git_cmd_try { $repo->command_noisy('checkout', 'master') }
-#     "Error, cannot continue (%s [%d])";
-
-# git_cmd_try { $repo->command_noisy('pull', '--rebase', 'origin', 'master') }
-#     "Error, cannot continue (%s [%d])";
-
 git_cmd_try { $repo->command_noisy('fetch', 'origin') }
     "Error, cannot continue (%s [%d])";
 
@@ -38,7 +32,13 @@ my $contains =
 die "master does not include '$branch', exiting\n"
     if $contains !~ m!^\*?\s+remotes/origin/master$!m;
 
-git_cmd_try { $repo->command_noisy('branch', '-r', '-d', $branch) }
+git_cmd_try { $repo->command_noisy('checkout', 'master') }
+    "Error, cannot continue (%s [%d])";
+
+git_cmd_try { $repo->command_noisy('merge', '--ff-only', 'origin/master') }
+    "Error, cannot continue (%s [%d])";
+
+git_cmd_try { $repo->command_noisy('branch', '-d', $branch) } # '-r',
     "Error, cannot continue (%s [%d])";
 
 git_cmd_try { $repo->command_noisy('push', '-d', 'origin', $branch) }
