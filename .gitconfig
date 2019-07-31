@@ -12,6 +12,7 @@
     st      = !git --no-pager status
     ss      = !git stash save
     sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
+    fetch   = !git fetch --tags
 
     dc      = !git diff --color=always | less -R
     diffc   = !git diff --cached
@@ -82,7 +83,7 @@
     host            = github.com
     protocol        = ssh
 [remote "origin"]
-    fetch           = +refs/tags/*:refs/tags/*
+#    fetch           = +refs/tags/*:refs/tags/*
     prune           = true
 [branch]
     autosetuprebase = always
