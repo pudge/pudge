@@ -7,7 +7,7 @@ our $o;
 my $jira = shift;
 chomp(my $name = shift || 'pudge' || `github_api user | jq -r .login`);
 
-my @branches = `git branch -a | grep -i dev-$jira 2>/dev/null`;
+my @branches = `git branch -a | grep -i $jira 2>/dev/null`;
 my %branches;
 for (@branches) {
     chomp;
@@ -15,7 +15,7 @@ for (@branches) {
     s/^\s+//;
     s/\s+$//;
     s|remotes/origin/||;
-    next unless m|^\w+/dev-$jira|;
+    next unless m|^\w+/(?:\w+-)?$jira|;
     $_ = 'origin/' . $_ if $o;
     $branches{$_}++;
 }
