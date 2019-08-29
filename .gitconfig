@@ -12,7 +12,7 @@
     st      = !git --no-pager status
     ss      = !git stash save
     sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
-    fetch   = !git fetch --tags
+    fetch   = !git fetch --tags -f
 
     dc      = !git diff --color=always | less -R
     diffc   = !git diff --cached
