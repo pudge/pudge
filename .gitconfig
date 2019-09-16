@@ -7,20 +7,22 @@
 [alias]
     pushf   = !git push --force-with-lease
     pullr   = !git pull --rebase
-    pro     = !hub pull-request -o
+    pro     = !hub pull-request --browse
+    prod    = !hub pull-request --browse --draft
     cb      = !git checkout -b
     st      = !git --no-pager status
     ss      = !git stash save
     sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
-    fetch   = !git fetch --tags -f
+    fetch   = !git fetch --tags --force
 
     dc      = !git diff --color=always | less -R
     diffc   = !git diff --cached
 
     lasttag = describe --tags --abbrev=0
-    tagl    = !git tag -l | sort_tags
+    tagl    = !git tag --list | sort_tags
     mod     = ls-files --modified
-    br      = symbolic-ref HEAD
+    br      = rev-parse --abbrev-ref HEAD
+    sbr     = symbolic-ref HEAD
     rbr     = rev-parse --abbrev-ref --symbolic-full-name @{u}
     repo    = config --get remote.origin.url
     only    = !git_only
