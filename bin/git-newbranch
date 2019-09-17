@@ -1,10 +1,10 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 use warnings;
 use strict;
 use feature ':5.10';
 
 my $desc = shift;
-chomp(my $name = shift || 'pudge' || `github_api user | jq -r .login`);
+my $name = shift || $ENV{GIT_USER} || $ENV{USER};
 
 my $branch = "$name/$desc";
 

@@ -1,11 +1,11 @@
-#!/usr/local/bin/perl -s
+#!/usr/bin/perl -s
 use warnings;
 use strict;
 use feature ':5.10';
 
 our $o;
 my $jira = shift;
-chomp(my $name = shift || 'pudge' || `github_api user | jq -r .login`);
+my $name = shift || $ENV{GIT_USER} || $ENV{USER};
 
 my @branches = `git branch -a | grep -i $jira 2>/dev/null`;
 my %branches;

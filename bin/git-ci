@@ -1,14 +1,11 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 use warnings;
 use strict;
 use feature ':5.10';
 
-use Git;
-my $repo = Git->repository();
-
-chomp(my $branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
 my $mess = '';
-if ($branch =~ m|^(?:(\w+)/)?(\w+)-(\d+)\b|) {
-    $mess = uc "[$2-$3] ";
+chomp(my $id = `jira_id`);
+if ($id) {
+    $mess = uc "[$id] ";
 }
 system 'git', 'commit', '-m', $mess, '-e', @ARGV;

@@ -39,6 +39,7 @@ alias sb_dbf="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log"
 alias tt=track_time
 alias jb=jira_branch
 alias jo=jira_open
+alias ji=jira_id
 alias cs=complete-shell
 alias api_client=$SB/app/tools/api_client.pl
 

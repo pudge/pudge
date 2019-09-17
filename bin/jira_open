@@ -1,11 +1,15 @@
 #!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
 my $proj = 'DEV';
 my($id) = @ARGV;
-$id ||= id(`git rev-parse --abbrev-ref HEAD`);
-$id ||= id(`pbpaste`);
+$id //= '';
+
+chomp($id ||= `jira_id \Q$id\E`);
 
 if ($id) {
-    chomp $id;
     if ($id =~ /^(\d+)$/) {
         $id = "$proj-$id";
     }
@@ -13,9 +17,4 @@ if ($id) {
     if ($id =~ /^\w+-\d+$/) {
         system 'open', "https://shiftboard.atlassian.net/browse/$id";
     }
-}
-
-sub id {
-    my $id = shift;
-    return $id =~ /(\w+-\d+)/ ? $1 : '';
 }
