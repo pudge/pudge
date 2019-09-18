@@ -3,14 +3,26 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-my($id) = @ARGV;
+my $proj = 'DEV';
 
+# 1. first get ID from passed argument
+my $arg = shift;
+my $id = id($arg);
+# something was passed in, but it is not an ID, so return nothing
+exit if $arg && !$id;
+
+# 2. then look at current git branch
 $id ||= id(`git rev-parse --abbrev-ref HEAD`);
+
+# 2. then look at pasteboard
 $id ||= id(`pbpaste`);
 
-say $id;
+say $id if $id;
+exit;
 
 sub id {
     my $id = shift;
-    return $id =~ m|(\w+-\d+)| ? $1 : '';
+    return unless defined $id && length $id;
+    return $1 if $id =~ m|(\w+-\d+)|;
+    return "$proj-$1" if $id =~ /^(\d+)$/;
 }

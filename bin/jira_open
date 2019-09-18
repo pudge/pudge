@@ -3,18 +3,11 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-my $proj = 'DEV';
 my($id) = @ARGV;
 $id //= '';
 
-chomp($id ||= `jira_id \Q$id\E`);
+chomp($id = `jira_id \Q$id\E`);
 
-if ($id) {
-    if ($id =~ /^(\d+)$/) {
-        $id = "$proj-$id";
-    }
-
-    if ($id =~ /^\w+-\d+$/) {
-        system 'open', "https://shiftboard.atlassian.net/browse/$id";
-    }
+if ($id && $id =~ /^\w+-\d+$/) {
+    system 'open', "https://shiftboard.atlassian.net/browse/$id";
 }
