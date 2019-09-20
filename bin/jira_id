@@ -12,7 +12,7 @@ my $id = id($arg);
 exit if $arg && !$id;
 
 # 2. then look at current git branch
-$id ||= id(`git rev-parse --abbrev-ref HEAD`);
+$id ||= id(`git rev-parse --abbrev-ref HEAD 2>&1`);
 
 # 2. then look at pasteboard
 $id ||= id(`pbpaste`);
@@ -23,6 +23,7 @@ exit;
 sub id {
     my $id = shift;
     return unless defined $id && length $id;
+    chomp $id;
     return $1 if $id =~ m|(\w+-\d+)|;
     return "$proj-$1" if $id =~ /^(\d+)$/;
 }

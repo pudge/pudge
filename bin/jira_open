@@ -3,10 +3,12 @@ use warnings;
 use strict;
 use feature ':5.10';
 
+use FindBin '$Bin';
+
 my($id) = @ARGV;
 $id //= '';
 
-chomp($id = `jira_id \Q$id\E`);
+chomp($id = `$Bin/jira_id \Q$id\E`);
 
 if ($id && $id =~ /^\w+-\d+$/) {
     system 'open', "https://shiftboard.atlassian.net/browse/$id";
