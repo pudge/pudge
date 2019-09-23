@@ -15,7 +15,7 @@ for (@branches) {
     s/^\s+//;
     s/\s+$//;
     s|remotes/origin/||;
-    next unless m|^\w+/(?:\w+-)?$jira|;
+    next unless m|^\w+/(?:\w+-)?$jira|i;
     $_ = 'origin/' . $_ if $o;
     $branches{$_}++;
 }
