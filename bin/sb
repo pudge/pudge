@@ -9,19 +9,22 @@ Getopt::Long::Configure('bundling');
 GetOptions(
     'd|dbh'         => \$opts{dbh},
     'o|org=i'       => \$opts{org},
-    'M|module=s'    => \@{$opts{modules}}
+    'M|module=s'    => \@{$opts{modules}},
+    'v|verbose'     => \$opts{verbose},
 );
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
 $ENV{PERL5LIB} //= '';
 
-my @args = ('sudo', "PERL5LIB=/usr/lib/shiftboard:$ENV{PERL5LIB}", $^X, '-MSB');
+my @args = ('sudo', "PERL5LIB=/usr/lib/shiftboard:$ENV{PERL5LIB}", $^X);
 for my $m (@{$opts{modules}}) {
     push @args, "-M$m";
 }
 
+my $log_level = $opts{verbose} ? 'debug' : 'info';
+
 push @args, '-MData::Dumper', '-E', '$Data::Dumper::Sortkeys=1; $cm::BATCH_ERROR = 1;',
-    '-E', 'BEGIN { $ENV{SHIFTBOARD_LOG_LEVEL}="debug" }; use SB2::Logger;';
+    '-E', qq!BEGIN { \$ENV{SHIFTBOARD_LOG_LEVEL}="$log_level" }; use SB; use SB2::Logger;!;
 if ($opts{org}) {
     push @args, '-E', "\$cm::SS = $opts{org}; &cm::conf_shiftboard(\$cm::SS);";
 }
