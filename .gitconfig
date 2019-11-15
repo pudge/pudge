@@ -85,7 +85,7 @@
     host            = github.com
     protocol        = ssh
 [remote "origin"]
-#    fetch           = +refs/tags/*:refs/tags/*
+    fetch           = +refs/tags/*:refs/tags/*
     prune           = true
 [branch]
     autosetuprebase = always

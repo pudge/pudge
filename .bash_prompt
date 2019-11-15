@@ -122,9 +122,9 @@ function show_exit_status {
 
     # 130 == SIGINT
     if [[ $es != '' && $es != '0' ]]; then
-        echo -ne " \e[31;1m✘ $es\e[0m"
+        echo -ne ' \001\e[31;1m\002✘ '$es'\001\e[0m\002'
     else
-        echo -ne " \e[32;1m✔\e[0m"
+        echo -ne ' \001\e[32;1m\002✔\001\e[0m\002'
     fi
 }
 
