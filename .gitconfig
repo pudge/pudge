@@ -15,8 +15,11 @@
     sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
     fetch   = !git fetch --tags --force
 
-    dc      = !git diff --color=always | less -R
     diffc   = !git diff --cached
+    dc      = !git diff --color=always | less -R
+    dcc     = !git diff --cached --color=always | less -R
+    dt      = !git difftool
+    dtc     = !git difftool --cached
 
     lasttag = describe --tags --abbrev=0
     tagl    = !git tag --list | sort_tags
@@ -81,6 +84,7 @@
     patternType     = perl
 [merge]
     ff              = false
+    tool            = bbdiff
 [hub]
     host            = github.com
     protocol        = ssh
@@ -96,13 +100,15 @@
 [rebase]
     stat            = true
 [rerere]
-	enabled         = false
+    enabled         = false
 [init]
-	templatedir     = ~/.git-templates
+    templatedir     = ~/.git-templates
 
 [diff]
-    tool = "bbdiff"
+    tool = bbdiff
 [difftool]
     prompt = false
 [difftool "bbdiff"]
-    cmd = /usr/local/bin/bbdiff --wait --resume "$LOCAL" "$REMOTE"
+    cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
+[mergetool "bbdiff"]
+    cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
