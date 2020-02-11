@@ -56,7 +56,7 @@ function set_ps1 {
     pchar="${blue}\$${end}"
 
     hostmarks="$red$(_host_marks)$end"
-    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\n$hostmarks$phist"
+    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\$(git_url)\n$hostmarks$phist"
     postcmd=" $pchar " #$yellow\$(get_err)$end$pchar "
 
     GIT_PROMPT_START="$precmd"
@@ -90,7 +90,8 @@ function _my_date {
 
 function _dyn_marks {
     if [[ -s "$HOME/.sb_track_time" ]]; then
-        echo -n ' ⏱ ';
+        track_time_url='https://shiftboard.atlassian.net/browse/'$(head -1 "$HOME/.sb_track_time")
+        echo -ne '\e]8;;'$track_time_url'\e\\ ⏱ \e]8;;\e\\'
     fi
 }
 
@@ -125,6 +126,28 @@ function show_exit_status {
         echo -ne ' \001\e[31;1m\002✘ '$es'\001\e[0m\002'
     else
         echo -ne ' \001\e[32;1m\002✔\001\e[0m\002'
+    fi
+}
+
+function git_url {
+    local remote_git_branch=$(git rev-parse --abbrev-ref @{u} 2>/dev/null)
+    local git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    local git_url=$(git config --get remote.origin.url)
+    local git_http_url=''
+
+    if [[ "$git_url" =~ ^ssh || "$git_url" =~ ^git ]]; then
+        git_http_url=$(perl -le 'print shift =~ s!^(?:ssh://)?git\@github.com[/:](.+?)/(.+?)(?:\.git)?\n?$!https://github.com/$1/$2!r' "$git_url")
+    elif [[ ! "$git_url" =~ ^http ]]; then
+        git_http_url="$git_url"
+    fi
+
+    if [[ ! -z "$remote_git_branch" && ! -z "$git_branch" ]]; then
+        git_http_url="$git_http_url/tree/$git_branch"
+    fi
+
+    # ssh://git@github.com/shiftboard/app.git
+    if [[ ! -z "$git_http_url" ]]; then
+        echo -ne "\e]8;;"$git_http_url"\e\\ 💻 \e]8;;\e\\"
     fi
 }
 

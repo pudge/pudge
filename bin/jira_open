@@ -11,5 +11,6 @@ $id //= '';
 chomp($id = `$Bin/jira_id \Q$id\E`);
 
 if ($id && $id =~ /^\w+-\d+$/) {
+#    system 'open', '-b', 'com.atlassian.jira.mac', "https://shiftboard.atlassian.net/browse/$id";
     system 'open', "https://shiftboard.atlassian.net/browse/$id";
 }

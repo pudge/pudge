@@ -1,8 +1,8 @@
 shopt -s histappend
 shopt -s direxpand
 
-export HISTFILESIZE=1000000
-export HISTSIZE=1000000
+export HISTFILESIZE=100000
+export HISTSIZE=100000
 export HISTCONTROL=ignoreboth
 export HISTTIMEFORMAT='%F %T '
 

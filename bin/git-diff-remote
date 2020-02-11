@@ -1,9 +1,10 @@
 #!/usr/bin/perl
-use strict;
 use warnings;
 use 5.018;
 
-my $c = shift // 1;
+chomp(my $c = shift // `git rev-list --count --left-only "\@{upstream}"...HEAD`);
 my $r = shift // $c;
-`git diff HEAD~$c.. | bbeditd`;
-`git diff \$(git rbr)~$r..\$(git rbr) | bbeditd`;
+say "nothing to compare" && exit unless $c;
+say "comparing $c commits between local and remote";
+`git diff HEAD~$c.. | egrep '^ [ +-]' | bbeditd`;
+`git diff \$(git rbr)~$r..\$(git rbr) | egrep '^ [ +-]' | bbeditd`;

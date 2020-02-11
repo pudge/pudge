@@ -10,7 +10,7 @@ GetOptions(
     'd|dbh'         => \$opts{dbh},
     'o|org=i'       => \$opts{org},
     'M|module=s'    => \@{$opts{modules}},
-    'v|verbose+'     => \$opts{verbose},
+    'v|verbose+'    => \$opts{verbose},
 );
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
@@ -21,7 +21,6 @@ for my $m (@{$opts{modules}}) {
     push @args, "-M$m";
 }
 
-#my $log_level = $opts{verbose} ? 'debug' : 'info';
 my $log_level = $opts{verbose} ? ($opts{verbose} > 1 ? 'trace' : 'debug') : 'info';
 
 push @args, '-MData::Dumper', '-E', '$Data::Dumper::Sortkeys=1; $cm::BATCH_ERROR = 1;',
