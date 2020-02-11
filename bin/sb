@@ -10,7 +10,7 @@ GetOptions(
     'd|dbh'         => \$opts{dbh},
     'o|org=i'       => \$opts{org},
     'M|module=s'    => \@{$opts{modules}},
-    'v|verbose'     => \$opts{verbose},
+    'v|verbose+'     => \$opts{verbose},
 );
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
@@ -21,7 +21,8 @@ for my $m (@{$opts{modules}}) {
     push @args, "-M$m";
 }
 
-my $log_level = $opts{verbose} ? 'debug' : 'info';
+#my $log_level = $opts{verbose} ? 'debug' : 'info';
+my $log_level = $opts{verbose} ? ($opts{verbose} > 1 ? 'trace' : 'debug') : 'info';
 
 push @args, '-MData::Dumper', '-E', '$Data::Dumper::Sortkeys=1; $cm::BATCH_ERROR = 1;',
     '-E', qq!BEGIN { \$ENV{SHIFTBOARD_LOG_LEVEL}="$log_level" }; use SB; use SB2::Logger;!;
@@ -49,7 +50,7 @@ for my $arg (@ARGV) {
     }
 }
 
-say '# ', join ' ', map {
+say STDERR '# ', join ' ', map {
     (my $foo = $_) =~ s/'/'\\''/g;
     $foo =~ /[#; \t\n'"]/ ? "'$foo'" : $foo
 } @args;
