@@ -11,6 +11,8 @@ else
 fi
 
 alias vg=vagrant
+alias myup="sudo /usr/local/mariadb/server/support-files/mysql.server start"
+alias mydown="sudo /usr/local/mariadb/server/support-files/mysql.server stop"
 alias grep="egrep --color"
 alias whois="whois -h whois.geektools.com"
 alias cenodiff="cenoview -l foo.diff"
@@ -27,10 +29,13 @@ alias b2kitchen='KITCHEN_YAML=.kitchen.ec2.yml bundle exec kitchen'
 alias gcg=github_changelog_generator
 alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
 
-alias ap='ansible-playbook -v --skip-tags=vault -i /opt/shiftboard/ansible/hosts /opt/shiftboard/ansible/site.yml --limit'
+alias ap='ansible-playbook -v --skip-tags=vault -i ./inventory ./site.yml --limit'
 alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
-alias tail_servola="sudo tail -n0 -F /var/log/shiftboard/*log /var/log/attestations/*log /var/log/apache2/*log /var/log/notify/*log /var/log/slate/*log"
-alias ops_update="git -C /git/ops/ pull --ff-only"
+alias tail_servola="sudo tail -n 100 -F /var/log/shiftboard/*log /var/log/attestations/*log /var/log/apache2/*log /var/log/notify/*log /var/log/slate/*log /var/log/frontdoor/*log"
+
+alias com2_master=' MYSQL_PS1="com2/MASTER> "  MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_com_2)        mysql --pager=less --init-command BEGIN -h sqldb -u shiftboard_com_2 shiftboard_com_2'
+alias com2_script=' MYSQL_PS1="com2/SCRIPT> "  MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_com_2)        mysql --pager=less                      -h sqldb -u shiftboard_com_2 shiftboard_com_2'
+alias com2_ro='     MYSQL_PS1="com2/ro> "      MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)            mysql --pager=less                      -h sqldb -u readonly         shiftboard_com_2'
 
 alias sb_dbs_rm="rm -rf /opt/dump/scrubbed/*; bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
 alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"

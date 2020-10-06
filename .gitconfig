@@ -5,6 +5,8 @@
     excludesfile    = ~/.gitignore.default
     hooksPath       = ~/.githooks
 [alias]
+    cwip    = !git commit -m wip --no-verify
+
     pushf   = !git push --force-with-lease
     pullr   = !git pull --rebase
     pro     = !hub pull-request --browse
@@ -29,6 +31,8 @@
     rbr     = rev-parse --abbrev-ref --symbolic-full-name @{u}
     repo    = config --get remote.origin.url
     only    = !git_only
+    sha     = rev-parse --verify HEAD
+    shas    = rev-parse --short HEAD
 
     lg      = log --pretty=pudge1 --date=short
     lgs     = !git lg --numstat
@@ -106,6 +110,7 @@
 
 [diff]
     tool = bbdiff
+    renameLimit = 4096
 [difftool]
     prompt = false
 [difftool "bbdiff"]

@@ -1,5 +1,16 @@
 #!/usr/bin/perl
+if ($_ = shift) {
+    calc();
+    exit;
+}
+
+my $x;
 while (<>) {
+    calc();
+	chomp;
+}
+
+sub calc {
 	chomp;
 	if ($x && m|^[*/+-]|) {
 		$_ = $x . $_;

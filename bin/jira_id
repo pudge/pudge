@@ -3,7 +3,7 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-my $proj = 'DEV';
+my $proj = 'ENG';
 
 # 1. first get ID from passed argument
 my $arg = shift;
