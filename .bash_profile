@@ -62,4 +62,7 @@ function reset_iterm_profile {
 function _set_iterm_profile {
     echo -e "\033]50;SetProfile=${1}\a"
 }
-eval "$(pyenv init -)"
+
+if [[ ! -z $(which pyenv) ]]; then
+    eval "$(pyenv init -)"
+fi
