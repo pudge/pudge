@@ -117,3 +117,17 @@ git_only() {
     fi
     git log $(git rev-parse --not --remotes --branches | grep -v $(git rev-parse $branch)) $branch $opts
 }
+
+mfa() {
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_SESSION_TOKEN
+
+    read -e -p 'MFA Code: ' mfa_code
+
+    session=$(aws sts get-session-token --serial-number arn:aws:iam::869546935036:mfa/chris.nandor --token-code $mfa_code --duration-seconds 86400)
+
+    export AWS_ACCESS_KEY_ID=$(echo $session | jq '.Credentials.AccessKeyId' | tr -d \")
+    export AWS_SECRET_ACCESS_KEY=$(echo $session | jq '.Credentials.SecretAccessKey' | tr -d \")
+    export AWS_SESSION_TOKEN=$(echo $session | jq '.Credentials.SessionToken' | tr -d \")
+}
