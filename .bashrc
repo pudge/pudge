@@ -13,6 +13,7 @@ export TNS_ADMIN=$HOME
 
 export SB=$HOME/src/shiftboard
 export SB_PRISTINE=$HOME/.ghd/src/shiftboard
+export ANSIBLE_HOME=$HOME/ansible
 
 export GITHUB_HOST=github.com
 export PAGER=less

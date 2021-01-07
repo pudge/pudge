@@ -29,7 +29,9 @@ alias b2kitchen='KITCHEN_YAML=.kitchen.ec2.yml bundle exec kitchen'
 alias gcg=github_changelog_generator
 alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
 
-alias ap='ansible-playbook -v --skip-tags=vault -i ./inventory ./site.yml --limit'
+alias ap='ansible-playbook -v --skip-tags=vault -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit'
+alias apv='ansible-playbook -v --ask-vault-pass -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit'
+
 alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
 alias tail_servola="sudo tail -n 100 -F /var/log/shiftboard/*log /var/log/attestations/*log /var/log/apache2/*log /var/log/notify/*log /var/log/slate/*log /var/log/frontdoor/*log"
 
