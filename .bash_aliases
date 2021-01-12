@@ -16,12 +16,14 @@ vg() {
 export -f vg
 
 myup() {
-    sudo /usr/local/mariadb/server/support-files/mysql.server start "$@"
+    sudo mysql.server start "$@"
+    #sudo /usr/local/mariadb/server/support-files/mysql.server start "$@"
 }
 export -f myup
 
 mydown() {
-    sudo /usr/local/mariadb/server/support-files/mysql.server stop "$@"
+    sudo mysql.server stop "$@"
+    #sudo /usr/local/mariadb/server/support-files/mysql.server stop "$@"
 }
 export -f mydown
 
