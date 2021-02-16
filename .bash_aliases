@@ -63,7 +63,8 @@ export -f tail_servola
 
 alias com2_master=' MYSQL_PS1="com2/MASTER> "  MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_com_2)        mysql --pager=less --init-command BEGIN -h sqldb -u shiftboard_com_2 shiftboard_com_2'
 alias com2_script=' MYSQL_PS1="com2/SCRIPT> "  MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_com_2)        mysql --pager=less                      -h sqldb -u shiftboard_com_2 shiftboard_com_2'
-alias com2_ro='     MYSQL_PS1="com2/ro> "      MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)            mysql --pager=less                      -h sqldb -u readonly         shiftboard_com_2'
+alias com2_ro='     MYSQL_PS1="com2/ro> "      MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)                mysql --pager=less                      -h sqldb -u readonly         shiftboard_com_2'
+alias msg_master='  MYSQL_PS1="msg/MASTER> "   MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_msg)          mysql --pager=less                      -h dbmsg -u shiftboard_msg   shiftboard_msg'
 
 alias sb_dbs_rm="rm -rf /opt/dump/scrubbed/*; bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
 alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
