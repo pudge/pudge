@@ -5,6 +5,9 @@ use feature ':5.10';
 
 my $max = 9;
 
+my $cmd = shift;
+my @cmd = $cmd ? ('-c', $cmd) : ();
+
 open my $host_fh, '<', "$ENV{HOME}/security_hosts" or die $!;
 
 my $i = 0;
@@ -35,7 +38,9 @@ for my $host (<$host_fh>) {
 for my $group (@hosts) {
     say '# ', join ', ', @$group;
     balance('-d', $group);
-    system tm => @$group;
+
+    system tm => @cmd, @$group;
+
     balance('-e', $group);
 }
 
