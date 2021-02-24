@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+my $max = 9;
+
+open my $host_fh, '<', "$ENV{HOME}/security_hosts" or die $!;
+
+my $i = 0;
+my @hosts;
+for my $host (<$host_fh>) {
+    chomp $host;
+    if (!$host || $host =~ /#/) {
+        $i = 0 if $host eq '';
+        next;
+    }
+
+    if ($i == 0) {
+        push @hosts, [];
+    }
+
+    push @{$hosts[-1]}, $host;
+    $i++;
+    $i = 0 if $i == $max;
+}
+
+for my $group (@hosts) {
+    system tm => @$group;
+}
+
+__END__
+
+#!/bin/bash
+
+for host in $(grep -v '#' security_hosts | grep .)
+do
+    h=${host%\.[a-z][a-z]*}
+    echo -n "$host   "
+
+    if [[ ! -z "$1" ]]; then
+        ssh -tt $host "$1"
+    else
+        ssh $host
+    fi
+
+    if [[ $1 = balancer ]]
+    then
+        read -ep '[ENTER] to enable balancer and proceed '
+        /opt/bin/balancer.sh -e $h
+    fi
+done
