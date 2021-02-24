@@ -1,8 +1,9 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use warnings;
 use strict;
 use feature ':5.10';
 
+our $bal;
 my $max = 9;
 
 my $cmd = shift;
@@ -29,7 +30,7 @@ for my $host (<$host_fh>) {
         push @hosts, [];
     }
 
-    $balance{$host} = 1 if $balance;
+    $balance{$host} = 1 if $bal && $balance;
     push @{$hosts[-1]}, $host;
     $i++;
     $i = 0 if $i == $max;
