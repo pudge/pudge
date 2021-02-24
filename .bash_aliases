@@ -16,13 +16,13 @@ vg() {
 export -f vg
 
 myup() {
-    sudo mysql.server start "$@"
+    mysql.server start "$@"
     #sudo /usr/local/mariadb/server/support-files/mysql.server start "$@"
 }
 export -f myup
 
 mydown() {
-    sudo mysql.server stop "$@"
+    mysql.server stop "$@"
     #sudo /usr/local/mariadb/server/support-files/mysql.server stop "$@"
 }
 export -f mydown
@@ -133,4 +133,8 @@ mfa() {
     export AWS_ACCESS_KEY_ID=$(echo $session | jq '.Credentials.AccessKeyId' | tr -d \")
     export AWS_SECRET_ACCESS_KEY=$(echo $session | jq '.Credentials.SecretAccessKey' | tr -d \")
     export AWS_SESSION_TOKEN=$(echo $session | jq '.Credentials.SessionToken' | tr -d \")
+}
+
+ghs() {
+    github_search -o shiftboard $@
 }
