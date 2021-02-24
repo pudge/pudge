@@ -2,6 +2,15 @@
 use strict;
 use warnings;
 
+use Getopt::Long;
+
+my $cmd;
+Getopt::Long::Configure('bundling');
+GetOptions(
+    'c|cmd=s' => \$cmd,
+) or die "Cannot parse options";
+$cmd = $cmd ? " \Q$cmd\E" : "";
+
 our @hosts = @ARGV;
 
 if ($ENV{TMUX} || $ENV{TMUX_PANE}) {
@@ -20,7 +29,7 @@ for my $host (@hosts) {
         print $fh qq{tmux split-window -t "$session_name"\n};
         print $fh qq{tmux select-layout -t "$session_name" tiled\n};
     }
-    print $fh qq{tmux send-keys -t "$session_name" 'ssh $host' Enter\n};
+    print $fh qq{tmux send-keys -t "$session_name" 'ssh $host$cmd' Enter\n};
 }
 if ($i < 5) {
     print $fh qq{tmux select-layout -t "$session_name" even-horizontal\n};
