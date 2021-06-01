@@ -6,6 +6,7 @@ use feature ':5.10';
 my $desc = shift;
 my $name = shift || $ENV{GIT_USER} || $ENV{USER};
 
-my $branch = "$name/$desc";
+# in case we fully formatted it already
+my $branch = $desc =~ m|^\Q$name\E/| ? $desc : "$name/$desc";
 
 system 'git', 'checkout', '-b', $branch;
