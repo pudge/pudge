@@ -3,13 +3,14 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-our $bal;
+our($bal, $bionic);
 my $max = 9;
 
 my $cmd = shift;
 my @cmd = $cmd ? ('-c', $cmd) : ();
+my $file = $bionic ? 'security_hosts_bionic' : 'security_hosts';
 
-open my $host_fh, '<', "$ENV{HOME}/security_hosts" or die $!;
+open my $host_fh, '<', "$ENV{HOME}/$file" or die $!;
 
 my $i = 0;
 my(@hosts, $balance, %balance);
