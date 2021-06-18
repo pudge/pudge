@@ -10,7 +10,7 @@ my $cmd = shift;
 my @cmd = $cmd ? ('-c', $cmd) : ();
 my $file = $bionic ? 'security_hosts_bionic' : 'security_hosts';
 
-open my $host_fh, '<', "$ENV{HOME}/$file" or die $!;
+open my $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
 
 my $i = 0;
 my(@hosts, $balance, %balance);
