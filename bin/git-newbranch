@@ -1,7 +1,9 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use warnings;
 use strict;
 use feature ':5.10';
+
+our($jira, $j, $push, $p);
 
 my $desc = shift;
 my $name = shift || $ENV{GIT_USER} || $ENV{USER};
@@ -10,3 +12,15 @@ my $name = shift || $ENV{GIT_USER} || $ENV{USER};
 my $branch = $desc =~ m|^\Q$name\E/| ? $desc : "$name/$desc";
 
 system 'git', 'checkout', '-b', $branch;
+exit if $?;
+
+if ($jira || $j) {
+    chomp(my $ticket = uc `jira_id $desc`);
+    system 'git', 'commit', '-m', "[$ticket] #in-progress", '--no-verify', '--allow-empty';
+    exit if $?;
+}
+
+if ($push || $p) {
+    system 'git', 'push', '-u';
+    exit if $?;
+}
