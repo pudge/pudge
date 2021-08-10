@@ -20,7 +20,7 @@ my $keyfile = "$ENV{HOME}/.water_heater_key";
 chomp(my $key = do { open my $fh, '<', $keyfile or die $!; <$fh> });
 $hook =~ s/\b__KEY__\b/$key/;
 
-my $html = get($url);
+my $html = get($url) || '';
 my $seen = 0;
 my $status = 0;
 while ($html =~ /(.+?)\n/g) {
