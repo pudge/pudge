@@ -11,15 +11,14 @@
     pullr   = !git pull --rebase
     pro     = !hub pull-request --browse
     prod    = !hub pull-request --browse --draft
-    cb      = !git checkout -b
     st      = !git --no-pager status
     ss      = !git stash save
     sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
     fetch   = !git fetch --tags --force
 
     diffc   = !git diff --cached
-    dc      = !git diff --color=always | less -R
-    dcc     = !git diff --cached --color=always | less -R
+    dl      = !git diff --color=always | less -R
+    dlc     = !git diff --cached --color=always | less -R
     dt      = !git difftool
     dtc     = !git difftool --cached
 
@@ -30,41 +29,21 @@
     sbr     = symbolic-ref HEAD
     rbr     = rev-parse --abbrev-ref --symbolic-full-name @{u}
     repo    = config --get remote.origin.url
-    only    = !git_only
     sha     = rev-parse --verify HEAD
     shas    = rev-parse --short HEAD
 
-    lg      = log --pretty=pudge1 --date=short
+    lg      = log --pretty=pudge1 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*'
     lgs     = !git lg --numstat
-    mn      = !git lg $(git pbr)..HEAD
-    mns     = !git lgs $(git pbr)..HEAD
-    th      = !git lg $(git rbr)..HEAD
-    ths     = !git lgs $(git rbr)..HEAD
-    top     = !git lg -8
-    tops    = !git lgs -8
+    top     = !git lg -10
+    tops    = !git lgs -10
 
-    log1    = log --oneline
+    #log1    = log --oneline
+    log1    = log --pretty=pudge1 --date=short
     logs    = log --stat
     logp    = log --patch
     logsp   = !git logs --patch
     logg    = log --graph
     logg1   = !git logg --oneline
-
-    mine    = !git log $(git pbr)..HEAD
-    mine1   = !git log1 $(git pbr)..HEAD
-    mines   = !git logs $(git pbr)..HEAD
-    minep   = !git logp $(git pbr)..HEAD
-    minesp  = !git logsp $(git pbr)..HEAD
-    mineg   = !git logg $(git pbr)..HEAD
-    mineg1  = !git logg1 $(git pbr)..HEAD
-
-    this    = !git log $(git rbr)..HEAD
-    this1   = !git log1 $(git rbr)..HEAD
-    thiss   = !git logs $(git rbr)..HEAD
-    thisp   = !git logp $(git rbr)..HEAD
-    thissp  = !git logsp $(git rbr)..HEAD
-    thisg   = !git logg $(git rbr)..HEAD
-    thisg1  = !git logg1 $(git rbr)..HEAD
 
     last    = log -1
     last1   = last
@@ -77,7 +56,7 @@
     date            = iso-strict
     decorate        = true
 [pretty]
-    pudge1          = format:%C(yellow)%h%Creset %<(12,trunc)%Cblue%an %ad%Creset %s%Cred%d%Creset
+    pudge1          = format:%C(auto)%h%Creset %<(12,trunc)%Cblue%al %ad%Creset %s%C(auto)%d%Creset
     hash            = format:%H
 [format]
     pretty          = medium
