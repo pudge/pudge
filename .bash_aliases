@@ -43,19 +43,21 @@ alias ssg='ssh grax.sea.marchex.com'
 # alias gcg=github_changelog_generator
 # alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
 
-ap() {
+function ap() {
     ansible-playbook -v --skip-tags=vault -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$@"
 }
 export -f ap
 
-apv() {
+function apv() {
     ansible-playbook -v --ask-vault-pass -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$@"
 }
 export -f apv
 
 
 alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
-tail_servola() {
+
+unalias tail_servola
+function tail_servola() {
     sudo tail -n 100 -F /var/log/shiftboard/*log /var/log/attestations/*log /var/log/apache2/*log /var/log/notify/*log /var/log/slate/*log /var/log/frontdoor/*log "$@"
 }
 export -f tail_servola
@@ -83,27 +85,27 @@ alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync
 alias sb_dbr="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --refresh-only"
 alias sb_dbf="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log"
 
-bn() {
+function bn() {
     /opt/bin/business_name
 }
 export -f bn
 
-tt() {
+function tt() {
     track_time "$@"
 }
 export -f tt
 
-jb() {
+function jb() {
     jira_branch "$@"
 }
 export -f jb
 
-jo() {
+function jo() {
     jira_open "$@"
 }
 export -f jo
 
-ji() {
+function ji() {
     jira_id "$@"
 }
 export -f ji
@@ -111,24 +113,24 @@ export -f ji
 alias cs=complete-shell
 alias api_client=$SB/app/tools/api_client.pl
 
-psg() {
+function psg() {
     ps auxww | egrep --color=always $1 | egrep --color=never -v egrep
 }
 export -f psg
 
-knife_hosted() {
+function knife_hosted() {
     knife "$@" --config ~/.chef/knife-hosted.rb
 }
 
-knife_ent() {
+function knife_ent() {
     knife "$@" --config ~/.chef/knife-ent.rb
 }
 
-knife_prem() {
+function knife_prem() {
     knife "$@" --config ~/.chef/knife-prem.rb
 }
 
-git_only() {
+function git_only() {
     opts=$(git rev-parse --no-revs "$@" 2>/dev/null)
     rev=$(git rev-parse --revs-only "$@" 2>/dev/null)
     if [[ -z $rev ]]; then
@@ -139,7 +141,7 @@ git_only() {
     git log $(git rev-parse --not --remotes --branches | grep -v $(git rev-parse $branch)) $branch $opts
 }
 
-mfa() {
+function mfa() {
     unset AWS_ACCESS_KEY_ID
     unset AWS_SECRET_ACCESS_KEY
     unset AWS_SESSION_TOKEN
@@ -153,6 +155,6 @@ mfa() {
     export AWS_SESSION_TOKEN=$(echo $session | jq '.Credentials.SessionToken' | tr -d \")
 }
 
-ghs() {
+function ghs() {
     github_search -o shiftboard $@
 }
