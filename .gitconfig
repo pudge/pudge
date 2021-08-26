@@ -32,7 +32,7 @@
     sha     = rev-parse --verify HEAD
     shas    = rev-parse --short HEAD
 
-    lg      = log --pretty=pudge1 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*'
+    lg      = log --pretty=pudge1 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*' --decorate-refs-exclude='refs/tags/[a-z]*-[A-Z]*[0-9]*'
     lgs     = !git lg --numstat
     top     = !git lg -10
     tops    = !git lgs -10
