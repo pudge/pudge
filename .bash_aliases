@@ -56,7 +56,10 @@ export -f apv
 
 alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
 
-unalias tail_servola
+if [[ $(alias tail_servola 2>/dev/null) ]]; then
+    unalias tail_servola
+fi
+
 function tail_servola() {
     sudo tail -n 100 -F /var/log/shiftboard/*log /var/log/attestations/*log /var/log/apache2/*log /var/log/notify/*log /var/log/slate/*log /var/log/frontdoor/*log "$@"
 }
