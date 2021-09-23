@@ -83,6 +83,7 @@ alias api_script='  MYSQL_PS1="api/SCRIPT> "   MYSQL_PWD=$(sudo /opt/bin/secret 
 alias api_ro='      MYSQL_PS1="api/ro> "       MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)        	mysql --pager=less                      -h sqldb -u readonly         api_integrations'
 
 alias mngo='mongosh $( sudo /opt/bin/secret -n PUSH_NOTIFICATIONS_URI | perl -pe '\''s/&ssl_ca_certs=[^&]+//'\'' ) --tlsCAFile ./rds-combined-ca-bundle.pem'
+alias mngo_cert='wget -O rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem'
 
 alias sb_dbs_rm="rm -rf /opt/dump/scrubbed/*; bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
 alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
