@@ -33,7 +33,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
 #     test -r "${HOME}/.ssh-completion.bash"                      && source "${HOME}/.ssh-completion.bash"
 #     test -r "${HOME}/.shiftboard_api_completion.sh"             && source "${HOME}/.shiftboard_api_completion.sh"
 #     test -r "${HOME}/.shiftboard_tool_completion.sh"            && source "${HOME}/.shiftboard_tool_completion.sh"
-#     complete -C '/usr/local/bin/aws_completer' aws
+    complete -C '/usr/local/bin/aws_completer' aws
 
     if [[ -r "${HOME}/.complete-shell/src/complete-shell/.rc" ]]; then
         source "${HOME}/.complete-shell/src/complete-shell/.rc"

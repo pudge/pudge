@@ -2,5 +2,5 @@
 use 5.018;
 my $args = join ' ', map quotemeta, (@ARGV ? @ARGV : '.');
 my $ex = "jq -C $args | less -R";
-say $ex;
+#say $ex;
 system($ex);

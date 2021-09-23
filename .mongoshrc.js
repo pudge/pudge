@@ -26,9 +26,9 @@ function showTokens(collection={}) {
     db.UserDevices.find(collection).forEach(
         function(myDoc) {
             print(
-                "Id:", ToGUID(myDoc.Id.hex()) + ":\n  ",
-                "TenantId:", ToGUID(myDoc.TenantId.hex()) + "\n  ",
-                "UserID:", ToGUID(myDoc.UserId.hex()) + "\n  ",
+                "Id:", ToGUID(myDoc.Id.toString('hex')) + ":\n  ",
+                "TenantId:", ToGUID(myDoc.TenantId.toString('hex')) + "\n  ",
+                "UserID:", ToGUID(myDoc.UserId.toString('hex')) + "\n  ",
                 "DeviceType:", myDoc.DeviceType + "\n  ",
                 "RegistrationDateUtc:", myDoc.RegistrationDateUtc + "\n  ",
                 "Token:", myDoc.FcmToken + "\n"

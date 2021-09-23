@@ -12,41 +12,50 @@ our $n;
 # *    0-8,23 * * * ~/bin/water_heater.plx
 
 my $url = 'http://lmreports.eastriver.coop/loadgraphandcontroldatagen/LoadControlStatus.html';
-my $load = '(WAT&nbsp;12)';
-my $hook = 'http://maker.ifttt.com/trigger/water_heater_status/with/key/__KEY__?value1=water+heater&value2=';
-my $file = "$ENV{HOME}/.water_heater";
-my $keyfile = "$ENV{HOME}/.water_heater_key";
+my $hook = 'http://maker.ifttt.com/trigger/water_heater_status/with/key/__KEY__?value1=__PNAME__&value2=';
+my %loads = (
+    water_heater    => 'WAT&nbsp;12',
+    air_conditioner => 'AIR&nbsp;*',
+);
 
-chomp(my $key = do { open my $fh, '<', $keyfile or die $!; <$fh> });
-$hook =~ s/\b__KEY__\b/$key/;
+for my $name (sort keys %loads) {
+    my $pname = $name =~ s/_/+/gr;
+    my $load = "$loads{$name})";
+    my $file = "$ENV{HOME}/.$name";
+    my $keyfile = "$ENV{HOME}/.water_heater_key";
 
-my $html = get($url) || '';
-my $seen = 0;
-my $status = 0;
-while ($html =~ /(.+?)\n/g) {
-    my $m = $1;
-    $seen = 1, next if $m =~ /\Q$load\E/;
-    next unless $seen;
-    if ($m =~ />(ON|OFF)</) {
-        $status = $1;
-        last;
+    chomp(my $key = do { open my $fh, '<', $keyfile or die "Cannot open $keyfile: $!"; <$fh> });
+    my $hook = $hook =~ s/\b__KEY__\b/$key/gr;
+    $hook =~ s/\b__PNAME__\b/$pname/g;
+
+    my $html = get($url) || '';
+    my $seen = 0;
+    my $status = 0;
+    while ($html =~ /(.+?)\n/g) {
+        my $m = $1;
+        $seen = 1, next if $m =~ /\Q$load\E/;
+        next unless $seen;
+        if ($m =~ />(ON|OFF)</) {
+            $status = $1;
+            last;
+        }
     }
-}
 
-if ($n) {
-    say $status;
-    exit;
-}
-
-if ($status) {
-    my $fh;
-    if (open $fh, '<', $file) {
-        my $old = <$fh>;
-        get($hook . $status) if $status ne $old;
-        close $fh;
+    if ($n) {
+        say $status;
+        exit;
     }
-    if (open $fh, '>', $file) {
-        print $fh $status;
-        close $fh;
+
+    if ($status) {
+        my $fh;
+        if (open $fh, '<', $file) {
+            my $old = <$fh>;
+            get($hook . $status) if $status ne $old;
+            close $fh;
+        }
+        if (open $fh, '>', $file) {
+            print $fh $status;
+            close $fh;
+        }
     }
 }
