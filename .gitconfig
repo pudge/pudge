@@ -15,6 +15,7 @@
     ss      = !git stash save
     sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
     fetch   = !git fetch --tags --force
+    delrem  = !git push origin --delete
 
     diffc   = !git diff --cached
     dl      = !git diff --color=always | less -R
