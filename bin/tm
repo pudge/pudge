@@ -23,17 +23,17 @@ my($fh, $filename) = tempfile();
 my $session_name = "session-$$";
 print $fh qq{tmux new-session -d -s "$session_name"\n};
 
+my $layout = @hosts > 5 ? 'tiled' : 'even-vertical';
+
 my $i = 0;
 for my $host (@hosts) {
     if ($i++) {
         print $fh qq{tmux split-window -t "$session_name"\n};
-        print $fh qq{tmux select-layout -t "$session_name" tiled\n};
+        #print $fh qq{tmux select-layout -t "$session_name" tiled\n};
     }
     print $fh qq{tmux send-keys -t "$session_name" 'ssh $host$cmd' Enter\n};
 }
-if ($i < 5) {
-    print $fh qq{tmux select-layout -t "$session_name" even-horizontal\n};
-}
+print $fh qq{tmux select-layout -t "$session_name" $layout\n};
 print $fh qq{tmux set-window -t "$session_name" synchronize-panes on\n};
 print $fh qq{tmux select-pane -t "$session_name" -R\n};
 close $fh;
