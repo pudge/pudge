@@ -29,7 +29,6 @@ my $i = 0;
 for my $host (@hosts) {
     if ($i++) {
         print $fh qq{tmux split-window -t "$session_name"\n};
-        #print $fh qq{tmux select-layout -t "$session_name" tiled\n};
     }
     print $fh qq{tmux send-keys -t "$session_name" 'ssh $host$cmd' Enter\n};
 }
