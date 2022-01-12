@@ -3,7 +3,19 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-our($bal, $bionic, $trip);
+# requirements:
+# tmux
+# tools repo
+# ansible repo
+# .zabbix file
+# security_hosts files
+# tm (from pudge repo)
+
+# usage:
+# xh -maint -reboot -trip -bal -bionic 'sudo apt update && sudo apt upgrade --autoremove -y'
+
+our($MAINTENANCE_ID, $ENV);
+our($bal, $bionic, $trip, $reboot, $maint);
 my $max = 9;
 
 my $cmd = shift;
@@ -13,7 +25,7 @@ my $file = $bionic ? 'security_hosts_bionic' : 'security_hosts';
 open my $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
 
 my $i = 0;
-my(@hosts, $balance, %balance, @trip);
+my(@hosts, $balance, %balance, @all_hosts);
 for my $host (<$host_fh>) {
     chomp $host;
     if (!$host || $host =~ /#/) {
@@ -33,22 +45,61 @@ for my $host (<$host_fh>) {
 
     $balance{$host} = 1 if $bal && $balance;
     push @{$hosts[-1]}, $host;
-    push @trip, $host if $trip;
+    push @all_hosts, $host;
     $i++;
     $i = 0 if $i == $max;
 }
 
+maint_on(\@all_hosts);
+
 for my $group (@hosts) {
+    beep();
     say '# ', join ', ', @$group;
     balance('-d', $group);
 
     system tm => @cmd, @$group;
 
+    reboot($group);
+
     balance('-e', $group);
+
+    trip($group);
+    beep();
 }
 
-if (@trip) {
-    my $trip_hosts = join ",", @trip;
+maint_off();
+
+sub maint_on {
+    my($hosts) = @_;
+    return unless $maint && $hosts && @$hosts;
+    get_env();
+    my $hosts_str = join ' ', @$hosts;
+    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -t 60 $hosts_str!;
+    if ($result =~ /'maintenanceids' => \[\s*'(\d+)\'\s*\]/s) {
+        $MAINTENANCE_ID = $1;
+        say "created maintenance $MAINTENANCE_ID in zabbix";
+    }
+}
+
+sub maint_off {
+    return unless $maint && $ENV && $MAINTENANCE_ID;
+    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -d $MAINTENANCE_ID!;
+    say "deleted maintenance $MAINTENANCE_ID in zabbix" if $result =~ /\Q$MAINTENANCE_ID\E/;
+}
+
+sub reboot {
+    my($group) = @_;
+    return unless $reboot && $group && @$group;
+    say "rebooting hosts ...";
+    system tm => '-c', 'sudo reboot', @$group;
+    sleep 30;
+}
+
+sub trip {
+    my($group) = @_;
+    return unless $trip && $group && @$group;
+    my $trip_hosts = join ",", @$group;
+    beep();
     system qq!ansible-playbook -v --ask-vault-pass -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
 }
 
@@ -63,8 +114,10 @@ sub balance {
 
     if ($balanced) {
         my $action_str = $action eq '-e' ? 'enable' : 'disable';
-        say "[ENTER] to $action_str balancer and proceed ";
-        <>;
+        if ($action eq '-d') {
+            say "[ENTER] to $action_str balancer and proceed ";
+            <>;
+        }
     }
     elsif ($action eq '-d') {
         say "[ENTER] to proceed ";
@@ -79,4 +132,18 @@ sub balance {
     }
 
     say '';
+}
+
+sub get_env {
+    return $ENV if $ENV;
+    chomp($ENV = `/opt/bin/get_env.sh`);
+    unless ($ENV) {
+        warn "No env found for maintenance, exiting";
+        exit;
+    }
+    return $ENV;
+}
+
+sub beep {
+    print "\007";
 }
