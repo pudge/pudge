@@ -3,7 +3,7 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-our($bal, $bionic);
+our($bal, $bionic, $trip);
 my $max = 9;
 
 my $cmd = shift;
@@ -13,7 +13,7 @@ my $file = $bionic ? 'security_hosts_bionic' : 'security_hosts';
 open my $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
 
 my $i = 0;
-my(@hosts, $balance, %balance);
+my(@hosts, $balance, %balance, @trip);
 for my $host (<$host_fh>) {
     chomp $host;
     if (!$host || $host =~ /#/) {
@@ -33,6 +33,7 @@ for my $host (<$host_fh>) {
 
     $balance{$host} = 1 if $bal && $balance;
     push @{$hosts[-1]}, $host;
+    push @trip, $host if $trip;
     $i++;
     $i = 0 if $i == $max;
 }
@@ -44,6 +45,11 @@ for my $group (@hosts) {
     system tm => @cmd, @$group;
 
     balance('-e', $group);
+}
+
+if (@trip) {
+    my $trip_hosts = join ",", @trip;
+    system qq!ansible-playbook -v --ask-vault-pass -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
 }
 
 sub balance {
