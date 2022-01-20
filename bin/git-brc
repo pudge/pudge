@@ -12,7 +12,7 @@ sub iterm_mark () { "\e]133;A\x07" }
 our $sub;
 if ($sub) {
     opendir my $dh, '.' or die "Cannot open dir '.': $!";
-    for my $dir (grep { -d "$_/.git" } grep { !/\./ } readdir $dh) {
+    for my $dir (grep { -d "$_/.git" } grep { !/\./ } sort readdir $dh) {
         chdir $dir;
         say "#==============================";
         say iterm_mark, "git-brc on $dir\n";
