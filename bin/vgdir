@@ -1,0 +1,10 @@
+#!/bin/bash
+# gets vagrant directory (call from other scripts)
+
+if [[ -z "$1" ]]; then
+    dir="$HOME/src/vagrant"
+else
+    dir="$1"
+fi
+
+echo -n $dir

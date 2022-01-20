@@ -1,0 +1,5 @@
+#!/bin/bash
+# starts up vagrant if it is not already running, then logs in
+
+cd $(vgdir $1)
+vagrant status default
