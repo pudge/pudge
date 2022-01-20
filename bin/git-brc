@@ -1,24 +1,48 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use warnings;
 use 5.018;
 
 use Git;
 
-my $repo = Git->repository();
 my $color_re = qr/(?:\c[\[\d*m)?/;
 my $branch_re = qr/^(\*)? +$color_re(\w+) +$color_re([\w\/-]+)$color_re([<>=]+)?(?: $color_re(.+?))?$color_re$/;
 
-chomp(my $current_branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
+sub iterm_mark () { "\e]133;A\x07" }
 
-git_cmd_try { $repo->command_noisy('fetch') }
-    'Error, cannot continue (%s [%d])';
+our $sub;
+if ($sub) {
+    opendir my $dh, '.' or die "Cannot open dir '.': $!";
+    for my $dir (grep { -d "$_/.git" } grep { !/\./ } readdir $dh) {
+        chdir $dir;
+        say "#==============================";
+        say iterm_mark, "git-brc on $dir\n";
+        brc($dir);
+        chdir '..';
+        say "";
+    }
+}
+else {
+    brc();
+}
 
-update_locals();
-git_r_done();
-report();
+sub brc {
+    my($repo, $current_branch) = get_branch();
+    update_locals($repo, $current_branch);
+    git_r_done($repo);
+    report($repo);
+}
+
+sub get_branch {
+    my $repo = Git->repository();
+    chomp(my $current_branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
+    git_cmd_try { $repo->command_noisy('fetch') }
+        'Error, cannot continue (%s [%d])';
+    return($repo, $current_branch);
+}
 
 sub update_locals {
-    do_branches('Updating local branches from remote', sub {
+    my($repo, $current_branch) = @_;
+    do_branches($repo, 'Updating local branches from remote', sub {
         my($branch_line, $current, $sha, $branch, $status) = @_;
         if ($status && $status eq '<') {
             if ($current_branch eq $branch) {
@@ -32,9 +56,10 @@ sub update_locals {
 }
 
 sub git_r_done {
-    do_branches('Deleting merged branches', sub {
+    my($repo) = @_;
+    do_branches($repo, 'Deleting merged branches', sub {
         my($branch_line, $current, $sha, $branch, $status) = @_;
-        if (merged($branch, $status)) {
+        if (merged($repo, $branch, $status)) {
             git_cmd_try { $repo->command('r-done', $branch) }
                 'Error, cannot continue (%s [%d])';
         }
@@ -42,14 +67,15 @@ sub git_r_done {
 }
 
 sub report {
-    do_branches('Branches', sub {
+    my($repo) = @_;
+    do_branches($repo, 'Branches', sub {
         my($branch_line, $current, $sha, $branch, $status) = @_;
         say $branch_line;
     });
 }
 
 sub do_branches {
-    my($name, $iter) = @_;
+    my($repo, $name, $iter) = @_;
     # the `sta` alias is in my .gitconfig and looks like:
     # sta = !git for-each-ref --color=always --format='%(HEAD) %(refname:short)%(color:red)%(upstream:trackshort) %(color:yellow)%(upstream:track)' refs/heads
     my @branches = git_cmd_try { $repo->command('sta') }
@@ -66,7 +92,7 @@ sub do_branches {
 }
 
 sub merged {
-    my($branch, $status) = @_;
+    my($repo, $branch, $status) = @_;
     if ($status && $branch =~ m!^pudge/!) {
         my $contains = git_cmd_try { $repo->command('branch', '--all', '--contains', "refs/heads/$branch") }
             'Error, cannot continue (%s [%d])';
