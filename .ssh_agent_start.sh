@@ -7,7 +7,7 @@
 # this will not run under tmux; hopefully, it ran before you ran tmux and
 # inherited the environment
 
-if [ $EUID -ne 0 ] && [ $(ps -p $(ps -p $$ -o ppid=) -o ucmd=) != "tmux" ] && [ -z "${SSH_AUTH_SOCK}" ]; then
+if [ $EUID -ne 0 ] && [ "$(ps -p $(ps -p $$ -o ppid=) -o ucmd=)" != "tmux" ] && [ -z "${SSH_AUTH_SOCK}" ]; then
     unset SSH_AGENT_PID
     SSH_ENV="$HOME/.ssh/environment"
 
