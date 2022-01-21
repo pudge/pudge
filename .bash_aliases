@@ -44,15 +44,24 @@ alias ssg='ssh grax.sea.marchex.com'
 # alias gcgm='github_changelog_generator --github-site="https://github.marchex.com" --github-api="https://github.marchex.com/api/v3"'
 
 function ap() {
-    ansible-playbook -v --skip-tags=vault -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$@"
+    _fix_ap_hosts $1
+    shift
+    ansible-playbook -v --skip-tags=vault -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
 }
 export -f ap
 
 function apv() {
-    ansible-playbook -v --ask-vault-pass -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$@"
+    _fix_ap_hosts $1
+    shift
+    ansible-playbook -v --ask-vault-pass -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
 }
 export -f apv
 
+function _fix_ap_hosts() {
+    arg=$1
+    export AP_ENV=$(get_env.sh)
+    ap_hosts=$(perl -e '@a=split /\s*,\s*/, shift; for (@a) { $_ .= ".$ENV{AP_ENV}" unless /[.&:]/ }; print join ",", @a' "$arg")
+}
 
 alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
 
