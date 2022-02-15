@@ -15,8 +15,18 @@ my $repo = Git->repository();
 chomp(my $current_branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
 my $branch = shift // $current_branch;
 
+my $master;
+for my $name (qw(master main)) {
+    chomp(my $sha = $repo->command('rev-parse', '--short', "origin/$name"));
+    if ($sha) {
+        $master = $name;
+        last;
+    }
+}
+die "No master/main found" unless $master;
+
 die "Cannot get branches, exiting\n" unless $branch && $current_branch;
-die "Can't prune master, exiting\n" if $branch eq 'master';
+die "Can't prune $master, exiting\n" if $branch eq $master;
 
 if ($branch eq $current_branch) {
     git_cmd_try { $repo->command('diff', '--exit-code', '--quiet') }
@@ -29,13 +39,13 @@ git_cmd_try { $repo->command_noisy('fetch', 'origin') }
 my $contains =
     git_cmd_try { $repo->command('branch', '--all', '--contains', "refs/heads/$branch") }
     "Error, cannot continue (%s [%d])";
-die "master does not include '$branch', exiting\n"
-    if $contains !~ m!^\*?\s+remotes/origin/master$!m;
+die "$master does not include '$branch', exiting\n"
+    if $contains !~ m!^\*?\s+remotes/origin/$master$!m;
 
-git_cmd_try { $repo->command_noisy('checkout', 'master') }
+git_cmd_try { $repo->command_noisy('checkout', $master) }
     "Error, cannot continue (%s [%d])";
 
-git_cmd_try { $repo->command_noisy('merge', '--ff-only', 'origin/master') }
+git_cmd_try { $repo->command_noisy('merge', '--ff-only', "origin/$master") }
     "Error, cannot continue (%s [%d])";
 
 git_cmd_try { $repo->command_noisy('branch', '-d', $branch) } # '-r',

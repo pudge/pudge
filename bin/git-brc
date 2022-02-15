@@ -9,16 +9,17 @@ my $branch_re = qr/^(\*)? +$color_re(\w+) +$color_re([\w\/-]+)$color_re([<>=]+)?
 
 sub iterm_mark () { "\e]133;A\x07" }
 
-our $sub;
+our($sub, $nod);
 if ($sub) {
     opendir my $dh, '.' or die "Cannot open dir '.': $!";
     for my $dir (grep { -d "$_/.git" } grep { !/\./ } sort readdir $dh) {
         chdir $dir;
         say "#==============================";
         say iterm_mark, "git-brc on $dir\n";
-        brc($dir);
+        eval { brc($dir) };
         chdir '..';
         say "";
+        #sleep 60;
     }
 }
 else {
@@ -28,7 +29,7 @@ else {
 sub brc {
     my($repo, $current_branch) = get_branch();
     update_locals($repo, $current_branch);
-    git_r_done($repo);
+    git_r_done($repo) unless $nod;
     report($repo);
 }
 
@@ -96,7 +97,7 @@ sub merged {
     if ($status && $branch =~ m!^pudge/!) {
         my $contains = git_cmd_try { $repo->command('branch', '--all', '--contains', "refs/heads/$branch") }
             'Error, cannot continue (%s [%d])';
-        if ($contains =~ m!^\*?\s+remotes/origin/master$!m) {
+        if ($contains =~ m!^\*?\s+remotes/origin/(?:master|main)$!m) {
             return 1;
         }
     }
