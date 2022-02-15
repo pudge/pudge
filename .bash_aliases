@@ -10,23 +10,6 @@ else
     alias ls="ls --color"
 fi
 
-vg() {
-    vagrant "$@"
-}
-export -f vg
-
-myup() {
-    mysql.server start "$@"
-    #sudo /usr/local/mariadb/server/support-files/mysql.server start "$@"
-}
-export -f myup
-
-mydown() {
-    mysql.server stop "$@"
-    #sudo /usr/local/mariadb/server/support-files/mysql.server stop "$@"
-}
-export -f mydown
-
 alias grep="egrep --color"
 alias whois="whois -h whois.geektools.com"
 alias cenodiff="cenoview -l foo.diff"
@@ -63,46 +46,22 @@ function _fix_ap_hosts() {
     ap_hosts=$(perl -e '@a=split /\s*,\s*/, shift; for (@a) { $_ .= ".$ENV{AP_ENV}" unless /[.&:]/ }; print join ",", @a' "$arg")
 }
 
-alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
-
-if [[ $(alias tail_servola 2>/dev/null) ]]; then
-    unalias tail_servola
-fi
-
-function tail_servola() {
-    sudo tail -n 100 -F /var/log/shiftboard/*log /var/log/attestations/*log /var/log/apache2/*log /var/log/notify/*log /var/log/slate/*log /var/log/frontdoor/*log "$@"
+vg() {
+    vagrant "$@"
 }
-export -f tail_servola
+export -f vg
 
-
-alias com2_master=' MYSQL_PS1="com2/MASTER> "  MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_com_2)	mysql --pager=less --init-command BEGIN -h sqldb -u shiftboard_com_2 shiftboard_com_2'
-alias com2_script=' MYSQL_PS1="com2/SCRIPT> "  MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_com_2)	mysql --pager=less                      -h sqldb -u shiftboard_com_2 shiftboard_com_2'
-alias com2_ro='     MYSQL_PS1="com2/ro> "      MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)            mysql --pager=less                      -h sqldb -u readonly         shiftboard_com_2'
-
-alias msg_master='  MYSQL_PS1="msg/MASTER> "   MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_messaging)	        mysql --pager=less --init-command BEGIN -h sqldb -u messaging        messaging'
-alias msg_script='  MYSQL_PS1="msg/SCRIPT> "   MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_messaging)	        mysql --pager=less                      -h sqldb -u messaging        messaging'
-alias msg_ro='      MYSQL_PS1="msg/ro> "       MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)            mysql --pager=less                      -h sqldb -u readonly         messaging'
-
-alias sbmsg_master='MYSQL_PS1="sbmsg/MASTER> " MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_msg)	    mysql --pager=less --init-command BEGIN -h dbmsg -u shiftboard_msg   shiftboard_msg'
-alias sbmsg_script='MYSQL_PS1="sbmsg/SCRIPT> " MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_shiftboard_msg)	    mysql --pager=less                      -h dbmsg -u shiftboard_msg   shiftboard_msg'
-alias sbmsg_ro='    MYSQL_PS1="sbmsg/ro> "     MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)            mysql --pager=less                      -h dbmsg -u readonly         shiftboard_msg'
-
-alias api_master='  MYSQL_PS1="api/MASTER> "   MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_api_integrations)	mysql --pager=less --init-command BEGIN -h sqldb -u api_integrations api_integrations'
-alias api_script='  MYSQL_PS1="api/SCRIPT> "   MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_api_integrations)	mysql --pager=less                      -h sqldb -u api_integrations api_integrations'
-alias api_ro='      MYSQL_PS1="api/ro> "       MYSQL_PWD=$(sudo /opt/bin/secret DBPASS_readonly)        	mysql --pager=less                      -h sqldb -u readonly         api_integrations'
-
-alias mngo='mongosh $( sudo /opt/bin/secret -n PUSH_NOTIFICATIONS_URI | perl -pe '\''s/&ssl_ca_certs=[^&]+//'\'' ) --tlsCAFile ./rds-combined-ca-bundle.pem'
-alias mngo_cert='wget -O rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem'
-
-alias sb_dbs_rm="rm -rf /opt/dump/scrubbed/*; bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
-alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
-alias sb_dbr="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --refresh-only"
-alias sb_dbf="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log"
-
-function bn() {
-    /opt/bin/business_name
+myup() {
+    mysql.server start "$@"
+    #sudo /usr/local/mariadb/server/support-files/mysql.server start "$@"
 }
-export -f bn
+export -f myup
+
+mydown() {
+    mysql.server stop "$@"
+    #sudo /usr/local/mariadb/server/support-files/mysql.server stop "$@"
+}
+export -f mydown
 
 function tt() {
     track_time "$@"
@@ -155,20 +114,6 @@ function git_only() {
     git log $(git rev-parse --not --remotes --branches | grep -v $(git rev-parse $branch)) $branch $opts
 }
 
-function mfa() {
-    unset AWS_ACCESS_KEY_ID
-    unset AWS_SECRET_ACCESS_KEY
-    unset AWS_SESSION_TOKEN
-
-    read -e -p 'MFA Code: ' mfa_code
-
-    session=$(aws sts get-session-token --serial-number arn:aws:iam::869546935036:mfa/chris.nandor --token-code $mfa_code --duration-seconds 86400)
-
-    export AWS_ACCESS_KEY_ID=$(echo $session | jq '.Credentials.AccessKeyId' | tr -d \")
-    export AWS_SECRET_ACCESS_KEY=$(echo $session | jq '.Credentials.SecretAccessKey' | tr -d \")
-    export AWS_SESSION_TOKEN=$(echo $session | jq '.Credentials.SessionToken' | tr -d \")
-}
-
-function ghs() {
-    github_search -o shiftboard $@
-}
+if [[ -r "${HOME}/.sb_aliases" ]]; then
+    source "${HOME}/.sb_aliases"
+fi

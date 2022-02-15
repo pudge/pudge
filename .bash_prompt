@@ -1,4 +1,9 @@
 function set_ps1 {
+    if [[ "$ITERM_PROFILE" =~ demo ]]; then
+        PS1='\$ '
+        return
+    fi
+
     if [ -r "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
         MYGITPROMPT=bash-git-prompt
         # Set config variables first
