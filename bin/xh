@@ -1,73 +1,195 @@
-#!/usr/bin/perl -s
+#!/usr/bin/perl
 use warnings;
 use strict;
 use feature ':5.10';
 
-# requirements:
-# tmux
-# tools repo
-# ansible repo
-# .zabbix file
-# security_hosts files
-# tm (from pudge repo)
+use File::Basename 'basename';
+use Getopt::Long;
+use Pod::Usage;
 
-# usage:
-# xh -maint -reboot -trip -bal -bionic 'sudo apt update && sudo apt upgrade --autoremove -y'
+=pod
 
+=head1 NAME
+
+xh - run commands across multiple hosts
+
+=head1 SYNOPSIS
+
+    xh [--maint] [--balancer] [--reboot] [--tripwire] [--no_mp] [--help] CMD [HOSTS_FILE]
+
+    # Example:
+    xh -m -b -r -t 'sudo apt update && sudo apt upgrade --autoremove -y' security_hosts_bionic
+
+
+=head1 DESCRIPTION
+
+xh will run a command across all hosts in a file, optionally:
+
+    * Turning maintenance mode on in Zabbix (`--maint`)
+    * Disabling hosts in the balancer before running command (`--balancer`)
+    * Rebooting hosts (and sleeping 30 seconds before continuing) after the command is run (`--reboot`)
+    * Re-enabling hosts in the balancer (`--balancer`)
+    * Rebuilding tripwire DB (`--tripwire`)
+
+If a supported multiplexer is available, commands can be run across groups of hosts simultaneously. This support can be disabled with `--no_mp`.
+
+=head1 OPTIONS
+
+=over 4
+
+=item * 'h|help' - Show the documentation
+
+=item * 'm|maint' - Put all hosts in maintenance in Zabbix
+
+=item * 'b|balancer' - Enable/disable balanced hosts in the balancer
+
+=item * 'r|reboot' - Reboot host after run
+
+=item * 't|tripwire' - Rebuild tripwire DB after run/reboot
+
+=item * 'P|no_mp' - Turn off multiplexer support
+
+=item * 'W|no_wait' - Do not wait in between commands (option disabled if `--balancer` is on, or if multiplexer support is on)
+
+=back
+
+=head1 REQUIREMENTS
+
+=over 4
+
+=item * tools repo (zapi, balancer, get_env)
+
+=item * ansible repo (tripwire)
+
+=item * .zabbix file (zapi credentials)
+
+=item * security_hosts files (see below)
+
+=back
+
+=head2 OPTIONAL
+
+=over 4
+
+=item * tm (from pudge/pudge GitHub repo, to use tmux multiplexer support)
+
+=back
+
+
+=head2 HOSTS FILE
+
+The security hosts file is a list of hosts, one per line, with the environment included, e.g., `jump-01.prod`. The hosts will be run in order. Empty lines, or header lines, will run the hosts as a group, up to $max hosts.
+
+If the header line matches `# \d+_balancer`, and `--balancer` is set, then each host will be disabled/enabled in the balancer before/after the run.
+
+Example:
+
+    # 00_first
+    host-01.pud
+
+    # 01_balancer
+    api-01.pud
+    web-01.pud
+    api-03.pud
+    web-03.pud
+
+    api-02.pud
+    web-02.pud
+    api-04.pud
+    web-04.pud
+
+    # 02_last
+    host-02.pud
+
+First, host-01 will be run. Then, if `--balancer` is set, the next four hosts will be disabled in the balancer, and then those hosts will be run, and re-enabled in the balancer. Then the same for the next four hosts. Finally, host-02 will be run.
+
+=head1 CAVEATS
+
+Note that if you are connected through a host, and rebooting that host, you will lose your connection. In such a situation, better to run them separately. For example, if connected through foo-01 and running on bar-01, put those hosts in `security_hosts_last`, and then run:
+
+    bar-01:~$ xh -maint -balancer -reboot -tripwire CMD security_hosts
+    bar-01:~$ xh -maint -balancer -tripwire CMD security_hosts_last
+    bar-01:~$ sudo reboot
+    [disconnected from bar-01]
+    foo-01:~$ sudo reboot
+    [disconnected from foo-01]
+
+=head1 TODO
+
+=over 4
+
+=item * screen multiplexer support
+
+=back
+
+=cut
+
+our $NAME = basename($0);
 our($MAINTENANCE_ID, $ENV);
-our($bal, $bionic, $trip, $reboot, $maint);
+my @multiplexers = qw(tm);
 my $max = 9;
 
-my $cmd = shift;
-my @cmd = $cmd ? ('-c', $cmd) : ();
-my $file = $bionic ? 'security_hosts_bionic' : 'security_hosts';
+our($balancer, $tripwire, $reboot, $maint, $no_mp, $no_wait,
+    @cmd, $file, $multiplexer);
+init();
 
-open my $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
+my(@hosts, %balance, @all_hosts);
 
-my $i = 0;
-my(@hosts, $balance, %balance, @all_hosts);
-for my $host (<$host_fh>) {
-    chomp $host;
-    if (!$host || $host =~ /#/) {
-        if ($host =~ /# 01_balancer/) {
-            $balance = 1;
-        }
-        elsif ($host =~ /# \d+_\w/) {
-            $balance = 0;
-        }
-        $i = 0 if $host eq '';
-        next;
-    }
-
-    if ($i == 0) {
-        push @hosts, [];
-    }
-
-    $balance{$host} = 1 if $bal && $balance;
-    push @{$hosts[-1]}, $host;
-    push @all_hosts, $host;
-    $i++;
-    $i = 0 if $i == $max;
-}
-
+get_hosts($file);
 maint_on(\@all_hosts);
+do_all(\@hosts);
+maint_off();
 
-for my $group (@hosts) {
-    beep();
-    say '# ', join ', ', @$group;
-    balance('-d', $group);
+sub do_all {
+    say "==> $NAME starting ...\n";
+    for my $group (@hosts) {
+        beep() unless $no_wait;
 
-    system tm => @cmd, @$group;
+        say '# ', join ', ', @$group unless $no_wait;
+        balance('-d', $group);
 
-    reboot($group);
+        run(\@cmd, $group);
 
-    balance('-e', $group);
+        reboot($group);
 
-    trip($group);
-    beep();
+        balance('-e', $group);
+
+        tripwire($group);
+        beep() unless $no_wait;
+    }
+    say "\n$NAME complete.";
 }
 
-maint_off();
+sub get_hosts {
+    my($file) = @_;
+    open my $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
+
+    my $i = 0;
+    my $balance;
+    for my $host (<$host_fh>) {
+        chomp $host;
+        if (!$host || $host =~ /#/) {
+            if ($host =~ /# \d+_balancer/) {
+                $balance = 1;
+            }
+            elsif ($host =~ /# \d+_\w/) {
+                $balance = 0;
+            }
+            $i = 0 if $host eq '';
+            next;
+        }
+
+        if ($i == 0) {
+            push @hosts, [];
+        }
+
+        $balance{$host} = 1 if $balancer && $balance;
+        push @{$hosts[-1]}, $host;
+        push @all_hosts, $host;
+        $i++;
+        $i = 0 if $i == $max;
+    }
+}
 
 sub maint_on {
     my($hosts) = @_;
@@ -95,9 +217,9 @@ sub reboot {
     sleep 30;
 }
 
-sub trip {
+sub tripwire {
     my($group) = @_;
-    return unless $trip && $group && @$group;
+    return unless $tripwire && $group && @$group;
     my $trip_hosts = join ",", @$group;
     beep();
     system qq!ansible-playbook -v --ask-vault-pass -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
@@ -119,7 +241,7 @@ sub balance {
             <>;
         }
     }
-    elsif ($action eq '-d') {
+    elsif ($action eq '-d' && !$no_wait) {
         say "[ENTER] to proceed ";
         <>;
     }
@@ -131,7 +253,7 @@ sub balance {
         }
     }
 
-    say '';
+    say '' unless $no_wait;
 }
 
 sub get_env {
@@ -146,4 +268,55 @@ sub get_env {
 
 sub beep {
     print "\007";
+}
+
+sub has_multiplexer {
+    my $multiplexer = '';
+    return $multiplexer if $no_mp;
+    for my $mp (@multiplexers) {
+        `which \Q$mp\E`;
+        unless ($?) {
+            $multiplexer = $mp;
+            last;
+        }
+    }
+    return $multiplexer;
+}
+
+sub run {
+    my($cmd, $group) = @_;
+    if ($multiplexer) {
+        system $multiplexer => @$cmd, @$group;
+    }
+    else {
+        for my $host (@$group) {
+            say join ' ', '#', ssh => $host, @$cmd;
+            system ssh => $host, @$cmd;
+        }
+    }
+}
+
+sub init {
+    Getopt::Long::Configure('bundling');
+    GetOptions(
+        'h|help',       sub { pod2usage(-verbose => 2) },
+        'm|maint',      \$maint,
+        'b|balancer',   \$balancer,
+        'r|reboot',     \$reboot,
+        't|tripwire',   \$tripwire,
+        'P|no_mp',      \$no_mp,
+        'W|no_wait',    \$no_wait,
+    ) or pod2usage(-verbose => 1);
+
+    (my $cmd, $file) = (shift(@ARGV), shift(@ARGV));
+    $file //= 'security_hosts';
+
+    $multiplexer = has_multiplexer();
+
+    @cmd = $cmd ? ($cmd) : ();
+    if (@cmd && $multiplexer eq 'tm') {
+        unshift @cmd, '-c';
+    }
+
+    undef $no_wait if $balancer || $multiplexer;
 }
