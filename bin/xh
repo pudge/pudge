@@ -238,7 +238,7 @@ sub tripwire {
 sub checks {
     my($group) = @_;
     return unless $checks && $group && @$group;
-    say "checking hosts hosts ...";
+    say "checking hosts ...";
     run(['sudo /opt/bin/security_patch_list.pl'], $group, 1);
 }
 
@@ -263,12 +263,14 @@ sub balance {
         <>;
     }
 
+    my @balance_hosts;
     for my $host (@$hosts) {
         if ($balance{$host}) {
             (my $short = $host) =~ s/\.\w+$//;
-            system '/opt/bin/balancer.sh', $action, $short;
+            push @balance_hosts, $short;
         }
     }
+    system '/opt/bin/balancer.sh', $action, @balance_hosts if @balance_hosts;
 
     say '' unless $no_wait;
 }
