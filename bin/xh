@@ -15,21 +15,23 @@ xh - run commands across multiple hosts
 
 =head1 SYNOPSIS
 
-    xh [--maint] [--balancer] [--reboot] [--tripwire] [--no_mp] [--help] CMD [HOSTS_FILE]
+    xh [--maint] [--balancer] [--reboot] [--checks] [--tripwire] [--no_mp] [--help] [--exit] CMD [HOSTS_FILE]
 
     # Example:
-    xh -m -b -r -t 'sudo apt update && sudo apt upgrade --autoremove -y' security_hosts_bionic
+    xh -mbrcte 'sudo apt update && sudo apt upgrade --autoremove -y' security_hosts_bionic
 
 
 =head1 DESCRIPTION
 
 xh will run a command across all hosts in a file, optionally:
 
+    * Exiting the multiplexer after running the command (`--exit`)
     * Turning maintenance mode on in Zabbix (`--maint`)
     * Disabling hosts in the balancer before running command (`--balancer`)
     * Rebooting hosts (and sleeping 30 seconds before continuing) after the command is run (`--reboot`)
     * Re-enabling hosts in the balancer (`--balancer`)
     * Rebuilding tripwire DB (`--tripwire`)
+    * Running security patch checks (`--checks`)
 
 If a supported multiplexer is available, commands can be run across groups of hosts simultaneously. This support can be disabled with `--no_mp`.
 
@@ -46,6 +48,10 @@ If a supported multiplexer is available, commands can be run across groups of ho
 =item * 'r|reboot' - Reboot host after run
 
 =item * 't|tripwire' - Rebuild tripwire DB after run/reboot
+
+=item * 'c|checks' - Recheck for security patches after run/reboot
+
+=item * 'e|exit' - Exit multiplexer after run
 
 =item * 'P|no_mp' - Turn off multiplexer support
 
@@ -129,8 +135,8 @@ our($MAINTENANCE_ID, $ENV);
 my @multiplexers = qw(tm);
 my $max = 9;
 
-our($balancer, $tripwire, $reboot, $maint, $no_mp, $no_wait,
-    @cmd, $file, $multiplexer);
+our($balancer, $tripwire, $checks, $reboot, $maint, $exit, $no_mp, $no_wait,
+    @cmd, $file, $multiplexer, @multi_opts);
 init();
 
 my(@hosts, %balance, @all_hosts);
@@ -146,15 +152,14 @@ sub do_all {
         beep() unless $no_wait;
 
         say '# ', join ', ', @$group unless $no_wait;
+
         balance('-d', $group);
-
         run(\@cmd, $group);
-
         reboot($group);
-
         balance('-e', $group);
-
         tripwire($group);
+        checks($group);
+
         beep() unless $no_wait;
     }
     say "\n$NAME complete.";
@@ -206,14 +211,19 @@ sub maint_on {
 sub maint_off {
     return unless $maint && $ENV && $MAINTENANCE_ID;
     my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -d $MAINTENANCE_ID!;
-    say "deleted maintenance $MAINTENANCE_ID in zabbix" if $result =~ /\Q$MAINTENANCE_ID\E/;
+    if ($result =~ /\Q$MAINTENANCE_ID\E/) {
+        say "deleted maintenance $MAINTENANCE_ID in zabbix";
+    }
+    else {
+        say "unexpected result:\n$result\n";
+    }
 }
 
 sub reboot {
     my($group) = @_;
     return unless $reboot && $group && @$group;
     say "rebooting hosts ...";
-    system tm => '-c', 'sudo reboot', @$group;
+    run(['sudo reboot'], $group, 1);
     sleep 30;
 }
 
@@ -223,6 +233,13 @@ sub tripwire {
     my $trip_hosts = join ",", @$group;
     beep();
     system qq!ansible-playbook -v --ask-vault-pass -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
+}
+
+sub checks {
+    my($group) = @_;
+    return unless $checks && $group && @$group;
+    say "checking hosts hosts ...";
+    run(['sudo /opt/bin/security_patch_list.pl'], $group, 1);
 }
 
 sub balance {
@@ -284,9 +301,15 @@ sub has_multiplexer {
 }
 
 sub run {
-    my($cmd, $group) = @_;
+    my($cmd, $group, $do_exit) = @_;
     if ($multiplexer) {
-        system $multiplexer => @$cmd, @$group;
+        my @opts = @multi_opts;
+        if ($do_exit && !$exit) {
+            if ($multiplexer eq 'tm') {
+                unshift @opts, '-e';
+            }
+        }
+        system $multiplexer => @opts, @$cmd, @$group;
     }
     else {
         for my $host (@$group) {
@@ -304,6 +327,8 @@ sub init {
         'b|balancer',   \$balancer,
         'r|reboot',     \$reboot,
         't|tripwire',   \$tripwire,
+        'c|checks',     \$checks,
+        'e|exit',       \$exit,
         'P|no_mp',      \$no_mp,
         'W|no_wait',    \$no_wait,
     ) or pod2usage(-verbose => 1);
@@ -315,7 +340,7 @@ sub init {
 
     @cmd = $cmd ? ($cmd) : ();
     if (@cmd && $multiplexer eq 'tm') {
-        unshift @cmd, '-c';
+        @multi_opts = ( ($exit ? '-e' : ()), '-c' );
     }
 
     undef $no_wait if $balancer || $multiplexer;
