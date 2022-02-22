@@ -4,12 +4,16 @@ use warnings;
 
 use Getopt::Long;
 
-my $cmd;
+my($cmd, $exit);
 Getopt::Long::Configure('bundling');
 GetOptions(
     'c|cmd=s' => \$cmd,
+    'e|exit'  => \$exit,
 ) or die "Cannot parse options";
 $cmd = $cmd ? " \Q$cmd\E" : "";
+if ($exit) {
+    $cmd .= '; exit';
+}
 
 our @hosts = @ARGV;
 
