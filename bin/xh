@@ -28,7 +28,7 @@ xh will run a command across all hosts in a file, optionally:
     * Exiting the multiplexer after running the command (`--exit`)
     * Turning maintenance mode on in Zabbix (`--maint`)
     * Disabling hosts in the balancer before running command (`--balancer`)
-    * Rebooting hosts (and sleeping 30 seconds before continuing) after the command is run (`--reboot`)
+    * Rebooting hosts (and sleeping 45 seconds before continuing) after the command is run (`--reboot`)
     * Re-enabling hosts in the balancer (`--balancer`)
     * Rebuilding tripwire DB (`--tripwire`)
     * Running security patch checks (`--checks`)
@@ -224,7 +224,7 @@ sub reboot {
     return unless $reboot && $group && @$group;
     say "rebooting hosts ...";
     run(['sudo reboot'], $group, 1);
-    sleep 30;
+    sleep 45;
 }
 
 sub tripwire {
