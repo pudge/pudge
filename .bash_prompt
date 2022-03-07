@@ -1,3 +1,5 @@
+BASH_NEW=$( if [[ "${BASH_VERSION/.*/}" -ge 5 ]]; then echo 1; else echo 0; fi )
+
 function set_ps1 {
     if [[ "$ITERM_PROFILE" =~ demo ]]; then
         PS1='\$ '
@@ -128,9 +130,17 @@ function show_exit_status {
 
     # 130 == SIGINT
     if [[ $es != '' && $es != '0' ]]; then
-        echo -ne ' \001\e[31;1m\002✘ '$es'\001\e[0m\002'
+        if [[ "$BASH_NEW" -eq 1 ]]; then
+            echo -ne ' \001\e[31;1m\002✘ '$es'\001\e[0m\002'
+        else
+            echo -ne ' ✘ '$es''
+        fi
     else
-        echo -ne ' \001\e[32;1m\002✔\001\e[0m\002'
+        if [[ "$BASH_NEW" -eq 1 ]]; then
+            echo -ne ' \001\e[32;1m\002✔\001\e[0m\002'
+        else
+            echo -ne ' ✔'
+        fi
     fi
 }
 
@@ -151,8 +161,10 @@ function git_url {
     fi
 
     # ssh://git@github.com/shiftboard/app.git
-    if [[ ! -z "$git_http_url" ]]; then
-        echo -ne "\e]8;;"$git_http_url"\e\\ 💻 \e]8;;\e\\"
+    if [[ "$BASH_NEW" -eq 1 ]]; then
+        if [[ ! -z "$git_http_url" ]]; then
+            echo -ne "\e]8;;"$git_http_url"\e\\ 💻 \e]8;;\e\\"
+        fi
     fi
 }
 
