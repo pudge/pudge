@@ -69,8 +69,8 @@ function iterm2_print_user_vars {
         # \(user.hostname_short)
         if [[ ! -z "$myenv" && "$myenv" != "unknown" ]]; then
             iterm2_set_user_var hostname_short $( echo -n "$myenv" )
-        else
-            iterm2_set_user_var hostname_short $( echo -n "$(hostname)" )
+        #else
+            #iterm2_set_user_var hostname_short $( echo -n "$(hostname)" )
         fi
     fi
 }
