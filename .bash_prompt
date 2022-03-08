@@ -107,9 +107,11 @@ function iterm2_prompt_mark {
 }
 
 function _host_marks {
-    local myenv=$(get_env.sh 2>/dev/null | awk '{ print toupper($0) }')
-    if [[ ! -z "$myenv" && "$myenv" != "UNKNOWN" ]]; then
-        echo -n "☢️ $myenv☢️  "
+    if [[ -x /opt/bin/get_env.sh ]]; then
+        local myenv=$(/opt/bin/get_env.sh | awk '{ print toupper($0) }')
+        if [[ ! -z "$myenv" && "$myenv" != "UNKNOWN" ]]; then
+            echo -n "☢️ $myenv☢️  "
+        fi
     fi
 }
 
