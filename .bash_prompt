@@ -63,7 +63,7 @@ function set_ps1 {
     pchar="${blue}\$${end}"
 
     hostmarks="$red$(_host_marks)$end"
-    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\$(git_url)\n$hostmarks$phist"
+    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\$(git_url)\n$phist"
     postcmd=" $pchar " #$yellow\$(get_err)$end$pchar "
 
     GIT_PROMPT_START="$precmd"
@@ -107,15 +107,9 @@ function iterm2_prompt_mark {
 }
 
 function _host_marks {
-    local hostf=$(hostname -f)
-    if [[ $hostf =~ \.shiftboard\.com$ ]]; then
-        echo -n ' '
-        if [[ $hostf =~ \.stg\.shiftboard\.com$ ]]; then
-            echo -n '🅢 🅣 🅖'; # $STG
-        else
-            echo -n '🅟 🅡 🅞 🅓'; # PROD
-        fi
-        echo -n ' ☢️  '
+    local myenv=$(get_env.sh 2>/dev/null | awk '{ print toupper($0) }')
+    if [[ ! -z "$myenv" && "$myenv" != "UNKNOWN" ]]; then
+        echo -n "☢️ $myenv☢️  "
     fi
 }
 
