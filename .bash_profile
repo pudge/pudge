@@ -63,17 +63,17 @@ function _set_iterm_profile {
     echo -e "\033]50;SetProfile=${1}\a"
 }
 
-function iterm2_print_user_vars {
-    if [[ -x /opt/bin/get_env.sh ]]; then
-        local myenv=$(/opt/bin/get_env.sh)
-        # \(user.hostname_short)
-        if [[ ! -z "$myenv" && "$myenv" != "unknown" ]]; then
-            iterm2_set_user_var hostname_short $( echo -n "$myenv" )
-        #else
-            #iterm2_set_user_var hostname_short $( echo -n "$(hostname)" )
-        fi
-    fi
-}
+# function iterm2_print_user_vars {
+#     if [[ -x /opt/bin/get_env.sh ]]; then
+#         local myenv=$(/opt/bin/get_env.sh)
+#         # \(user.hostname_short)
+#         if [[ ! -z "$myenv" && "$myenv" != "unknown" ]]; then
+#             iterm2_set_user_var hostname_short $( echo -n "$myenv" )
+#         #else
+#             #iterm2_set_user_var hostname_short $( echo -n "$(hostname)" )
+#         fi
+#     fi
+# }
 
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"

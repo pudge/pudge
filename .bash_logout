@@ -6,4 +6,4 @@ if [ "$SHLVL" = 1 ]; then
     [ -x /usr/bin/clear_console ] && /usr/bin/clear_console -q
 fi
 
-echo -e "\x1B]1337;SetBadgeFormat=$(echo "" | base64)\007"
+#echo -e "\x1B]1337;SetBadgeFormat=$(echo "" | base64)\007"
