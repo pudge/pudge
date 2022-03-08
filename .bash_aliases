@@ -5,9 +5,11 @@ if [[ $(uname) == 'Darwin' ]]; then
     # https://support.apple.com/en-us/HT202516
     alias dnsflush='sudo killall -HUP mDNSResponder'
     alias markoff='open -a Markoff'
+    alias dfh="df -PhT apfs | grep -v '/(VM|Preboot|Update)$' | grep -v ' /$' | grep -v '/private/var/vm'"
 else
     alias ll="ls -lh --color"
     alias ls="ls --color"
+    alias dfh="df -Phl -x squashfs -x tmpfs -x devtmpfs"
 fi
 
 alias grep="egrep --color"
