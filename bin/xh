@@ -254,7 +254,7 @@ sub maint_on {
     return unless $maint && $hosts && @$hosts;
     get_env();
     my $hosts_str = join ' ', @$hosts;
-    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -t 120 $hosts_str!;
+    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -t 60 $hosts_str!;
     if ($result =~ /'maintenanceids' => \[\s*'(\d+)\'\s*\]/s) {
         $MAINTENANCE_ID = $1;
         say "created maintenance $MAINTENANCE_ID in zabbix";
