@@ -4,6 +4,7 @@ use strict;
 use feature ':5.10';
 
 use File::Basename 'basename';
+use File::Temp ();
 use Getopt::Long;
 use Pod::Usage;
 
@@ -15,10 +16,10 @@ xh - run commands across multiple hosts
 
 =head1 SYNOPSIS
 
-    xh [--maint] [--balancer] [--reboot] [--checks] [--tripwire] [--no_mp] [--help] [--exit] CMD [HOSTS_FILE]
+    xh [--maint] [--balancer] [--elb] [--reboot] [--checks] [--tripwire] [--no_mp] [--help] [--exit] CMD [HOSTS_FILE]
 
     # Example:
-    xh -mbrcte 'sudo apt update && sudo apt upgrade --autoremove -y' security_hosts_bionic
+    xh -mblrct 'sudo apt update && sudo apt upgrade --autoremove -y' security_hosts_bionic
 
 
 =head1 DESCRIPTION
@@ -28,10 +29,12 @@ xh will run a command across all hosts in a file, optionally:
     * Exiting the multiplexer after running the command (`--exit`)
     * Turning maintenance mode on in Zabbix (`--maint`)
     * Disabling hosts in the balancer before running command (`--balancer`)
-    * Rebooting hosts (and sleeping 45 seconds before continuing) after the command is run (`--reboot`)
+    * Disabling hosts in the ELB before running command (`--elb`)
+    * Rebooting hosts (and sleeping before continuing) after the command is run (`--reboot`)
     * Re-enabling hosts in the balancer (`--balancer`)
     * Rebuilding tripwire DB (`--tripwire`)
     * Running security patch checks (`--checks`)
+    * Pass in hosts instead of file (`--hosts`)
 
 If a supported multiplexer is available, commands can be run across groups of hosts simultaneously. This support can be disabled with `--no_mp`.
 
@@ -45,11 +48,15 @@ If a supported multiplexer is available, commands can be run across groups of ho
 
 =item * 'b|balancer' - Enable/disable balanced hosts in the balancer
 
+=item * 'l|elb' - Enable/disable hosts in the ELB
+
 =item * 'r|reboot' - Reboot host after run
 
 =item * 't|tripwire' - Rebuild tripwire DB after run/reboot
 
 =item * 'c|checks' - Recheck for security patches after run/reboot
+
+=item * 'H|hosts' - Pass in hosts instead of file
 
 =item * 'e|exit' - Exit multiplexer after run
 
@@ -63,11 +70,13 @@ If a supported multiplexer is available, commands can be run across groups of ho
 
 =over 4
 
-=item * tools repo (zapi, balancer, get_env)
+=item * tools repo (zapi, balancer, get_env, elb)
 
 =item * ansible repo (tripwire)
 
 =item * .zabbix file (zapi credentials)
+
+=item * aws credentials set in env (for --elb option)
 
 =item * security_hosts files (see below)
 
@@ -104,7 +113,12 @@ Example:
     api-04.pud
     web-04.pud
 
-    # 02_last
+    # 02_elb
+    sftp-01.pud
+
+    sftp-02.pud
+
+    # 03_last
     host-02.pud
 
 First, host-01 will be run. Then, if `--balancer` is set, the next four hosts will be disabled in the balancer, and then those hosts will be run, and re-enabled in the balancer. Then the same for the next four hosts. Finally, host-02 will be run.
@@ -128,6 +142,10 @@ Note that if you are connected through a host, and rebooting that host, you will
 
 =back
 
+=head1 NOTES
+
+I do not know why this is called "xh".
+
 =cut
 
 our $NAME = basename($0);
@@ -135,60 +153,95 @@ our($MAINTENANCE_ID, $ENV);
 my @multiplexers = qw(tm);
 my $max = 9;
 
-our($balancer, $tripwire, $checks, $reboot, $maint, $exit, $no_mp, $no_wait,
-    @cmd, $file, $multiplexer, @multi_opts);
+our($balancer, $elb, $first_elb, $tripwire, $checks, $reboot, $maint, $exit, $hosts, $no_mp, $no_wait,
+    $tripwire_pass_fh, $tripwire_pass_file, @cmd, $file, $multiplexer, @multi_opts, @hosts_input);
 init();
 
-my(@hosts, %balance, @all_hosts);
+my(@hosts, %balance, %elb, @all_hosts);
 
 get_hosts($file);
+die "No AWS env set (required for --elb option)" if $first_elb && !$ENV{AWS_ACCESS_KEY_ID};
 maint_on(\@all_hosts);
 do_all(\@hosts);
 maint_off();
 
 sub do_all {
     say "==> $NAME starting ...\n";
+
+    # get the first elb hosts started
+    if ($first_elb) {
+        say '# pre-draining ', join ', ', @$first_elb;
+        elb('-d', $first_elb, 'no wait');
+        say '';
+    }
+
     for my $group (@hosts) {
         beep() unless $no_wait;
 
-        say '# ', join ', ', @$group unless $no_wait;
+        say '### ', join ', ', @$group unless $no_wait;
 
+        elb('-d', $group);
         balance('-d', $group);
+
         run(\@cmd, $group);
         reboot($group);
+
+        elb('-r', $group, 'no wait');
         balance('-e', $group);
+
         tripwire($group);
         checks($group);
 
+        elb('-r', $group);
+
         beep() unless $no_wait;
     }
-    say "\n$NAME complete.";
+
+    say "==> $NAME complete.\n";
 }
 
 sub get_hosts {
     my($file) = @_;
-    open my $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
+
+    unless ($hosts) {
+        my $host_fh;
+        if ($file eq '-') {
+            $host_fh = \*STDIN;
+        }
+        else {
+            open $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
+        }
+        @hosts_input = <$host_fh>;
+    }
 
     my $i = 0;
-    my $balance;
-    for my $host (<$host_fh>) {
+    my($do_balance, $do_elb);
+    for my $host (@hosts_input) {
         chomp $host;
         if (!$host || $host =~ /#/) {
             if ($host =~ /# \d+_balancer/) {
-                $balance = 1;
+                $do_balance = 1;
+                $do_elb = 0;
+            }
+            elsif ($host =~ /# \d+_elb/) {
+                $do_balance = 0;
+                $do_elb = 1;
             }
             elsif ($host =~ /# \d+_\w/) {
-                $balance = 0;
+                $do_balance = 0;
+                $do_elb = 0;
             }
             $i = 0 if $host eq '';
             next;
         }
 
-        if ($i == 0) {
+        if ($i == 0) { # start new group
             push @hosts, [];
         }
 
-        $balance{$host} = 1 if $balancer && $balance;
+        $balance{$host} = 1 if $do_balance && $balancer;
+        $elb{$host} = 1 if $do_elb && $elb;
+        $first_elb ||= $hosts[-1] if $do_elb && $elb;
         push @{$hosts[-1]}, $host;
         push @all_hosts, $host;
         $i++;
@@ -201,7 +254,7 @@ sub maint_on {
     return unless $maint && $hosts && @$hosts;
     get_env();
     my $hosts_str = join ' ', @$hosts;
-    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -t 60 $hosts_str!;
+    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -t 120 $hosts_str!;
     if ($result =~ /'maintenanceids' => \[\s*'(\d+)\'\s*\]/s) {
         $MAINTENANCE_ID = $1;
         say "created maintenance $MAINTENANCE_ID in zabbix";
@@ -209,6 +262,7 @@ sub maint_on {
 }
 
 sub maint_off {
+    return; # for now, not deleting maintenance, but just letting it expire
     return unless $maint && $ENV && $MAINTENANCE_ID;
     my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -d $MAINTENANCE_ID!;
     if ($result =~ /\Q$MAINTENANCE_ID\E/) {
@@ -224,7 +278,7 @@ sub reboot {
     return unless $reboot && $group && @$group;
     say "rebooting hosts ...";
     run(['sudo reboot'], $group, 1);
-    sleep 45;
+    sleep 90;
 }
 
 sub tripwire {
@@ -232,7 +286,7 @@ sub tripwire {
     return unless $tripwire && $group && @$group;
     my $trip_hosts = join ",", @$group;
     beep();
-    system qq!ansible-playbook -v --ask-vault-pass -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
+    system qq!ansible-playbook -v --vault-password-file=$tripwire_pass_file -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
 }
 
 sub checks {
@@ -240,6 +294,7 @@ sub checks {
     return unless $checks && $group && @$group;
     say "checking hosts ...";
     run(['sudo /opt/bin/security_patch_list.pl'], $group, 1);
+    say '';
 }
 
 sub balance {
@@ -254,12 +309,14 @@ sub balance {
     if ($balanced) {
         my $action_str = $action eq '-e' ? 'enable' : 'disable';
         if ($action eq '-d') {
-            say "[ENTER] to $action_str balancer and proceed ";
+            local $| = 1;
+            print "[ENTER] to $action_str hosts in balancer and proceed ";
             <>;
         }
     }
     elsif ($action eq '-d' && !$no_wait) {
-        say "[ENTER] to proceed ";
+        local $| = 1;
+        print "[ENTER] to proceed ";
         <>;
     }
 
@@ -273,6 +330,41 @@ sub balance {
     system '/opt/bin/balancer.sh', $action, @balance_hosts if @balance_hosts;
 
     say '' unless $no_wait;
+}
+
+sub elb {
+    my($action, $hosts, $no_wait) = @_;
+
+    my $balanced = 0;
+    for my $host (@$hosts) {
+        if ($elb{$host}) {
+            $balanced = 1;
+        }
+    }
+
+    if ($balanced) {
+        my $action_str = $action eq '-r' ? 'register' : 'deregister';
+        if ($action eq '-d') {
+            local $| = 1;
+            print "[ENTER] to $action_str hosts in ELB and " . ($no_wait ? '' : 'wait, then ') . 'proceed ';
+            <>;
+        }
+        else {
+            say "Registering hosts in ELB" . ($no_wait ? '' : ' and waiting');
+        }
+    }
+
+    my @balance_hosts;
+    for my $host (@$hosts) {
+        if ($elb{$host}) {
+            push @balance_hosts, $host;
+        }
+    }
+
+    system '/opt/bin/elb', $action, $_ for @balance_hosts; # register/deregister all hosts up front
+    unless ($no_wait) { # wait for all to finish
+        system '/opt/bin/elb', $action, '-w', $_ for @balance_hosts;
+    }
 }
 
 sub get_env {
@@ -311,6 +403,7 @@ sub run {
                 unshift @opts, '-e';
             }
         }
+        say join ' ', '#', @$cmd;
         system $multiplexer => @opts, @$cmd, @$group;
     }
     else {
@@ -327,16 +420,24 @@ sub init {
         'h|help',       sub { pod2usage(-verbose => 2) },
         'm|maint',      \$maint,
         'b|balancer',   \$balancer,
+        'l|elb',        \$elb,
         'r|reboot',     \$reboot,
         't|tripwire',   \$tripwire,
         'c|checks',     \$checks,
         'e|exit',       \$exit,
+        'H|hosts',      \$hosts,
         'P|no_mp',      \$no_mp,
         'W|no_wait',    \$no_wait,
     ) or pod2usage(-verbose => 1);
 
-    (my $cmd, $file) = (shift(@ARGV), shift(@ARGV));
-    $file //= 'security_hosts';
+    my $cmd = shift @ARGV;
+    if ($hosts) {
+        @hosts_input = @ARGV;
+    }
+    else {
+        $file = shift(@ARGV) // 'security_hosts';
+    }
+    undef @ARGV;
 
     $multiplexer = has_multiplexer();
 
@@ -346,4 +447,15 @@ sub init {
     }
 
     undef $no_wait if $balancer || $multiplexer;
+
+    if ($tripwire) {
+        system(stty => '-echo');
+        print "Vault password: ";
+        my $pass = <STDIN>;
+        system(stty => 'echo');
+        print "\n";
+        $tripwire_pass_fh = File::Temp->new(UNLINK => 1);
+        print $tripwire_pass_fh $pass;
+        $tripwire_pass_file = $tripwire_pass_fh->filename;
+    }
 }
