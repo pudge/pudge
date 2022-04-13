@@ -3,4 +3,4 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-say scalar localtime shift;
+say scalar localtime (shift || time);
