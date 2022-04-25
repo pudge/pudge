@@ -5,6 +5,7 @@ use feature ':5.10';
 
 # usage:
 #   $ swordle KNOWN FOUND TRIED...
+#   $ swordle -S LETTERS # sacrifice words
 #
 # KNOWN is the known good letters, with positions (only [a-z.] allowed).
 # if no known, just use '.'.
@@ -21,12 +22,12 @@ use feature ':5.10';
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
 
+our($v, $f, $n, $s, $S);
+
 die "need at least two parameters; see 'usage' in source"
-    unless scalar(@ARGV) >= 3;
+    unless ( scalar(@ARGV) >= 3 || ($S && scalar(@ARGV)) );
 
 our $LEN = 5;
-
-our($v, $f, $n, $s);
 
 our %SCRABBLE = (
     'a' => 1,
@@ -57,46 +58,54 @@ our %SCRABBLE = (
     'z' => 10,
 );
 
+my($correct_re, $found_re, $nfound_re, %found);
 
-my $correct = lc shift @ARGV;
-my $found   = lc shift @ARGV;
-my @guesses = map lc, @ARGV;
-
-$correct =~ s/[^a-z.]+//g;
-$correct .= '.' until length($correct) >= $LEN;
-my @correct = split '', $correct;
-my %correct = map { $_ => 1 } @correct;
-
-my @possible;
-for (0..4) {
-    $possible[$_] = $correct[$_] =~ /^[a-z]$/ ? [$correct[$_]] : ['a'..'z'];
+if ($S) {
+    my @letters = map lc, @ARGV;
+    $correct_re = qr/^[a-z]{5}$/;
+    ($found_re)  = map { qr/$_/  } '[' . join('', @letters) . ']';
+    $f = 1;
 }
+else {
+    my $correct = lc shift @ARGV;
+    my $found   = lc shift @ARGV;
+    my @guesses = map lc, @ARGV;
 
-my %found;
-for (@correct, split '', $found) {
-    $found{$_}++ if /^[a-z]$/;
-}
+    $correct =~ s/[^a-z.]+//g;
+    $correct .= '.' until length($correct) >= $LEN;
+    my @correct = split '', $correct;
+    my %correct = map { $_ => 1 } @correct;
 
-my %all;
-for (@guesses) {
-    my @guess = split '';
-    for my $i (0..4) {
-        my $letter = $guess[$i];
-        $all{$letter}++;
-        if (!$found{$letter}) {
-            for (@possible) {
-                @$_ = grep { $_ ne $letter } @$_;
+    my @possible;
+    for (0..4) {
+        $possible[$_] = $correct[$_] =~ /^[a-z]$/ ? [$correct[$_]] : ['a'..'z'];
+    }
+
+    for (@correct, split '', $found) {
+        $found{$_}++ if /^[a-z]$/;
+    }
+
+    my %all;
+    for (@guesses) {
+        my @guess = split '';
+        for my $i (0..4) {
+            my $letter = $guess[$i];
+            $all{$letter}++;
+            if (!$found{$letter}) {
+                for (@possible) {
+                    @$_ = grep { $_ ne $letter } @$_;
+                }
+            }
+            elsif (!$correct{$letter}) {
+                @{ $possible[$i] } = grep { $_ ne $letter } @{ $possible[$i] };
             }
         }
-        elsif (!$correct{$letter}) {
-            @{ $possible[$i] } = grep { $_ ne $letter } @{ $possible[$i] };
-        }
     }
-}
 
-my($correct_re) = map { qr/^$_$/ } join '', map { @$_ == 1 ? $_->[0] : @$_ < 1 ? 'X' : '[' . join('', @$_) . ']' } @possible;
-my($found_re)   = map { qr/^$_/  } join '', map { "(?=.*$_)" } sort keys %found; # positive lookahead
-my($nfound_re)  = map { qr/^$_/  } join '', map { "(?!.*$_)" } sort keys %all; # negative lookahead
+    ($correct_re) = map { qr/^$_$/ } join '', map { @$_ == 1 ? $_->[0] : @$_ < 1 ? 'X' : '[' . join('', @$_) . ']' } @possible;
+    ($found_re)   = map { qr/^$_/  } join '', map { "(?=.*$_)" } sort keys %found; # positive lookahead
+    ($nfound_re)  = map { qr/^$_/  } join '', map { "(?!.*$_)" } sort keys %all; # negative lookahead
+}
 
 if ($v) {
     say $correct_re;
@@ -138,6 +147,7 @@ if ($f) {
         my %seen;
         $words{$word} = 0;
         for (split '', $word) {
+            next if $S && $_ !~ $found_re;
             next if $seen{$_}++ || $found{$_};
             $words{$word} += $nlfs{$_};
         }
