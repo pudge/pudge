@@ -60,7 +60,7 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
     test -r "${HOME}/.hub-completion.bash"                      && source "${HOME}/.hub-completion.bash"
     test -r "${HOME}/.smartcd_config.sh"                        && source "${HOME}/.smartcd_config.sh"
     # brew install fzf
-    test -r "${HOME}/.fzf.bash" && which fzf                    && source "${HOME}/.fzf.bash"
+    test -r "${HOME}/.fzf.bash" && $(which fzf > /dev/null)     && source "${HOME}/.fzf.bash"
 
 #     test -r "${HOME}/.knife-completion.bash"                    && source "${HOME}/.knife-completion.bash"
 #     test -r "${HOME}/.ssh-completion.bash"                      && source "${HOME}/.ssh-completion.bash"
