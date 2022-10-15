@@ -3,7 +3,7 @@ if [[ $(uname) == 'Darwin' ]]; then
     alias ls="ls -G"
     alias verbosemode='sudo nvram boot-args="-v"'
     # https://support.apple.com/en-us/HT202516
-    alias dnsflush='sudo killall -HUP mDNSResponder'
+    alias dnsflush='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
     alias markoff='open -a Markoff'
     alias dfh="df -PhT apfs | grep -v '/(VM|Preboot|Update)$' | grep -v ' /$' | grep -v '/private/var/vm'"
 else
@@ -129,3 +129,7 @@ function git_only() {
 if [[ -r "${HOME}/.sb_aliases" ]]; then
     source "${HOME}/.sb_aliases"
 fi
+
+function jump() {
+    ssh jump.$1
+}
