@@ -131,5 +131,9 @@ if [[ -r "${HOME}/.sb_aliases" ]]; then
 fi
 
 function jump() {
-    ssh jump.$1
+    if [[ $2 -eq '2' ]]; then
+        ssh jump2.$1
+    else
+        ssh jump.$1
+    fi
 }

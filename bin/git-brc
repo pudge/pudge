@@ -38,6 +38,8 @@ sub get_branch {
     chomp(my $current_branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
     git_cmd_try { $repo->command_noisy('fetch') }
         'Error, cannot continue (%s [%d])';
+    git_cmd_try { $repo->command_noisy('fetch', '--tags', '--force') }
+        'Error, cannot continue (%s [%d])';
     return($repo, $current_branch);
 }
 

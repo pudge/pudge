@@ -1,9 +1,19 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use warnings;
 use strict;
 use feature ':5.10';
 
+our $s;
 my $proj = 'ENG';
+
+# 0. get ID from Safari, if requested/available
+if ($s) {
+    my $osa_out = `osascript -e 'tell application "Safari" to get url of current tab of window 1'`;
+    if ($osa_out) {
+        system($0, $osa_out);
+        exit;
+    }
+}
 
 # 1. first get ID from passed argument
 my $arg = shift;
@@ -17,7 +27,7 @@ $id ||= id(`git rev-parse --abbrev-ref HEAD 2>&1`);
 # 2. then look at pasteboard
 $id ||= id(`pbpaste`);
 
-say $id if $id;
+say lc $id if $id;
 exit;
 
 sub id {

@@ -8,7 +8,8 @@
     cwip    = !git commit -m wip --no-verify
 
     pushf   = !git push --force-with-lease
-    pullr   = !git pull --rebase
+    fetcht  = !git fetch --tags --force
+    pullr   = !git pull --rebase --tags
     pro     = !hub pull-request --browse
     prod    = !hub pull-request --browse --draft
     st      = !git --no-pager status
@@ -73,7 +74,7 @@
     host            = github.com
     protocol        = ssh
 [remote "origin"]
-    fetch           = +refs/tags/*:refs/tags/*
+    #fetch           = +refs/tags/*:refs/tags/*
     prune           = true
 [branch]
     autosetuprebase = always
@@ -97,3 +98,8 @@
     cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
 [mergetool "bbdiff"]
     cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
