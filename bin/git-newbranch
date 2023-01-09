@@ -3,10 +3,21 @@ use warnings;
 use strict;
 use feature ':5.10';
 
-our($jira, $j, $push, $p);
+our($jira, $j, $push, $p, $s);
 
 my $desc = shift;
 my $name = shift || $ENV{GIT_USER} || $ENV{USER};
+
+if ($s) {
+    chomp(my $new = lc `jira_id -s`);
+    if ($desc) {
+        $desc = $new . '-' . $desc;
+        $desc =~ s/-+/-/g;
+    }
+    else {
+        $desc = $new;
+    }
+}
 
 # in case we fully formatted it already
 my $branch = $desc =~ m|^\Q$name\E/| ? $desc : "$name/$desc";
