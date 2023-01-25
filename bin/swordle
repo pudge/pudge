@@ -37,7 +37,13 @@ my $DIR = "$ENV{HOME}/.swordle";
 
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
 
-our($v, $f, $n, $s, $H, $S, $C);
+# v verbose
+# f New Letter Frequency Score
+# s Scrabble Score
+# n negate
+# H never show color
+# C give solution
+our($v, $f, $s, $n, $H, $C);
 
 if ($C) {
     print "Today's solution is ${\( color_str(solutions(1), RED, { bold => 1 }) )}, cheater\n";
@@ -45,7 +51,7 @@ if ($C) {
 }
 
 die "need at least two parameters; see 'usage' in source"
-    unless ( scalar(@ARGV) >= 3 || ($S && scalar(@ARGV)) );
+    unless scalar(@ARGV) >= 3;
 
 our $LEN = 5;
 
@@ -80,52 +86,44 @@ our %SCRABBLE = (
 
 my($correct_re, $found_re, $nfound_re, %found);
 
-if ($S) {
-    my @letters = map lc, @ARGV;
-    $correct_re = qr/^[a-z]{5}$/;
-    ($found_re)  = map { qr/$_/  } '[' . join('', @letters) . ']';
-    $f = 1;
+my $correct = lc shift @ARGV;
+my $found   = lc shift @ARGV;
+my @guesses = map lc, @ARGV;
+
+$correct =~ s/[^a-z.]+//g;
+$correct .= '.' until length($correct) >= $LEN;
+my @correct = split '', $correct;
+my %correct = map { $_ => 1 } @correct;
+
+my @possible;
+for (0..4) {
+    $possible[$_] = $correct[$_] =~ /^[a-z]$/ ? [$correct[$_]] : ['a'..'z'];
 }
-else {
-    my $correct = lc shift @ARGV;
-    my $found   = lc shift @ARGV;
-    my @guesses = map lc, @ARGV;
 
-    $correct =~ s/[^a-z.]+//g;
-    $correct .= '.' until length($correct) >= $LEN;
-    my @correct = split '', $correct;
-    my %correct = map { $_ => 1 } @correct;
+for (@correct, split '', $found) {
+    $found{$_}++ if /^[a-z]$/;
+}
 
-    my @possible;
-    for (0..4) {
-        $possible[$_] = $correct[$_] =~ /^[a-z]$/ ? [$correct[$_]] : ['a'..'z'];
-    }
-
-    for (@correct, split '', $found) {
-        $found{$_}++ if /^[a-z]$/;
-    }
-
-    my %all;
-    for (@guesses) {
-        my @guess = split '';
-        for my $i (0..4) {
-            my $letter = $guess[$i];
-            $all{$letter}++;
-            if (!$found{$letter}) {
-                for (@possible) {
-                    @$_ = grep { $_ ne $letter } @$_;
-                }
-            }
-            elsif (!$correct{$letter}) {
-                @{ $possible[$i] } = grep { $_ ne $letter } @{ $possible[$i] };
+my %all;
+for (@guesses) {
+    my @guess = split '';
+    for my $i (0..4) {
+        my $letter = $guess[$i];
+        $all{$letter}++;
+        if (!$found{$letter}) {
+            for (@possible) {
+                @$_ = grep { $_ ne $letter } @$_;
             }
         }
+        elsif (!$correct{$letter}) {
+            @{ $possible[$i] } = grep { $_ ne $letter } @{ $possible[$i] };
+        }
     }
-
-    ($correct_re) = map { qr/^$_$/ } join '', map { @$_ == 1 ? $_->[0] : @$_ < 1 ? 'X' : '[' . join('', @$_) . ']' } @possible;
-    ($found_re)   = map { qr/^$_/  } join '', map { "(?=.*$_)" } sort keys %found; # positive lookahead
-    ($nfound_re)  = map { qr/^$_/  } join '', map { "(?!.*$_)" } sort keys %all; # negative lookahead
 }
+
+($correct_re) = map { qr/^$_$/ } join '', map { @$_ == 1 ? $_->[0] : @$_ < 1 ? 'X' : '[' . join('', @$_) . ']' } @possible;
+($found_re)   = map { qr/^$_/  } join '', map { "(?=.*$_)" } sort keys %found; # positive lookahead
+($nfound_re)  = map { qr/^$_/  } join '', map { "(?!.*$_)" } sort keys %all; # negative lookahead
 
 if ($v) {
     say $correct_re;
@@ -173,7 +171,6 @@ if ($f) {
         my %seen;
         $words{$word} = 0;
         for (split '', $word) {
-            next if $S && $_ !~ $found_re;
             next if $seen{$_}++ || $found{$_};
             $words{$word} += $nlfs{$_};
         }

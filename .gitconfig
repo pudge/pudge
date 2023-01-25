@@ -10,6 +10,7 @@
     pushf   = !git push --force-with-lease
     fetcht  = !git fetch --tags --force
     pullr   = !git pull --rebase --tags
+    fp      = !git fetcht && git pullr
     pro     = !hub pull-request --browse
     prod    = !hub pull-request --browse --draft
     st      = !git --no-pager status

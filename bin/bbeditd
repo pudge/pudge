@@ -1,2 +1,3 @@
 #!/usr/bin/perl
-system 'bbedit', '--view-top', '--clean', '-t', 'Program Output', @ARGV;
+chomp( my($date) = `date +%Y-%m-%dT%H:%M:%S` );
+system 'bbedit', '--view-top', '--clean', '-t', $date, @ARGV;
