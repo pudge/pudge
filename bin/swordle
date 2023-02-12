@@ -14,10 +14,6 @@ use Time::Local qw(timelocal);
 use constant RED     => 31;
 use constant GREEN   => 32;
 
-my $DIR = "$ENV{HOME}/.swordle";
-
-
-
 # usage:
 #   $ swordle KNOWN FOUND TRIED...
 #   $ swordle -S LETTERS # sacrifice words
@@ -35,15 +31,28 @@ my $DIR = "$ENV{HOME}/.swordle";
 #   fount
 #   mount
 
-use Data::Dumper; $Data::Dumper::Sortkeys=1;
+our $DIR;
+our $WORDLE = 1;
+our $PATH = '/usr/share/dict/words';
 
 # v verbose
 # f New Letter Frequency Score
-# s Scrabble Score
 # n negate
+# s Scrabble Score
 # H never show color
 # C give solution
-our($v, $f, $s, $n, $H, $C);
+# S sacrifice words
+# h solutions path
+# c ?
+# p words path
+our($v, $f, $n, $s, $H, $S, $C, $h, $c, $p);
+
+if ($p) {
+    $PATH = shift @ARGV;
+    $WORDLE = 0;
+}
+
+$DIR = $h ? shift @ARGV : "$ENV{HOME}/.swordle";
 
 if ($C) {
     print "Today's solution is ${\( color_str(solutions(1), RED, { bold => 1 }) )}, cheater\n";
@@ -51,7 +60,7 @@ if ($C) {
 }
 
 die "need at least two parameters; see 'usage' in source"
-    unless scalar(@ARGV) >= 3;
+    unless ( scalar(@ARGV) >= 3 || ($S && scalar(@ARGV)) );
 
 our $LEN = 5;
 
@@ -86,44 +95,56 @@ our %SCRABBLE = (
 
 my($correct_re, $found_re, $nfound_re, %found);
 
-my $correct = lc shift @ARGV;
-my $found   = lc shift @ARGV;
-my @guesses = map lc, @ARGV;
-
-$correct =~ s/[^a-z.]+//g;
-$correct .= '.' until length($correct) >= $LEN;
-my @correct = split '', $correct;
-my %correct = map { $_ => 1 } @correct;
-
-my @possible;
-for (0..4) {
-    $possible[$_] = $correct[$_] =~ /^[a-z]$/ ? [$correct[$_]] : ['a'..'z'];
+if ($S) {
+    my @letters = map lc, @ARGV;
+    $correct_re = qr/^[a-z]{$LEN}$/;
+    ($found_re)  = map { qr/$_/  } '[' . join('', @letters) . ']';
+    $f = 1;
 }
+else {
+    my $correct = lc shift @ARGV;
+    my $found   = lc shift @ARGV;
+    my @guesses = map lc, @ARGV;
 
-for (@correct, split '', $found) {
-    $found{$_}++ if /^[a-z]$/;
-}
+    if ($guesses[0]) {
+        $LEN = length $guesses[0];
+    }
 
-my %all;
-for (@guesses) {
-    my @guess = split '';
-    for my $i (0..4) {
-        my $letter = $guess[$i];
-        $all{$letter}++;
-        if (!$found{$letter}) {
-            for (@possible) {
-                @$_ = grep { $_ ne $letter } @$_;
+    $correct =~ s/[^a-z.]+//g;
+    $correct .= '.' until length($correct) >= $LEN;
+    my @correct = split '', $correct;
+    my %correct = map { $_ => 1 } @correct;
+
+    my @possible;
+    for (0..($LEN-1)) {
+        $possible[$_] = $correct[$_] =~ /^[a-z]$/ ? [$correct[$_]] : ['a'..'z'];
+    }
+
+    for (@correct, split '', $found) {
+        $found{$_}++ if /^[a-z]$/;
+    }
+
+    my %all;
+    for (@guesses) {
+        my @guess = split '';
+        for my $i (0..($LEN-1)) {
+            my $letter = $guess[$i];
+            $all{$letter}++;
+            if (!$found{$letter}) {
+                for (@possible) {
+                    @$_ = grep { $_ ne $letter } @$_;
+                }
+            }
+            elsif (!$correct{$letter}) {
+                @{ $possible[$i] } = grep { $_ ne $letter } @{ $possible[$i] };
             }
         }
-        elsif (!$correct{$letter}) {
-            @{ $possible[$i] } = grep { $_ ne $letter } @{ $possible[$i] };
-        }
     }
-}
 
-($correct_re) = map { qr/^$_$/ } join '', map { @$_ == 1 ? $_->[0] : @$_ < 1 ? 'X' : '[' . join('', @$_) . ']' } @possible;
-($found_re)   = map { qr/^$_/  } join '', map { "(?=.*$_)" } sort keys %found; # positive lookahead
-($nfound_re)  = map { qr/^$_/  } join '', map { "(?!.*$_)" } sort keys %all; # negative lookahead
+    ($correct_re) = map { qr/^$_$/ } join '', map { @$_ == 1 ? $_->[0] : @$_ < 1 ? 'X' : '[' . join('', @$_) . ']' } @possible;
+    ($found_re)   = map { qr/^$_/  } join '', map { "(?=.*$_)" } sort keys %found; # positive lookahead
+    ($nfound_re)  = map { qr/^$_/  } join '', map { "(?!.*$_)" } sort keys %all; # negative lookahead
+}
 
 if ($v) {
     say $correct_re;
@@ -135,14 +156,14 @@ if ($v) {
 my $solutions = solutions();
 
 my(@words, %nlfs);
-open my $dict, '<', '/usr/share/dict/words' or die "Cannot open dict: $!";
+open my $dict, '<', $PATH or die "Cannot open `$PATH`: $!";
 my %dict = map { chomp; { $_ => 1 } } <$dict>;
 $dict{$_} = 1 for keys %$solutions;
 #WORDS: while (my $line = <$dict>) {
 WORDS: for my $line (sort keys %dict) {
 #    chomp $line;
     if ($n) {
-        next WORDS unless $line =~ /^[a-z]{5}$/ && $line =~ $nfound_re;
+        next WORDS unless $line =~ /^[a-z]{$LEN}$/ && $line =~ $nfound_re;
     }
     else {
         next WORDS unless $line =~ $correct_re && $line =~ $found_re;
@@ -171,6 +192,7 @@ if ($f) {
         my %seen;
         $words{$word} = 0;
         for (split '', $word) {
+            next if $S && $_ !~ $found_re;
             next if $seen{$_}++ || $found{$_};
             $words{$word} += $nlfs{$_};
         }
@@ -206,6 +228,7 @@ sub word {
 
 sub solutions {
     my($cheat) = @_;
+    return {} unless $WORDLE;
 
     my $today = get_date([ localtime(time) ]);
     my $solutions = fetch_solutions($today);
@@ -214,7 +237,8 @@ sub solutions {
 }
 
 sub get_solutions {
-    mkpath($DIR);
+    eval { mkpath($DIR) };
+    return if $@;
     open my $sfile, '<', "$DIR/solutions" or return {};
     my $solutions = join '', <$sfile>;
     return decode_json($solutions);
@@ -222,7 +246,8 @@ sub get_solutions {
 
 sub save_solutions {
     my($solutions) = @_;
-    mkpath($DIR);
+    eval { mkpath($DIR) };
+    return if $@;
     open my $sfile, '>', "$DIR/solutions" or die "Cannot open solutions: $!";
     print $sfile encode_json($solutions);
 }
@@ -230,6 +255,7 @@ sub save_solutions {
 sub fetch_solutions {
     my($today) = @_;
     my $solutions = get_solutions();
+    return unless $solutions;
 
     my($time, $date) = get_date();
     while ($date le $today) {
@@ -263,7 +289,9 @@ sub get_date {
 
 sub color_str {
     my($str, $color, $mod) = @_;
-    return $str unless (-t STDIN && -t STDOUT && !$H);
+    if (!$c) {
+        return $str unless (-t STDIN && -t STDOUT && !$H);
+    }
 
     my $pre = 0;
     if ($mod->{bold}) {
