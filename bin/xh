@@ -3,6 +3,7 @@ use warnings;
 use strict;
 use feature ':5.10';
 
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
 use File::Basename 'basename';
 use File::Temp ();
 use Getopt::Long;
@@ -16,17 +17,20 @@ xh - run commands across multiple hosts
 
 =head1 SYNOPSIS
 
-    xh [--maint] [--balancer] [--elb] [--reboot] [--checks] [--tripwire] [--no_mp] [--help] [--exit] CMD [HOSTS_FILE]
+    xh [OPTIONS] CMD [HOSTS_FILE|HOST_LIST|HOST_SELECTOR]
 
     # Example:
-    xh -mblrct 'sudo apt update && sudo apt upgrade --autoremove -y' security_hosts_bionic
+    xh -mxblrtc 'sudo apt update && sudo apt upgrade --autoremove -y' security_hosts_bionic
 
+    # if NO OPTIONS provided, use defaults. this:
+    xh bionic
+    # is same as this:
+    xh -smxblrtc 'sudo apt update && sudo apt upgrade --autoremove -y' bionic
 
 =head1 DESCRIPTION
 
-xh will run a command across all hosts in a file, optionally:
+xh will run a command across selected hosts, optionally:
 
-    * Exiting the multiplexer after running the command (`--exit`)
     * Turning maintenance mode on in Zabbix (`--maint`)
     * Disabling hosts in the balancer before running command (`--balancer`)
     * Disabling hosts in the ELB before running command (`--elb`)
@@ -34,7 +38,6 @@ xh will run a command across all hosts in a file, optionally:
     * Re-enabling hosts in the balancer (`--balancer`)
     * Rebuilding tripwire DB (`--tripwire`)
     * Running security patch checks (`--checks`)
-    * Pass in hosts instead of file (`--hosts`)
 
 If a supported multiplexer is available, commands can be run across groups of hosts simultaneously. This support can be disabled with `--no_mp`.
 
@@ -44,7 +47,11 @@ If a supported multiplexer is available, commands can be run across groups of ho
 
 =item * 'h|help' - Show the documentation
 
+=item * 's|selector' - Ansible host selector string
+
 =item * 'm|maint' - Put all hosts in maintenance in Zabbix
+
+=item * 'x|command' - Pass in command (instead of default)
 
 =item * 'b|balancer' - Enable/disable balanced hosts in the balancer
 
@@ -56,7 +63,7 @@ If a supported multiplexer is available, commands can be run across groups of ho
 
 =item * 'c|checks' - Recheck for security patches after run/reboot
 
-=item * 'H|hosts' - Pass in hosts instead of file
+=item * 'H|hosts' - Pass in hosts (instead of filename)
 
 =item * 'e|exit' - Exit multiplexer after run
 
@@ -91,9 +98,13 @@ If a supported multiplexer is available, commands can be run across groups of ho
 =back
 
 
-=head2 HOSTS FILE
+=head2 HOSTS
 
-The security hosts file is a list of hosts, one per line, with the environment included, e.g., `jump-01.prod`. The hosts will be run in order. Empty lines, or header lines, will run the hosts as a group, up to $max hosts.
+By default, xh will attempt to load a file called F<security_hosts> (see below for format). But the preferred way is using the C<-s> option with an ansible selector, such as C<all>, C<jammy>, C<bionic>, etc. Internally, xh will look for members of that selector that need to be handled in the balancers/ELBs/ALBs.
+
+=head2 Hosts Fle Format
+
+The hosts file is a list of hosts, one per line, with the environment included, e.g., `jump-01.prod`. The hosts will be run in order. Empty lines, or header lines, will run the hosts as a group, up to $max hosts.
 
 If the header line matches `# \d+_balancer`, and `--balancer` is set, then each host will be disabled/enabled in the balancer before/after the run.
 
@@ -138,7 +149,9 @@ Note that if you are connected through a host, and rebooting that host, you will
 
 =over 4
 
-=item * screen multiplexer support
+=item * `screen` multiplexer support
+
+=item * figure out balancer/elb stuff for hosts with `-H` option
 
 =back
 
@@ -152,21 +165,26 @@ our $NAME = basename($0);
 our($MAINTENANCE_ID, $ENV);
 my @multiplexers = qw(tm);
 my $max = 9;
+my $default_command = 'sudo apt update && sudo apt upgrade --autoremove -y';
 
 our($balancer, $elb, $first_elb, $tripwire, $checks, $reboot, $maint, $exit, $hosts, $no_mp, $no_wait,
-    $tripwire_pass_fh, $tripwire_pass_file, @cmd, $file, $multiplexer, @multi_opts, @hosts_input);
+    $selector, $command, $tripwire_pass_fh, $tripwire_pass_file, @cmd, $multiplexer, @multi_opts);
+
+my(@hosts, %balance, %elb, %pause, @last, @all_hosts);
 init();
 
-my(@hosts, %balance, %elb, @all_hosts);
+#print Dumper \%balance, \%elb, \%pause, \@hosts;
 
-get_hosts($file);
-die "No AWS env set (required for --elb option)" if $first_elb && !$ENV{AWS_ACCESS_KEY_ID};
 maint_on(\@all_hosts);
 do_all(\@hosts);
 maint_off();
 
+say "skipped hosts (run on alternate hosts): @last\n" if @last;
+exit;
+
 sub do_all {
     say "==> $NAME starting ...\n";
+    say "** REMINDER: watch the clock for tripwire (at 0 and 30 minutes) **\n";
 
     # get the first elb hosts started
     if ($first_elb) {
@@ -200,19 +218,89 @@ sub do_all {
     say "==> $NAME complete.\n";
 }
 
-sub get_hosts {
-    my($file) = @_;
+sub _get_ansible_hosts {
+    my($sel) = @_;
+    my @get_hosts = sort split "\n", qx(get_hosts.sh \Q$sel\E);
+    my(@hosts1, @hosts2);
 
-    unless ($hosts) {
-        my $host_fh;
-        if ($file eq '-') {
-            $host_fh = \*STDIN;
+    for my $host (@get_hosts) {
+        if ($host =~ /-(\d+)\.\w+$/) {
+            my $num = $1;
+            if ($num % 2) {
+                push @hosts1, $host;
+            }
+            else {
+                push @hosts2, $host;
+            }
         }
         else {
-            open $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
+            push @hosts1, $host;
         }
-        @hosts_input = <$host_fh>;
     }
+
+    return [@hosts1, '', @hosts2];
+}
+
+sub get_ansible_hosts {
+    my($sel) = @_;
+
+    my $main  = _get_ansible_hosts($sel . ':!apache:!elb');
+    my $bal   = { hosts => _get_ansible_hosts($sel . ':&apache:!elb'), balance => 1 };
+    my $elb   = { hosts => _get_ansible_hosts($sel . ':&elb'),         elb     => 1 };
+    my $pause = [];
+    my $first = [];
+
+    for my $host (@$main) {
+        if ($host =~ /^job-/) {
+            push @$pause, $host, '';
+            $pause{$host} = 1;
+        }
+        elsif ($host =~ /^(?:control|jump)-01/) {
+            push @last, $host;
+        }
+        else {
+            push @$first, $host;
+        }
+    }
+
+    my @groups = ($pause, $first, $bal, $elb);
+
+    for my $type (@groups) {
+        if (ref $type eq 'ARRAY') {
+            $type = { hosts => $type };
+        }
+        my $i = 0;
+        for my $host (@{ $type->{hosts} }) {
+            if ($host eq '') {
+                $i = 0;
+                next;
+            }
+
+            if ($i == 0) { # start new group
+                push @hosts, [];
+            }
+
+            $balance{$host} = 1 if $type->{balance} && $balancer;
+            $elb{$host} = 1 if $type->{elb} && $elb;
+            $first_elb ||= $hosts[-1] if $type->{elb} && $elb;
+            push @{$hosts[-1]}, $host;
+            push @all_hosts, $host;
+            $i++;
+            $i = 0 if $i == $max;
+        }
+    }
+}
+
+sub get_file_hosts {
+    my($file) = @_;
+    my $host_fh;
+    if ($file eq '-') {
+        $host_fh = \*STDIN;
+    }
+    else {
+        open $host_fh, '<', "$ENV{HOME}/$file" or die "Cannot open `$ENV{HOME}/$file`: $!";
+    }
+    my @hosts_input = <$host_fh>;
 
     my $i = 0;
     my($do_balance, $do_elb);
@@ -254,11 +342,16 @@ sub maint_on {
     return unless $maint && $hosts && @$hosts;
     get_env();
     my $hosts_str = join ' ', @$hosts;
-    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -t 60 $hosts_str!;
+    my $result = qx!/opt/bin/zapi.pl -e "$ENV" maint -t 90 $hosts_str!;
     if ($result =~ /'maintenanceids' => \[\s*'(\d+)\'\s*\]/s) {
         $MAINTENANCE_ID = $1;
         say "created maintenance $MAINTENANCE_ID in zabbix";
     }
+
+    my @time = localtime();
+    my $sleep_sec = 60-$time[0];
+    say "sleeping $sleep_sec for maintenance";
+    sleep $sleep_sec+1;
 }
 
 sub maint_off {
@@ -278,7 +371,7 @@ sub reboot {
     return unless $reboot && $group && @$group;
     say "rebooting hosts ...";
     run(['sudo reboot'], $group, 1);
-    sleep 90;
+    sleep 120;
 }
 
 sub tripwire {
@@ -303,6 +396,7 @@ sub balance {
     for my $host (@$hosts) {
         if ($balance{$host}) {
             $balanced = 1;
+            last;
         }
     }
 
@@ -339,6 +433,7 @@ sub elb {
     for my $host (@$hosts) {
         if ($elb{$host}) {
             $balanced = 1;
+            last;
         }
     }
 
@@ -398,7 +493,7 @@ sub run {
     my($cmd, $group, $do_exit) = @_;
     if ($multiplexer) {
         my @opts = @multi_opts;
-        if ($do_exit && !$exit) {
+        if ($do_exit && !$exit && !$pause{$group->[0]}) {
             if ($multiplexer eq 'tm') {
                 unshift @opts, '-e';
             }
@@ -418,7 +513,9 @@ sub init {
     Getopt::Long::Configure('bundling');
     GetOptions(
         'h|help',       sub { pod2usage(-verbose => 2) },
+        's|selector',   \$selector,
         'm|maint',      \$maint,
+        'x|command',    \$command,
         'b|balancer',   \$balancer,
         'l|elb',        \$elb,
         'r|reboot',     \$reboot,
@@ -430,12 +527,21 @@ sub init {
         'W|no_wait',    \$no_wait,
     ) or pod2usage(-verbose => 1);
 
-    my $cmd = shift @ARGV;
+    # if NO options are true, use default options
+    unless (grep $_, $maint, $command, $balancer, $elb, $reboot, $tripwire, $checks, $exit, $no_mp, $no_wait) {
+        $selector = $maint = $balancer = $elb = $reboot = $tripwire = $checks = 1;
+    }
+
+    # if NO command is provided, use default command
+    my $cmd = $command ? shift(@ARGV) : $default_command;
     if ($hosts) {
-        @hosts_input = @ARGV;
+        @hosts = @ARGV;
+    }
+    elsif ($selector) {
+        get_ansible_hosts(shift @ARGV // '');
     }
     else {
-        $file = shift(@ARGV) // 'security_hosts';
+        get_file_hosts(shift(@ARGV) // 'security_hosts');
     }
     undef @ARGV;
 
@@ -448,6 +554,7 @@ sub init {
 
     undef $no_wait if $balancer || $multiplexer;
 
+    die "No AWS env set (required for --elb option)" if $first_elb && !$ENV{AWS_ACCESS_KEY_ID};
     if ($tripwire) {
         system(stty => '-echo');
         print "Vault password: ";
