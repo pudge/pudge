@@ -31,14 +31,14 @@ alias ssg='ssh grax.sea.marchex.com'
 function ap() {
     _fix_ap_hosts $1
     shift
-    ansible-playbook -v --skip-tags=vault -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
+    ANSIBLE_CONFIG=$ANSIBLE_HOME/shared/files/ansible.cfg ansible-playbook -v --skip-tags=vault -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
 }
 export -f ap
 
 function apv() {
     _fix_ap_hosts $1
     shift
-    ansible-playbook -v --ask-vault-pass -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
+    ANSIBLE_CONFIG=$ANSIBLE_HOME/shared/files/ansible.cfg ansible-playbook -v --ask-vault-pass -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
 }
 export -f apv
 
