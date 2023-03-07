@@ -245,8 +245,8 @@ sub get_ansible_hosts {
     my($sel) = @_;
 
     my $main  = _get_ansible_hosts($sel . ':!apache:!elb');
-    my $bal   = { hosts => _get_ansible_hosts($sel . ':&apache:!elb'), balance => 1 };
-    my $elb   = { hosts => _get_ansible_hosts($sel . ':&elb'),         elb     => 1 };
+    my $bals  = { hosts => _get_ansible_hosts($sel . ':&apache:!elb'), balance => 1 };
+    my $elbs  = { hosts => _get_ansible_hosts($sel . ':&elb'),         elb     => 1 };
     my $pause = [];
     my $first = [];
 
@@ -263,7 +263,7 @@ sub get_ansible_hosts {
         }
     }
 
-    my @groups = ($pause, $first, $bal, $elb);
+    my @groups = ($pause, $first, $bals, $elbs);
 
     for my $type (@groups) {
         if (ref $type eq 'ARRAY') {
