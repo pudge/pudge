@@ -12,7 +12,7 @@ GetOptions(
 ) or die "Cannot parse options";
 $cmd = $cmd ? " \Q$cmd\E" : "";
 if ($exit) {
-    $cmd .= '; exit';
+    $cmd .= ' && exit';
 }
 
 our @hosts = @ARGV;
