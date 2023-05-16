@@ -4,14 +4,18 @@ use warnings;
 
 use Getopt::Long;
 
-my($cmd, $exit);
+my($cmd, $exit, $exit_force);
 Getopt::Long::Configure('bundling');
 GetOptions(
-    'c|cmd=s' => \$cmd,
-    'e|exit'  => \$exit,
+    'c|cmd=s'       => \$cmd,
+    'e|exit'        => \$exit,
+    'E|exit_force'  => \$exit_force,
 ) or die "Cannot parse options";
 $cmd = $cmd ? " \Q$cmd\E" : "";
-if ($exit) {
+if ($exit_force) {
+    $cmd .= '; exit';
+}
+elsif ($exit) {
     $cmd .= ' && exit';
 }
 
