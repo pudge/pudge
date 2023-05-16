@@ -537,7 +537,7 @@ sub init {
     # if NO command is provided, use default command
     my $cmd = $command ? shift(@ARGV) : $default_command;
     if ($hosts) {
-        @hosts = @ARGV;
+        @hosts = [@ARGV];
     }
     elsif ($selector) {
         get_ansible_hosts(shift @ARGV // '');
