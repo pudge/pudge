@@ -379,7 +379,7 @@ sub tripwire {
     return unless $tripwire && $group && @$group;
     my $trip_hosts = join ",", @$group;
     beep();
-    my $cmd = qq!ansible-playbook -v --vault-password-file=$tripwire_pass_file -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
+    my $cmd = qq!ANSIBLE_CONFIG=$ENV{ANSIBLE_HOME}/shared/files/ansible.cfg ansible-playbook -v --vault-password-file=$tripwire_pass_file -i $ENV{ANSIBLE_HOME}/inventory $ENV{ANSIBLE_HOME}/site.yml --limit $trip_hosts -t rebuild_tripwire_db!;
     print STDERR "# $cmd\n";
     system $cmd;
 }
