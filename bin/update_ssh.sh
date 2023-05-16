@@ -1,0 +1,1 @@
+perl -E 'for (map { $_, s/\.\w+$//r } @ARGV) { system "tm -c date -e $_"; }' $(get_hosts.sh all)
