@@ -25,7 +25,7 @@ xh - run commands across multiple hosts
     # if NO OPTIONS provided, use defaults. this:
     xh bionic
     # is same as this:
-    xh -smxblrtc 'sudo apt update && sudo apt upgrade --autoremove -y' bionic
+    xh -smxblrtec 'sudo apt update && sudo apt upgrade --autoremove -y' bionic
 
 =head1 DESCRIPTION
 
@@ -495,9 +495,14 @@ sub run {
     my($cmd, $group, $do_exit) = @_;
     if ($multiplexer) {
         my @opts = @multi_opts;
-        if ($do_exit && !$exit && !$pause{$group->[0]}) {
+        if ($do_exit && !$pause{$group->[0]}) {
             if ($multiplexer eq 'tm') {
-                unshift @opts, ($do_exit > 1 : '-E' : '-e');
+                if (!$exit) {
+                    unshift @opts, ($do_exit > 1 : '-E' : '-e');
+                }
+                elsif ($do_exit > 1) {
+                    for (@opts) { s/^-e$/-E/ }
+                }
             }
         }
         say join ' ', '#', @$cmd;
@@ -531,7 +536,7 @@ sub init {
 
     # if NO options are true, use default options
     unless (grep $_, $maint, $command, $balancer, $elb, $reboot, $tripwire, $checks, $exit, $no_mp, $no_wait) {
-        $selector = $maint = $balancer = $elb = $reboot = $tripwire = $checks = 1;
+        $selector = $maint = $balancer = $elb = $reboot = $tripwire = $checks = $exit = 1;
     }
 
     # if NO command is provided, use default command
