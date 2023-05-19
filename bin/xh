@@ -498,7 +498,7 @@ sub run {
         if ($do_exit && !$pause{$group->[0]}) {
             if ($multiplexer eq 'tm') {
                 if (!$exit) {
-                    unshift @opts, ($do_exit > 1 : '-E' : '-e');
+                    unshift @opts, ($do_exit > 1 ? '-E' : '-e');
                 }
                 elsif ($do_exit > 1) {
                     for (@opts) { s/^-e$/-E/ }
