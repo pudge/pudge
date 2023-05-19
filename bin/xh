@@ -370,7 +370,7 @@ sub reboot {
     my($group) = @_;
     return unless $reboot && $group && @$group;
     say "rebooting hosts ...";
-    run(['sudo reboot'], $group, 1);
+    run(['sudo reboot'], $group, 2);
     sleep 120;
 }
 
@@ -497,7 +497,7 @@ sub run {
         my @opts = @multi_opts;
         if ($do_exit && !$exit && !$pause{$group->[0]}) {
             if ($multiplexer eq 'tm') {
-                unshift @opts, '-E';
+                unshift @opts, ($do_exit > 1 : '-E' : '-e');
             }
         }
         say join ' ', '#', @$cmd;
@@ -551,7 +551,7 @@ sub init {
 
     @cmd = $cmd ? ($cmd) : ();
     if (@cmd && $multiplexer eq 'tm') {
-        @multi_opts = ( ($exit ? '-E' : ()), '-c' );
+        @multi_opts = ( ($exit ? '-e' : ()), '-c' );
     }
 
     undef $no_wait if $balancer || $multiplexer;
