@@ -4,14 +4,18 @@ use warnings;
 
 use Getopt::Long;
 
-my($cmd, $exit, $exit_force);
+my($cmd, $exit, $screen, $exit_force);
 Getopt::Long::Configure('bundling');
 GetOptions(
     'c|cmd=s'       => \$cmd,
     'e|exit'        => \$exit,
+    's|screen'      => \$screen,
     'E|exit_force'  => \$exit_force,
 ) or die "Cannot parse options";
-$cmd = $cmd ? " \Q$cmd\E" : "";
+
+$screen = 1 if $ENV{'TM_SCREEN'};
+
+$cmd = $cmd && $screen ? " $cmd" : $cmd ? " \Q$cmd\E" : "";
 if ($exit_force) {
     $cmd .= '; exit';
 }
@@ -29,23 +33,99 @@ use File::Temp 'tempfile';
 my($fh, $filename) = tempfile();
 
 my $session_name = "session-$$";
-print $fh qq{tmux new-session -d -s "$session_name"\n};
 
-my $layout = @hosts > 5 ? 'tiled' : 'even-vertical';
+if ($screen) {
+    my $i = 0;
+    my $c = @hosts;
 
-my $i = 0;
-for my $host (@hosts) {
-    if ($i++) {
-        print $fh qq{tmux split-window -t "$session_name"\n};
-        print $fh qq{tmux select-layout -t "$session_name" tiled\n};
+    if ($c >= 7 && $c <= 9) {
+        print $fh <<'EOT';
+split -v
+split -v
+split
+split
+focus
+focus
+focus
+split
+split
+focus
+focus
+focus
+split
+split
+focus
+focus
+focus
+EOT
     }
-    print $fh qq{tmux send-keys -t "$session_name" 'ssh $host$cmd' Enter\n};
-}
-print $fh qq{tmux select-layout -t "$session_name" $layout\n};
-print $fh qq{tmux set-window -t "$session_name" synchronize-panes on\n};
-print $fh qq{tmux select-pane -t "$session_name" -R\n};
-close $fh;
-system("bash $filename >/dev/null");
+    elsif ($c >= 5 && $c <= 6) {
+        print $fh <<'EOT';
+split -v
+split -v
+split
+focus
+focus
+split
+focus
+focus
+split
+focus
+focus
+EOT
+    }
+    elsif ($c >= 3 && $c <= 4) {
+        print $fh <<'EOT';
+split
+split -v
+focus
+focus
+split -v
+focus
+focus
+EOT
+    }
+    elsif ($c == 2) {
+        print $fh <<'EOT';
+split
+split -v
+focus
+focus
+EOT
+    }
+    elsif ($c != 1) {
+        die "Must have 1-9 hosts";
+    }
 
-printf STDOUT "\e]1;%s\a", $session_name;
-system(qq{tmux attach -t "$session_name"});
+    for my $host (@hosts) {
+        $i++;
+        print $fh qq{focus\n} unless $i == 1;
+        print $fh qq{screen -t $session_name-$host\n};
+        print $fh qq{stuff "ssh $host$cmd\\n"\n};
+    }
+    close $fh;
+    #system "cat $filename";
+    system("screen -t $session_name -c $filename >/dev/null");
+}
+else {
+    print $fh qq{tmux new-session -d -s "$session_name"\n};
+
+    my $layout = @hosts > 5 ? 'tiled' : 'even-vertical';
+
+    my $i = 0;
+    for my $host (@hosts) {
+        if ($i++) {
+            print $fh qq{tmux split-window -t "$session_name"\n};
+            print $fh qq{tmux select-layout -t "$session_name" tiled\n};
+        }
+        print $fh qq{tmux send-keys -t "$session_name" 'ssh $host$cmd' Enter\n};
+    }
+    print $fh qq{tmux select-layout -t "$session_name" $layout\n};
+    print $fh qq{tmux set-window -t "$session_name" synchronize-panes on\n};
+    print $fh qq{tmux select-pane -t "$session_name" -R\n};
+    close $fh;
+    system("bash $filename >/dev/null");
+
+    printf STDOUT "\e]1;%s\a", $session_name;
+    system(qq{tmux attach -t "$session_name"});
+}
