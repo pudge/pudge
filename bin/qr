@@ -1,0 +1,2 @@
+#!/bin/bash
+qrencode -s 10 -o - $1 | ~/.iterm2/imgcat
