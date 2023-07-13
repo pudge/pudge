@@ -8,6 +8,7 @@
 use warnings;
 use strict;
 
+use Error qw(:try);
 use Git;
 
 my $repo = Git->repository();
@@ -17,7 +18,12 @@ my $branch = shift // $current_branch;
 
 my $master;
 for my $name (qw(master main)) {
-    chomp(my $sha = $repo->command('rev-parse', '--short', "origin/$name"));
+    my $sha;
+    try {
+        chomp($sha = $repo->command(['rev-parse', '--short', "origin/$name"], { STDERR => 0 }));
+    }
+    catch Error with {
+    };
     if ($sha) {
         $master = $name;
         last;
