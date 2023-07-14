@@ -148,8 +148,8 @@ function git_url {
 
     if [[ "$git_url" =~ ^ssh || "$git_url" =~ ^git ]]; then
         git_http_url=$(perl -le 'print shift =~ s!^(?:ssh://)?git\@github.com[/:](.+?)/(.+?)(?:\.git)?\n?$!https://github.com/$1/$2!r' "$git_url")
-    elif [[ ! "$git_url" =~ ^http ]]; then
-        git_http_url="$git_url"
+    elif [[ "$git_url" =~ ^http ]]; then
+        git_http_url=$(perl -le 'print shift =~ s!\.git\n?$!!r' "$git_url")
     fi
 
     if [[ ! -z "$remote_git_branch" && ! -z "$git_branch" ]]; then
