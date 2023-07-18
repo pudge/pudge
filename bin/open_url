@@ -1,7 +1,8 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use 5.018;
 use warnings;
 
+our $v;
 our $SSH = 'ssh';
 
 open_url(@ARGV);
@@ -35,6 +36,9 @@ sub open_url {
 
 sub _open_url {
     my(@args) = @_;
+    if ($v) {
+        say "@args";
+    }
     system(@args);
 }
 
