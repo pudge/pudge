@@ -7,13 +7,7 @@ export HISTCONTROL=ignoreboth
 export HISTTIMEFORMAT='%F %T '
 
 export OPEN_URL_SSH=1
-export SITE=/site
-export DEV_ID=2
-export TNS_ADMIN=$HOME
 
-export ANSIBLE_HOME=$HOME/ansible
-
-export JIRA_HOST=jira.i.extrahop.com
 export GITHUB_HOST=github.com
 export PAGER=less
 
@@ -26,8 +20,8 @@ if [[ $(uname) == 'Linux' ]]; then
 
     MYPATH=$PATH
 
-    if [ -x /site/marchex/bin/open_url ]; then
-        export BROWSER=/site/marchex/bin/open_url
+    if [[ -x "$HOME/bin/open_url" ]]; then
+        export BROWSER="$HOME/bin/open_url"
     fi
 
     # renice +1 $$
@@ -112,3 +106,5 @@ function _set_iterm_profile {
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"
 fi
+
+test -r "$HOME/.eh.bash" && source "$HOME/.eh.bash"
