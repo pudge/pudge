@@ -11,10 +11,9 @@ export SITE=/site
 export DEV_ID=2
 export TNS_ADMIN=$HOME
 
-export SB=$HOME/src/shiftboard
-export SB_PRISTINE=$HOME/.ghd/src/shiftboard
 export ANSIBLE_HOME=$HOME/ansible
 
+export JIRA_HOST=jira.i.extrahop.com
 export GITHUB_HOST=github.com
 export PAGER=less
 
