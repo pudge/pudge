@@ -6,6 +6,7 @@ function set_ps1 {
         return
     fi
 
+    # git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1
     if [ -r "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
         MYGITPROMPT=bash-git-prompt
         # Set config variables first
@@ -54,8 +55,8 @@ function set_ps1 {
     ptime="${cyan}\$(_my_date)${end} "
     puser='\u'
     phost=$(hostname -f | cut -d . -f 1,2)
-    if [[ $phost == 'chris-nandor' ]]; then
-        phost=williams
+    if [[ $phost == 'VG9CX2JYQ5' ]]; then
+        phost=bergeron
     fi
     export PHOST=$phost
     phist="${yellow}\!${end}"
@@ -64,7 +65,7 @@ function set_ps1 {
 
     hostmarks="$red$(_host_marks)$end"
     precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\$(git_url)\n$phist"
-    postcmd=" $pchar " #$yellow\$(get_err)$end$pchar "
+    postcmd=" $pchar "
 
     GIT_PROMPT_START="$precmd"
     GIT_PROMPT_END="$postcmd"

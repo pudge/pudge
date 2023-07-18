@@ -43,6 +43,8 @@ elif [[ $(uname) == 'Darwin' ]]; then
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
 fi
 
+export PATH=$HOME/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
+
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
 if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
@@ -54,11 +56,14 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
     test -r "${HOME}/.bash_local"                               && source "${HOME}/.bash_local"
 
     # brew install bash-completion@2
+    test -r "/opt/homebrew/etc/profile.d/bash_completion.sh"    && source "/opt/homebrew/etc/profile.d/bash_completion.sh"
     test -r "/usr/local/etc/profile.d/bash_completion.sh"       && source "/usr/local/etc/profile.d/bash_completion.sh"
+
     # brew install git
     test -r "${HOME}/.git-completion.bash"                      && source "${HOME}/.git-completion.bash"
     test -r "${HOME}/.hub-completion.bash"                      && source "${HOME}/.hub-completion.bash"
     test -r "${HOME}/.smartcd_config.sh"                        && source "${HOME}/.smartcd_config.sh"
+
     # brew install fzf
     test -r "${HOME}/.fzf.bash" && $(which fzf > /dev/null)     && source "${HOME}/.fzf.bash"
 
@@ -108,5 +113,3 @@ function _set_iterm_profile {
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"
 fi
-
-export PATH=$HOME/bin:/opt/bin:$MYPATH:$HOME/.yarn/bin
