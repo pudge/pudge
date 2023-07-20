@@ -20,7 +20,7 @@ if ($s) {
 }
 
 # in case we fully formatted it already
-my $branch = $desc =~ m|^\Q$name\E/| ? $desc : "$name/$desc";
+my $branch = $desc =~ m|^user/\Q$name\E/| ? $desc : "user/$name/$desc";
 
 system 'git', 'checkout', '-b', $branch;
 exit if $?;
