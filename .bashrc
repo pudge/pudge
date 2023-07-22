@@ -91,7 +91,7 @@ function _set_iterm_profile {
     echo -e "\033]50;SetProfile=${1}\a"
 }
 
-# function iterm2_print_user_vars {
+function iterm2_print_user_vars {
 #     if [[ -x /opt/bin/get_env.sh ]]; then
 #         local myenv=$(/opt/bin/get_env.sh)
 #         # \(user.hostname_short)
@@ -101,7 +101,8 @@ function _set_iterm_profile {
 #             #iterm2_set_user_var hostname_short $( echo -n "$(hostname)" )
 #         fi
 #     fi
-# }
+    it2git
+}
 
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"
