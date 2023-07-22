@@ -16,13 +16,13 @@ for (@branches) {
     s/\s+$//;
     s|remotes/origin/||;
     next if m|^base/|i; # ignore "base/" branches
-    next unless m|^[\w.-]+/(?:\w+-)?$jira|i;
+    next unless m|^(?:user/)?[\w.-]+/(?:\w+-)?$jira|i;
     $_ = 'origin/' . $_ if $o;
     $branches{$_}++;
 }
 
 my @sorted = sort {
-    sort_bool(sub { $_[0] =~ m|^\Q$name\E/| })
+    sort_bool(sub { $_[0] =~ m|^(?:user/)?\Q$name\E/| })
         ||
     $a cmp $b
 } keys %branches;

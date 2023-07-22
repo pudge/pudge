@@ -84,10 +84,10 @@ function prompt_command {
 }
 
 function wintitle {
-    if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/shiftboard/") ]]; then
-        echo -ne "\033]0;${PWD/#$HOME\/src\/shiftboard\//}: \007";
+    if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/oz/") ]]; then
+        echo -ne "\033]0;${PWD/#$HOME\/src\/oz\//} \007";
     else
-        echo -ne "\033]0;${USER}@${PHOST}:${PWD/#$HOME/~}: \007";
+        echo -ne "\033]0;${PHOST} \007";
     fi
 
 }
