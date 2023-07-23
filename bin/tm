@@ -4,11 +4,12 @@ use warnings;
 
 use Getopt::Long;
 
-my($cmd, $exit, $screen, $exit_force);
+my($cmd, $exit, $screen, $control, $exit_force);
 Getopt::Long::Configure('bundling');
 GetOptions(
     'c|cmd=s'       => \$cmd,
     'e|exit'        => \$exit,
+    'C|control'     => \$control,
     's|screen'      => \$screen,
     'E|exit_force'  => \$exit_force,
 ) or die "Cannot parse options";
@@ -121,11 +122,13 @@ else {
         print $fh qq{tmux send-keys -t "$session_name" 'ssh $host$cmd' Enter\n};
     }
     print $fh qq{tmux select-layout -t "$session_name" $layout\n};
-    print $fh qq{tmux set-window -t "$session_name" synchronize-panes on\n};
+    print $fh qq{tmux set-window -t "$session_name" synchronize-panes on\n} unless $control;
     print $fh qq{tmux select-pane -t "$session_name" -R\n};
     close $fh;
     system("bash $filename >/dev/null");
 
     printf STDOUT "\e]1;%s\a", $session_name;
-    system(qq{tmux attach -t "$session_name"});
+    my $ex = 'tmux';
+    $ex .= ' -CC' if $control;
+    system(qq{$ex attach -t "$session_name"});
 }

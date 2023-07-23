@@ -14,6 +14,7 @@
     pro     = !hub pull-request --browse
     prod    = !hub pull-request --browse --draft
     st      = !git --no-pager status
+    sts     = !git --no-pager status --short --branch
     ss      = !git stash save
     sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
     fetch   = !git fetch --tags --force
@@ -106,3 +107,27 @@
 	clean = git-lfs clean -- %f
 [credential]
 	helper = store
+
+[color "branch"]
+  current = cyan bold reverse
+  local = white
+  plain =
+  remote = red
+[color "diff"]
+  commit = yellow
+  func = magenta bold
+  plain =
+  whitespace = magenta reverse
+  meta = bold
+  frag = cyan bold
+  old = red
+  new = green
+[color "status"]
+  header =
+  localBranch = cyan bold
+  nobranch = magenta bold
+  remoteBranch = red bold
+  unmerged = magenta bold reverse
+  added = green
+  changed = blue
+  untracked = red

@@ -10,7 +10,7 @@ $id //= '';
 
 chomp($id = `$Bin/jira_id \Q$id\E`);
 my $host = $ENV{'JIRA_HOST'} || die "no jira host";
-my $url = "https://$host/browse/$id"
+my $url = "https://$host/browse/$id";
 
 if ($id && $id =~ /^\w+-\d+$/) {
 #    system 'open', '-b', 'com.atlassian.jira.mac', $url;

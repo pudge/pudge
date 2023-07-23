@@ -1,15 +1,24 @@
 shopt -s histappend
 shopt -s direxpand
 
-export HISTFILESIZE=100000
-export HISTSIZE=100000
-export HISTCONTROL=ignoreboth
+export HISTFILESIZE=
+export HISTSIZE=
+export HISTCONTROL=ignoredups:erasedups:ignorespace
 export HISTTIMEFORMAT='%F %T '
 
 export OPEN_URL_SSH=1
 
 export GITHUB_HOST=github.com
 export PAGER=less
+
+# Dracula 0
+#export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#282a36,hl:#bd93f9 --color=fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9 --color=info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6 --color=marker:#ff79c6,spinner:#ffb86c,header:#6272a4'
+# Dracula 1
+#export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#22212C,hl:#7970A9 --color=fg+:#f8f8f2,bg+:#454158,hl+:#7970A9 --color=info:#ffca80,prompt:#8aff80,pointer:#ff80bf --color=marker:#ffff80,spinner:#9580ff,header:#7970A9'
+# Dracula 2
+export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#21262c,hl:#9580FF --color=fg+:#f8f8f2,bg+:#414d58,hl+:#9580FF --color=info:#ffca80,prompt:#8aff80,pointer:#ff80bf --color=marker:#ffff80,spinner:#9580ff,header:#708ca9'
+
+
 
 if [[ $(uname) == 'Linux' ]]; then
     ulimit -n 4096
@@ -103,6 +112,7 @@ function iterm2_print_user_vars {
 #     fi
     it2git
 }
+
 
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"
