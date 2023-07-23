@@ -142,26 +142,9 @@ function show_exit_status {
 }
 
 function git_url {
-    local remote_git_branch=$(git rev-parse --abbrev-ref @{u} 2>/dev/null)
-    local git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-    local git_url=$(git config --get remote.origin.url)
-    local git_http_url=''
-
-    if [[ "$git_url" =~ ^ssh || "$git_url" =~ ^git ]]; then
-        git_http_url=$(perl -le 'print shift =~ s!^(?:ssh://)?git\@(.+?\.com)[/:](.+?)/(.+?)(?:\.git)?\n?$!https://$1/$2/$3!r' "$git_url")
-    elif [[ "$git_url" =~ ^http ]]; then
-        git_http_url=$(perl -le 'print shift =~ s!\.git\n?$!!r' "$git_url")
-    fi
-
-    if [[ ! -z "$remote_git_branch" && ! -z "$git_branch" ]]; then
-        git_http_url="$git_http_url/tree/$git_branch"
-    fi
-
-    # ssh://git@github.com/shiftboard/app.git
-    # https://github.com/pudge/pudge
-    # git@foo.bar.example.com:core/oz.git
     if [[ "$BASH_NEW" -eq 1 ]]; then
-        if [[ ! -z "$git_http_url" ]]; then
+        local git_http_url=$(get-git-url -b $(pwd))
+        if [[ -n "$git_http_url" ]]; then
             echo -ne "\e]8;;"$git_http_url"\e\\ 💻 \e]8;;\e\\"
         fi
     fi

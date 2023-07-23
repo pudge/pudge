@@ -3,6 +3,12 @@ use warnings;
 use strict;
 use feature ':5.10';
 
+our $dir = shift;
+if ($dir && !chdir $dir) {
+    $dir =~ s!^/home/!/Users/!;
+    chdir $dir or die "Cannot find `$dir`";
+}
+
 our($b, $s);
 
 chomp(my $remote_git_branch = `git rev-parse --abbrev-ref \@{u} 2>/dev/null`);
