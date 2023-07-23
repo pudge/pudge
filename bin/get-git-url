@@ -1,0 +1,37 @@
+#!/usr/bin/perl -s
+use warnings;
+use strict;
+use feature ':5.10';
+
+our($b, $s);
+
+chomp(my $remote_git_branch = `git rev-parse --abbrev-ref \@{u} 2>/dev/null`);
+chomp(my $git_url = `git config --get remote.origin.url`);
+my $git_http_url;
+
+# ssh://git@github.com/pudge/pudge.git
+# https://github.com/pudge/pudge
+# git@foo.bar.example.com:core/oz.git
+
+if ($git_url =~ /^(?:ssh|git)/) {
+    $git_http_url = $git_url =~
+        s!^(?:ssh://)?git\@(.+?\.com)[/:](.+?)/(.+?)(?:\.git)?\n?$!https://$1/$2/$3!r;
+}
+elsif ($git_url =~ /^http/) {
+    $git_http_url = $git_url =~
+        s!\.git\n?$!!r;
+}
+
+if ($remote_git_branch && $b) {
+    chomp(my $git_branch = `git rev-parse --abbrev-ref HEAD 2>/dev/null`);
+    $git_http_url = "$git_http_url/tree/$git_branch" if $git_branch;
+}
+elsif ($s) {
+    my $git_sha = shift;
+    chomp($git_sha = `git rev-parse --verify HEAD 2>/dev/null`) unless $git_sha;
+    $git_http_url = "$git_http_url/commit/$git_sha" if $git_sha;
+}
+
+`echo "$git_http_url" > /tmp/foo`;
+
+print $git_http_url;
