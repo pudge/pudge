@@ -56,6 +56,8 @@
     lastsp  = !git logsp -1
     lastc   = log --pretty=hash
 
+    grepp   = grep -p
+
 [log]
     date            = iso-strict
     decorate        = true
@@ -69,6 +71,8 @@
     grep            = always
 [grep]
     patternType     = perl
+    lineNumber      = true
+    column          = true
 [merge]
     ff              = false
     tool            = bbdiff
@@ -95,6 +99,7 @@
 [diff]
     tool = bbdiff
     renameLimit = 4096
+    colorMoved = zebra
 [difftool]
     prompt = false
 [difftool "bbdiff"]
@@ -109,26 +114,83 @@
 [credential]
 	helper = store
 
+
+# colors!
 [color "branch"]
-  current = cyan bold reverse
-  local = white
-  plain =
-  remote = red
+    current = green bold reverse
+    local = green
+    remote = red
+    upstream = blue
+    plain = cyan
+
 [color "diff"]
-  commit = yellow
-  func = magenta bold
-  plain =
-  whitespace = magenta reverse
-  meta = bold
-  frag = cyan bold
-  old = red
-  new = green
+    context =
+    plain =
+    commit = yellow
+    meta = bold
+    frag = cyan
+    func = magenta
+    old = red
+    new = green
+    whitespace = magenta reverse
+
+    # See the <mode> setting of --color-moved in git-diff
+    oldMoved = red reverse
+    newMoved = green reverse
+#     oldMovedDimmed =
+#     oldMovedAlternative =
+#     oldMovedAlternativeDimmed =
+#     newMovedDimmed =
+#     newMovedAlternative =
+#     newMovedAlternativeDimmed =
+
+    # see git-range-diff
+#     contextDimmed =
+#     oldDimmed =
+#     newDimmed =
+#     contextBold =
+#     oldBold =
+#     newBold =
+
+[color "decorate"]
+    branch = green
+    remoteBranch = red
+    tag = yellow
+    stash = magenta
+    HEAD = white bold
+
+[color "grep"]
+    context =
+    filename =
+    function = magenta bold
+    lineNumber = green
+    column = yellow
+    match =
+    matchContext =
+    matchSelected = blue bold
+    selected =
+    separator = cyan
+
+[color "interactive"]
+    prompt = yellow
+    header = cyan bold
+    help = green
+    error = red
+
+[color "remote"]
+    hint = yellow reverse
+    warning = magenta reverse
+    success = green reverse
+    error = red reverse
+
 [color "status"]
-  header =
-  localBranch = cyan bold
-  nobranch = magenta bold
-  remoteBranch = red bold
-  unmerged = magenta bold reverse
-  added = green
-  changed = blue
-  untracked = red
+    header =
+    branch = green
+    localBranch = green
+    nobranch = red reverse
+    remoteBranch = red
+    unmerged = magenta bold reverse
+    added = green
+    updated = green
+    changed = red
+    untracked = cyan
