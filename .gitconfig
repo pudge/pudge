@@ -86,6 +86,7 @@
     verbose         = true
 [rebase]
     stat            = true
+    autostash       = true
 [rerere]
     enabled         = false
 [init]
