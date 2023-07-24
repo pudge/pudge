@@ -61,11 +61,11 @@ function set_ps1 {
     export PHOST=$phost
     phist="${yellow}\!${end}"
     ppwd="${magenta}\w${end}"
-    pchar="${blue}\$${end}"
+    pchar="${blue}❯${end}"
 
     hostmarks="$red$(_host_marks)$end"
-    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)\$(git_url)\n$phist"
-    postcmd=" $pchar "
+    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$ptime$puser@$phost:$ppwd\$(_dyn_marks)" #$phist"
+    postcmd="\$(git_url)\n\$(show_exit_status) $pchar "
 
     GIT_PROMPT_START="$precmd"
     GIT_PROMPT_END="$postcmd"
@@ -128,15 +128,15 @@ function show_exit_status {
     # 130 == SIGINT
     if [[ $es != '' && $es != '0' ]]; then
         if [[ "$BASH_NEW" -eq 1 ]]; then
-            echo -ne ' \001\e[31;1m\002✘ '$es'\001\e[0m\002'
+            echo -ne '\001\e[31;1m\002✘ '$es'\001\e[0m\002'
         else
-            echo -ne ' ✘ '$es''
+            echo -ne '✘ '$es''
         fi
     else
         if [[ "$BASH_NEW" -eq 1 ]]; then
-            echo -ne ' \001\e[32;1m\002✔\001\e[0m\002'
+            echo -ne '\001\e[32;1m\002✔\001\e[0m\002'
         else
-            echo -ne ' ✔'
+            echo -ne '✔'
         fi
     fi
 }

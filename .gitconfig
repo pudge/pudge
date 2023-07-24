@@ -192,5 +192,5 @@
     unmerged = magenta bold reverse
     added = green
     updated = green
-    changed = red
+    changed = yellow
     untracked = cyan

@@ -6,18 +6,20 @@ override_git_prompt_colors() {
     GIT_PROMPT_THEME_NAME="Pudge"
 
     # These are the color definitions used by gitprompt.sh
-    GIT_PROMPT_PREFIX='('                 # start of the git info string
-    GIT_PROMPT_SUFFIX=')_LAST_COMMAND_INDICATOR_'                 # the end of the git info string
+#     GIT_PROMPT_PREFIX='('                 # start of the git info string
+#     GIT_PROMPT_SUFFIX=')_LAST_COMMAND_INDICATOR_'                 # the end of the git info string
+    GIT_PROMPT_PREFIX=''                 # start of the git info string
+    GIT_PROMPT_SUFFIX=''                 # the end of the git info string
     GIT_PROMPT_SEPARATOR=''              # separates each item
 
-    GIT_PROMPT_BRANCH="${Blue}"        # the git branch that is active in the current directory
-    GIT_PROMPT_MASTER_BRANCH="${Green}" # used if the git branch that is active in the current directory is $GIT_PROMPT_MASTER_BRANCHES
+    GIT_PROMPT_BRANCH="${Green}"        # the git branch that is active in the current directory
+    GIT_PROMPT_MASTER_BRANCH="${BoldGreen}" # used if the git branch that is active in the current directory is $GIT_PROMPT_MASTER_BRANCHES
     GIT_PROMPT_STAGED=" ${Green}●"           # the number of staged files/directories
     GIT_PROMPT_CONFLICTS=" ${Red}✖"       # the number of files in conflict
-    GIT_PROMPT_CHANGED=" ${Cyan}✚"        # the number of changed files
+    GIT_PROMPT_CHANGED=" ${Yellow}✚"        # the number of changed files
 
-    GIT_PROMPT_REMOTE=" "                 # the remote branch name (if any) and the symbols for ahead and behind
-    GIT_PROMPT_UNTRACKED=" ${Yellow}¿"       # the number of untracked files/dirs
+    GIT_PROMPT_REMOTE=" ${Red}"                 # the remote branch name (if any) and the symbols for ahead and behind
+    GIT_PROMPT_UNTRACKED=" ${Cyan}¿"       # the number of untracked files/dirs
     GIT_PROMPT_STASHED=" ${Magenta}⚑"    # the number of stashed files/dir
     GIT_PROMPT_CLEAN=" ${BoldGreen}✔"      # a colored flag indicating a "clean" repo
 
