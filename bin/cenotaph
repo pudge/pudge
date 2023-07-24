@@ -1,0 +1,226 @@
+#!/usr/bin/perl
+
+eval 'exec /usr/local/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
+use 5.006;
+use strict;
+use warnings;
+
+use File::Basename;
+use File::Spec::Functions;
+use File::Temp 'tempdir';
+use IO::Socket;
+use POSIX qw(:sys_wait_h);
+
+#
+# Configuration section
+#
+# make settable from config file
+our($editor, $edflags);
+$editor  = '/usr/local/bin/bbedit';
+$edflags = '-w';
+
+#
+# No user serviceable parts below
+#
+our($PROTOCOL_VERSION, $VERSION, $PROGNAME);
+($VERSION) = ' $Revision: 1.2 $ ' =~ /\$Revision:\s+([^\s]+)/;
+$PROGNAME = basename($0);
+$PROTOCOL_VERSION = '0100';
+
+eval {  # Override above preferences
+	my $file = catfile($ENV{HOME}, '.cenorc');
+	do $file if -e $file;
+};
+
+sub usage { "Usage: $PROGNAME" }
+die usage() if @ARGV;
+
+if (1) {
+	my $pid = fork;
+	if ($pid) {
+		print "Running $PROGNAME in background ($pid)\n";
+		exit;
+	}
+}
+
+sub REAPER {
+	1 until waitpid(-1, WNOHANG) > 0;
+}
+
+$SIG{CHLD} = \&REAPER;
+
+
+sub readlen {
+	my($sock, $len) = @_;
+	my($data);
+	sysread($sock, $data, $len) or return;
+	while (length($data) < $len) {
+		sysread($sock, $data, $len, length($data)) or return undef;
+	}
+	die "Peer aborted editing: $!.\n" unless defined $data;
+	return $data;
+}
+
+
+my $sock = new IO::Socket::INET (
+	LocalPort	=> 2305,
+	Type		=> SOCK_STREAM,
+	Proto		=> 'tcp',
+	Reuse		=> 1,
+	Listen		=> SOMAXCONN,
+) or die "Could not start server: $!.\n";
+
+FOO: while (my $child = $sock->accept) {
+	my $pid;
+	if ($pid = fork) {
+		close $child;
+		next;
+	}
+
+	die "fork error: $!.\n" unless defined $pid;
+	close $sock;
+
+	$child->autoflush(1);
+
+	my $vers    = readlen $child, 4;
+	my $flags   = readlen $child, 4;
+	my $namelen = readlen $child, 4;
+	my $name    = readlen $child, unpack('N', $namelen);
+	my $length  = readlen $child, 4;
+
+	die 'Bad protocol' if $PROTOCOL_VERSION ne $vers;
+
+	print $child pack('A4A4', $PROTOCOL_VERSION, $flags);
+
+	my $data = readlen $child, unpack('N', $length);
+
+	my $dir  = tempdir();
+	my $file = catfile($dir, $name);
+	open my $out, '>', $file or die "Can't open '$file': $!\n";
+	print $out $data if $data;
+	close $out;
+
+	system $editor, $edflags, $file;
+
+	if ($child->connected) {
+		open $out, '<', $file or die "Can't open '$file': $!\n";
+		{	local $/;
+			$data = <$out>;
+		}
+
+		print $child pack('N', length($data)), $data;
+	}
+
+	close $child;
+	unlink $file;
+	rmdir $dir;
+
+	exit;
+}
+
+# bug in IO::Socket with safe signals, it exits while() loop, so let's go back
+goto FOO;
+
+__END__
+
+=head1 NAME
+
+cenotaph, ceno, cenoview - Edit remote files locally
+
+=head1 DESCRIPTION
+
+cenotaph allows local editing of remote files.  Unlike many systems
+that allow opening remote files from the local box, cenotaph opens
+a remote file TO the local box.
+
+F<cenotaph> is the server running on the local box, and F<ceno> is
+the client running on the remote box.
+
+
+=head2 cenotaph
+
+To set up F<cenotaph>, just run the program on the local box where the
+files will be edited.  By default, the program is set to open the files
+using C<bbedit -w>.  To change this, use a F<.cenorc> file in your $HOME
+and define C<$editor> and C<$edflags> appropriately.
+
+Note that this will likely only work well with a GUI editor that can open
+files from the command line, and wait until the files are edited.
+
+F<cenotaph>, when run, will wait for incoming connections from a remote
+box, initiated with F<ceno>.  It will open the file sent by F<ceno> in
+the selected editor.  Once the file is edited, it will wait for the editor
+to return, and then send the modified file back to the remote box,
+which will save the file with the changes.
+
+=head2 ceno
+
+To use F<ceno>, just use it as a normal editor, typing C<ceno filename>.
+
+Options available to ceno are:
+
+=over 4
+
+=item C<i> I<EXT>
+
+Specify a backup extension (e.g., "~" or ".bak") to save the original file
+with.  Otherwise, original file will be overwritten.  This can be set to a
+default in F<.cenorc> with C<$backup>.
+
+=item C<h> I<HOST>
+
+Specify the host of the F<cenotaph> server (e.g., "yourhost.example.com").
+If not supplied, C<$mac_host> in F<.cenorc> will be used, else
+CENO_HOST in your environment will be used.  The host must be supplied
+in at least one of those ways.
+
+=item C<v>
+
+This option will open the file to the F<cenotaph> server and return
+immediately, without allowing edits.  It is the same as using the
+F<cenoview> program.
+
+=back
+
+
+=head2 cenoview
+
+F<cenoview> is merely a symbolic link to F<ceno> that opens the file
+to the F<cenotaph> server and returns immediately, without allowing
+edits.  It is the same as using the C<v> option with F<ceno>.  The
+only F<ceno> option that is useful with F<cenoview> is the C<h> option.
+
+
+=head1 SECURITY
+
+There is no built-in security.  No passwords or keys are used.  It is highly
+recommended to allow only specific IP addresses access to the port used
+by the cenotaph server (2305).  If you are that concerned about security
+that you want something more, either supply patches or don't use it.
+
+
+=head1 HISTORY
+
+Cenotaph was written by Matthias Neeracher for editing files on a Unix
+box on a Mac OS machine.  His server was written in C++ for Mac OS,
+and used the Mac OS API to open the file directly into BBEdit.  His remote
+client was in Perl.
+
+For this version, the server has been rewritten in Perl and should work on
+any system (patches welcome), although it may not work with many editors.
+The client is basically the same, though it's been polished up.  It
+should work fine with the Mac OS Cenotaph (if you have it ... if you want it,
+I can consider releasing the source for it).
+
+
+=head1 SEE ALSO
+
+L<ceno>, L<perl>.
+
+
+=head1 VERSION
+
+$Id: cenotaph.pod.src,v 1.1 2003/09/17 23:01:19 pudge Exp $
+
