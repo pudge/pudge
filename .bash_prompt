@@ -44,23 +44,24 @@ function set_ps1 {
     local black red green yellow blue magenta cyan white end
     black='\[\e[30m\]'
     red='\[\e[31m\]'
-    green='\[\e[32m\]'
     yellow='\[\e[33m\]'
+    green='\[\e[32m\]'
+    cyan='\[\e[36m\]'
     blue='\[\e[34m\]'
     magenta='\[\e[35m\]'
-    cyan='\[\e[36m\]'
     white='\[\e[37m\]'
     end='\[\e[0m\]'
 
-    ptime="${cyan}\$(_my_date)${end} "
-    puser='\u'
+    ptime="${magenta}\$(_my_date)${end} "
+    puser="${red}\u${end}"
     phost=$(hostname -f | cut -d . -f 1,2)
     if [[ $phost == 'VG9CX2JYQ5' ]]; then
         phost=bergeron
     fi
     export PHOST=$phost
+    phost="${yellow}$phost${end}"
     phist="${yellow}\!${end}"
-    ppwd="${magenta}\w${end}"
+    ppwd="${green}\w${end}"
     pchar="${blue}❯${end}"
 
     hostmarks="$red$(_host_marks)$end"
@@ -93,7 +94,7 @@ function wintitle {
 }
 
 function _my_date {
-    date +'%a %Y-%m-%dT%H:%M:%S'
+    date +'%Y-%m-%dT%H:%M:%S'
 }
 
 function _dyn_marks {
