@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+chomp(my $full_url = `get-git-url -b`);
+my($base, $branch) = $full_url =~ m!^(http.+?//.+?)/tree/(.+)$!;
+$branch =~ s!/!%2F!g;
+
+my $url = "$base/-/merge_requests/new?merge_request%5Bsource_branch%5D=$branch";
+system open_url => $url;
