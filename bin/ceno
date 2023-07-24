@@ -115,6 +115,7 @@ $reply = readlen $sock, 4;
 my($length) = unpack('N', $reply);
 
 my $new = readlen $sock, $length;
+$new //= '';
 #$new =~ s/\015/\012/g;
 
 length($new) >= $length or die "Error on file transfer.\n";

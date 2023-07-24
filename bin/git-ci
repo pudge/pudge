@@ -2,10 +2,21 @@
 use warnings;
 use strict;
 use feature ':5.10';
+use File::Temp 'tempfile';
 
 my $mess = '';
-chomp(my $id = `jira_id`);
+chomp(my $id = uc `jira_id`);
 if ($id) {
-    $mess = uc "[$id] ";
+    $mess = "Ticket: $id";
 }
-system 'git', 'commit', '-m', $mess, '-e', @ARGV;
+
+my($fh, $filename) = tempfile();
+my $template = <<EOT;
+
+
+Ticket: $id
+EOT
+
+print $fh $template;
+
+system 'git', 'commit', '-t', $filename, '-e', @ARGV;

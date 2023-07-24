@@ -25,7 +25,7 @@ exit if $arg && !$id;
 $id ||= id(`git rev-parse --abbrev-ref HEAD 2>&1`);
 
 # 2. then look at pasteboard
-$id ||= id(`pbpaste`);
+$id ||= id(`pbpaste 2>/dev/null`);
 
 say lc $id if $id;
 exit;
