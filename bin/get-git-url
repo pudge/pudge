@@ -38,6 +38,4 @@ elsif ($s) {
     $git_http_url = "$git_http_url/commit/$git_sha" if $git_sha;
 }
 
-`echo "$git_http_url" > /tmp/foo`;
-
 print $git_http_url;
