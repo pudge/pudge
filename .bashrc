@@ -1,5 +1,5 @@
 shopt -s histappend
-shopt -s direxpand
+shopt -s direxpand 2>/dev/null
 
 export HISTFILESIZE=
 export HISTSIZE=
