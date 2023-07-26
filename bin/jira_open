@@ -14,5 +14,5 @@ my $url = "https://$host/browse/$id";
 
 if ($id && $id =~ /^\w+-\d+$/) {
 #    system 'open', '-b', 'com.atlassian.jira.mac', $url;
-    system 'open', $url;
+    system 'open_url', $url;
 }
