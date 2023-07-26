@@ -1,8 +1,8 @@
 BASH_NEW=$( if [[ "${BASH_VERSION/.*/}" -ge 5 ]]; then echo 1; else echo 0; fi )
 
 function set_ps1 {
-    if [[ "$ITERM_PROFILE" =~ demo ]]; then
-        PS1='❯'
+    if [[ "$ITERM_PROFILE" =~ Demo || -f ~/.demo ]]; then
+        PS1='❯ '
         return
     fi
 

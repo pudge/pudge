@@ -17,7 +17,7 @@ chomp(my $current_branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
 my $branch = shift // $current_branch;
 
 my $master;
-for my $name (qw(master main)) {
+for my $name (qw(main master)) {
     my $sha;
     try {
         chomp($sha = $repo->command(['rev-parse', '--short', "origin/$name"], { STDERR => 0 }));
@@ -57,5 +57,7 @@ git_cmd_try { $repo->command_noisy('merge', '--ff-only', "origin/$master") }
 git_cmd_try { $repo->command_noisy('branch', '-d', $branch) } # '-r',
     "Error, cannot continue (%s [%d])";
 
-git_cmd_try { $repo->command_noisy('push', '-d', 'origin', $branch) }
-    "Error, cannot continue (%s [%d])";
+if ($contains =~ m!^\*?\s+remotes/origin/$branch$!m) {
+    git_cmd_try { $repo->command_noisy('push', '-d', 'origin', $branch) }
+        "Error, cannot continue (%s [%d])";
+}
