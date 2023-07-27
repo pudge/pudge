@@ -84,12 +84,11 @@ function prompt_command {
 }
 
 function wintitle {
-    if [[ $ITERM_SESSION_ID && ($PWD =~ "$HOME/src/eh/oz/") ]]; then
-        echo -ne "\033]0;${PWD/#$HOME\/src\/oz\//} \007";
-    else
-        echo -ne "\033]0;${PHOST} \007";
+    echo -ne "\033]0;${PHOST}"
+    if [[ $PWD =~ "$HOME/src/eh/oz" ]]; then
+        echo -ne " 🌪️";
     fi
-
+    echo -ne " \007"
 }
 
 function _my_date {
@@ -104,8 +103,8 @@ function _dyn_marks {
         echo -ne ' 🫥 \001\e[35m\002'$K8S_NAMESPACE'\001\e[0m\002'
     fi
     if [[ -s "$JIRA_TRACK_TIME_FILE" ]]; then
-        track_time_url="https://${$JIRA_HOST}/browse/"$(head -1 "$JIRA_TRACK_TIME_FILE")
-        echo -ne '\e]8;;'$track_time_url'\e\\ ⏱ \e]8;;\e\\'
+        track_time_url="https://${JIRA_HOST}/browse/"$(head -1 "$JIRA_TRACK_TIME_FILE")
+        echo -ne '\e]8;;'$track_time_url'\e\\ ⏱️ \e]8;;\e\\'
     fi
 }
 
