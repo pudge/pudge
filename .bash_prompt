@@ -52,7 +52,7 @@ function set_ps1 {
     white='\[\e[37m\]'
     end='\[\e[0m\]'
 
-    ptime="${white}\$(_my_date)${end} "
+    ptime="${white}\$(_my_date)${end}"
     puser="${red}\u${end}"
     phost=$(hostname -f | cut -d . -f 1,2)
     if [[ $phost == 'VG9CX2JYQ5' ]]; then
@@ -92,7 +92,9 @@ function wintitle {
 }
 
 function _my_date {
-    date +'%Y-%m-%dT%H:%M:%S'
+    if [[ -z "$ITERM_ORIG_PS1" ]]; then
+        date +'%Y-%m-%dT%H:%M:%S '
+    fi
 }
 
 function _dyn_marks {
@@ -150,7 +152,7 @@ function git_url {
     if [[ "$BASH_NEW" -eq 1 ]]; then
         local git_http_url=$(get-git-url -b $(pwd))
         if [[ -n "$git_http_url" ]]; then
-            echo -ne "\e]8;;"$git_http_url"\e\\ 💻\e]8;;\e\\"
+            echo -ne " \e]8;;"$git_http_url"\e\\💻\e]8;;\e\\"
         fi
     fi
 }
