@@ -74,8 +74,7 @@ function set_ps1 {
         __git_ps1 "$GIT_PROMPT_START" "$GIT_PROMPT_END"
     fi
 
-    PS1="$precmd\$(show_exit_status)$postcmd"
-    OLD_GITPROMPT="$PS1"
+    PS1="$precmd$postcmd"
 }
 
 function prompt_command {
