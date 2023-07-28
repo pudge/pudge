@@ -95,8 +95,8 @@ function _my_date {
         #date +'%Y-%m-%dT%H:%M:%S '
 #    fi
 
-    hour=$(date +'%I')
-    min=$(date +'%M')
+    hour=$(TZ=$LTZ date +'%I')
+    min=$(TZ=$LTZ date +'%M')
     perl -E 'binmode STDOUT, ":encoding(UTF-8)"; $x = 1359; $x += shift; $x += 12 if shift >= 30; print eval qq!"\\x{1f! . sprintf("%x",$x) . qq!}"!' $hour $min
     echo -n ' '
 }
