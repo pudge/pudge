@@ -6,13 +6,14 @@ use feature ':5.10';
 our $dir = shift;
 if ($dir && !chdir $dir) {
     $dir =~ s!^/home/[^/]+!/Users/chrisn!;
-    chdir $dir or die "Cannot find! `$dir`";
+    chdir $dir or die "Cannot find `$dir`";
 }
 
 our($b, $s);
 
 chomp(my $remote_git_branch = `git rev-parse --abbrev-ref \@{u} 2>/dev/null`);
-chomp(my $git_url = `git config --get remote.origin.url`);
+chomp(my $git_url = `git config --get remote.origin.url 2>/dev/null`);
+exit 0 unless $remote_git_branch && $git_url;
 my $git_http_url = '';
 
 # ssh://git@github.com/pudge/pudge.git
