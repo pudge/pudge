@@ -1,3 +1,45 @@
+# if [[ -r "${HOME}/.sb_aliases" ]]; then
+#     source "${HOME}/.sb_aliases"
+# fi
+
+function jump() {
+    if [[ $2 -eq '2' ]]; then
+        ssh jump2.$1
+    else
+        ssh jump.$1
+    fi
+}
+
+if [[ $(alias tail_servola 2>/dev/null) ]]; then
+    unalias tail_servola
+fi
+
+function tail_servola() {
+    sudo tail -n 100 -F /var/log/shiftboard/*log /var/log/attestations/*log /var/log/apache2/*log /var/log/notify/*log /var/log/slate/*log /var/log/frontdoor/*log /var/log/mapp/*log "$@"
+}
+
+function ap() {
+    _fix_ap_hosts $1
+    shift
+    ANSIBLE_CONFIG=$ANSIBLE_HOME/shared/files/ansible.cfg ansible-playbook -v --skip-tags=vault -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
+}
+export -f ap
+
+function apv() {
+    _fix_ap_hosts $1
+    shift
+    ANSIBLE_CONFIG=$ANSIBLE_HOME/shared/files/ansible.cfg ansible-playbook -v --ask-vault-pass -i $ANSIBLE_HOME/inventory $ANSIBLE_HOME/site.yml --limit "$ap_hosts" "$@"
+}
+export -f apv
+
+function _fix_ap_hosts() {
+    arg=$1
+    export AP_ENV=$(get_env.sh)
+    ap_hosts=$(perl -e '@a=split /\s*,\s*/, shift; for (@a) { $_ .= ".$ENV{AP_ENV}" unless /[.&:]/ }; print join ",", @a' "$arg")
+}
+
+alias api_client=$SB/app/tools/api_client.pl
+
 if [[ $(alias tail_servola 2>/dev/null) ]]; then
     unalias tail_servola
 fi
@@ -32,6 +74,7 @@ alias mngo='mongosh $( sudo /opt/bin/secret -n PUSH_NOTIFICATIONS_URI | perl -pe
 alias mngo_cert='wget -O rds-combined-ca-bundle.pem https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem'
 
 
+alias sb_db='sudo MYSQL_PWD=$(sudo /opt/bin/secret MYSQL_LOCALHOST_ROOT) mysql -u root shiftboard_com_2'
 alias sb_dbs_rm="rm -rf /opt/dump/scrubbed/*; bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
 alias sb_dbs="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --sync-only"
 alias sb_dbr="bash $SB/ansible/roles/servola_db/files/db_refresh --no-log --refresh-only"
