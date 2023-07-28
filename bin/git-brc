@@ -96,7 +96,8 @@ sub do_branches {
 
 sub merged {
     my($repo, $branch, $status) = @_;
-    if ($status && $branch =~ m!^pudge/!) {
+
+    if ($status && $branch =~ m!^(?:user/)?(?:pudge|chrisn|chris.nandor)/!) {
         my $contains = git_cmd_try { $repo->command('branch', '--all', '--contains', "refs/heads/$branch") }
             'Error, cannot continue (%s [%d])';
         if ($contains =~ m!^\*?\s+remotes/origin/(?:master|main)$!m) {
