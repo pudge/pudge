@@ -6,7 +6,6 @@ export HISTSIZE=
 export HISTCONTROL=ignoredups:erasedups:ignorespace
 export HISTTIMEFORMAT='%F %T '
 
-export LTZ=$TZ
 export OPEN_URL_SSH=1
 
 export GITHUB_HOST=github.com
