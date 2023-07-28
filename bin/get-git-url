@@ -13,7 +13,7 @@ our($b, $s);
 
 chomp(my $remote_git_branch = `git rev-parse --abbrev-ref \@{u} 2>/dev/null`);
 chomp(my $git_url = `git config --get remote.origin.url`);
-my $git_http_url;
+my $git_http_url = '';
 
 # ssh://git@github.com/pudge/pudge.git
 # https://github.com/pudge/pudge
