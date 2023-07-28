@@ -65,7 +65,7 @@ function set_ps1 {
 
     hostmarks="$red$(_host_marks)$end"
     precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$puser@$phost:${green}\$(get_pwd)${end}\$(git_url)" #$phist"
-    postcmd="\$(_dyn_marks)$ptime\n\$(show_exit_status) $pchar "
+    postcmd="$ptime\$(_dyn_marks)\n\$(show_exit_status) $pchar "
 
     GIT_PROMPT_START="$precmd"
     GIT_PROMPT_END="$postcmd"
