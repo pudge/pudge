@@ -12,6 +12,7 @@ else
     alias dfh="df -Phl -x squashfs -x tmpfs -x devtmpfs"
 fi
 
+alias cl=clear
 alias grep="egrep --color"
 alias whois="whois -h whois.geektools.com"
 alias cenodiff="cenoview -l diff.diff"
