@@ -65,7 +65,7 @@ function set_ps1 {
 
     hostmarks="$red$(_host_marks)$end"
     precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$puser@$phost:${green}\$(get_pwd)${end}\$(git_url)" #$phist"
-    postcmd="\$(_dyn_marks)\n$ptime\$(show_exit_status) $pchar "
+    postcmd="\$(_dyn_marks)$ptime\n\$(show_exit_status) $pchar "
 
     GIT_PROMPT_START="$precmd"
     GIT_PROMPT_END="$postcmd"
@@ -101,8 +101,8 @@ function _my_date {
     fi
     hour=$(date +'%I')
     min=$(date +'%M')
-    perl -E 'binmode STDOUT, ":encoding(UTF-8)"; $x = 1359; $x += shift; $x += 12 if shift >= 30; print eval qq!"\\x{1f! . sprintf("%x",$x) . qq!}"!' $hour $min
     echo -n ' '
+    perl -E 'binmode STDOUT, ":encoding(UTF-8)"; $x = 1359; $x += shift; $x += 12 if shift >= 30; print eval qq!"\\x{1f! . sprintf("%x",$x) . qq!}"!' $hour $min
     if [[ -n "$LTZ" ]]; then
         if [[ -n "$OTZ" ]]; then
             export TZ=$OTZ
