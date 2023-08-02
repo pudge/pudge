@@ -24,6 +24,7 @@ if [[ -x `which hub` ]]; then
 fi
 
 alias tmcc='tmux -CC'
+alias aws=~/bin/aws_yes_browser
 
 # vg() {
 #     vagrant "$@"
