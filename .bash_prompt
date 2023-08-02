@@ -1,3 +1,23 @@
+black='\e[30m'
+red='\e[31m'
+yellow='\e[33m'
+green='\e[32m'
+cyan='\e[36m'
+blue='\e[34m'
+magenta='\e[35m'
+white='\e[37m'
+end='\e[0m'
+
+black_b='\e[30;1m'
+red_b='\e[31;1m'
+yellow_b='\e[33;1m'
+green_b='\e[32;1m'
+cyan_b='\e[36;1m'
+blue_b='\e[34;1m'
+magenta_b='\e[35;1m'
+white_b='\e[37;1m'
+
+
 BASH_NEW=$( if [[ "${BASH_VERSION/.*/}" -ge 5 ]]; then echo 1; else echo 0; fi )
 
 function set_ps1 {
@@ -41,16 +61,6 @@ function set_ps1 {
 
 
     local ptime puser phost phist ppwd pgit pchar
-    local black red green yellow blue magenta cyan white end
-    black='\[\e[30m\]'
-    red='\[\e[31m\]'
-    yellow='\[\e[33m\]'
-    green='\[\e[32m\]'
-    cyan='\[\e[36m\]'
-    blue='\[\e[34m\]'
-    magenta='\[\e[35m\]'
-    white='\[\e[37m\]'
-    end='\[\e[0m\]'
 
     ptime="${white}\$(_my_date)${end}"
     puser="${red}\u${end}"
@@ -61,7 +71,7 @@ function set_ps1 {
     export PHOST=$phost
     phost="${yellow}$phost${end}"
     phist="${yellow}\!${end}"
-    pchar="${blue}❯${end}"
+    pchar="${blue_b}❯${end}"
 
     hostmarks="$red$(_host_marks)$end"
     precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$puser@$phost:${green}\$(get_pwd)${end}\$(git_url)" #$phist"
@@ -99,12 +109,17 @@ function _my_date {
         OTZ=$TZ
         export TZ=$LTZ
     fi
-    iso8601=$(date -Iseconds)
     hour=$(date +'%I')
     min=$(date +'%M')
-    echo -ne " \e]8;;$iso8601\e\\"
+    echo -ne ' '
+    if [[ $BASH_NEW -eq 1 ]]; then
+        iso8601=$(date -Iseconds)
+        echo -ne "\e]8;;$iso8601\e\\"
+    fi
     perl -E 'binmode STDOUT, ":encoding(UTF-8)"; $x = 1359; $x += shift; $x += 12 if shift >= 30; print eval qq!"\\x{1f! . sprintf("%x",$x) . qq!}"!' $hour $min
-    echo -ne "\e]8;;\e\\"
+    if [[ $BASH_NEW -eq 1 ]]; then
+        echo -ne "\e]8;;\e\\"
+    fi
     if [[ -n "$LTZ" ]]; then
         if [[ -n "$OTZ" ]]; then
             export TZ=$OTZ
@@ -152,15 +167,15 @@ function show_exit_status {
     # 130 == SIGINT
     if [[ $es != '' && $es != '0' ]]; then
         if [[ "$BASH_NEW" -eq 1 ]]; then
-            echo -ne '\001\e[31;1m\002✘ '$es'\001\e[0m\002'
+            echo -ne "${red_b}✘${end}${red} $es${end}"
         else
-            echo -ne '✘ '$es''
+            echo -ne "✘ $es"
         fi
     else
         if [[ "$BASH_NEW" -eq 1 ]]; then
-            echo -ne '\001\e[32;1m\002✔\001\e[0m\002'
+            echo -ne "${green_b}✔${end}"
         else
-            echo -ne '✔'
+            echo -ne "✔"
         fi
     fi
 }
@@ -180,7 +195,11 @@ function get_pwd {
     elif [[ $PWD =~ "$HOME/src/eh/oz" ]]; then
         echo -ne "${PWD/#$HOME\/src\/eh\/oz/🌪️  }";
     else
-        echo -ne "${PWD/#$HOME/\~}";
+        if [[ $BASH_NEW -eq 1 ]]; then
+            echo -n "${PWD/#$HOME/\~}";
+        else
+            echo -n "${PWD/#$HOME/~}";
+        fi
     fi
 }
 
