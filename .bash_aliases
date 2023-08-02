@@ -26,6 +26,22 @@ fi
 alias tmcc='tmux -CC'
 alias aws=~/bin/aws_yes_browser
 
+alias kc=kubectl
+function kce() {
+    cmd=$2
+    container_id=$(kubectl get po | grep $1 | cut -f 1 -d ' ' | head -1)
+    if [[ -z $container_id ]]; then
+        echo "could not find container ID for $1"
+    else
+        echo -e "trying to log into $container_id to exec $cmd ...\n"
+        kubectl exec -it $container_id -- $cmd
+    fi
+}
+function kcb() {
+    kce $1 bash
+}
+
+
 # vg() {
 #     vagrant "$@"
 # }
