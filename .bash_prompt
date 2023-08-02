@@ -99,10 +99,12 @@ function _my_date {
         OTZ=$TZ
         export TZ=$LTZ
     fi
+    iso8601=$(date -Iseconds)
     hour=$(date +'%I')
     min=$(date +'%M')
-    echo -n ' '
+    echo -ne " \e]8;;$iso8601\e\\"
     perl -E 'binmode STDOUT, ":encoding(UTF-8)"; $x = 1359; $x += shift; $x += 12 if shift >= 30; print eval qq!"\\x{1f! . sprintf("%x",$x) . qq!}"!' $hour $min
+    echo -ne "\e]8;;\e\\"
     if [[ -n "$LTZ" ]]; then
         if [[ -n "$OTZ" ]]; then
             export TZ=$OTZ
