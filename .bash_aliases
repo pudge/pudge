@@ -23,6 +23,8 @@ if [[ -x `which hub` ]]; then
     alias git=hub
 fi
 
+alias tmcc='tmux -CC'
+
 # vg() {
 #     vagrant "$@"
 # }
