@@ -1,21 +1,21 @@
-black='\e[30m'
-red='\e[31m'
-yellow='\e[33m'
-green='\e[32m'
-cyan='\e[36m'
-blue='\e[34m'
-magenta='\e[35m'
-white='\e[37m'
-end='\e[0m'
-
-black_b='\e[30;1m'
-red_b='\e[31;1m'
-yellow_b='\e[33;1m'
-green_b='\e[32;1m'
-cyan_b='\e[36;1m'
-blue_b='\e[34;1m'
-magenta_b='\e[35;1m'
-white_b='\e[37;1m'
+# black='\e[30m'
+# red='\e[31m'
+# yellow='\e[33m'
+# green='\e[32m'
+# cyan='\e[36m'
+# blue='\e[34m'
+# magenta='\e[35m'
+# white='\e[37m'
+# end='\e[0m'
+#
+# black_b='\e[30;1m'
+# red_b='\e[31;1m'
+# yellow_b='\e[33;1m'
+# green_b='\e[32;1m'
+# cyan_b='\e[36;1m'
+# blue_b='\e[34;1m'
+# magenta_b='\e[35;1m'
+# white_b='\e[37;1m'
 
 
 BASH_NEW=$( if [[ "${BASH_VERSION/.*/}" -ge 5 ]]; then echo 1; else echo 0; fi )
@@ -61,6 +61,19 @@ function set_ps1 {
 
 
     local ptime puser phost phist ppwd pgit pchar
+    local black red green yellow blue magenta cyan white end
+    local blue_bold
+    black='\[\e[30m\]'
+    red='\[\e[31m\]'
+    yellow='\[\e[33m\]'
+    green='\[\e[32m\]'
+    cyan='\[\e[36m\]'
+    blue='\[\e[34m\]'
+    magenta='\[\e[35m\]'
+    white='\[\e[37m\]'
+    end='\[\e[0m\]'
+
+    blue_bold='\[\e[34;1m\]'
 
     ptime="${white}\$(_my_date)${end}"
     puser="${red}\u${end}"
@@ -71,7 +84,7 @@ function set_ps1 {
     export PHOST=$phost
     phost="${yellow}$phost${end}"
     phist="${yellow}\!${end}"
-    pchar="${blue_b}❯${end}"
+    pchar="${blue_bold}❯${end}"
 
     hostmarks="$red$(_host_marks)$end"
     precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$puser@$phost:${green}\$(get_pwd)${end}\$(git_url)" #$phist"
@@ -167,13 +180,15 @@ function show_exit_status {
     # 130 == SIGINT
     if [[ $es != '' && $es != '0' ]]; then
         if [[ "$BASH_NEW" -eq 1 ]]; then
-            echo -ne "${red_b}✘${end}${red} $es${end}"
+            echo -ne '\001\e[31;1m\002✘ '$es'\001\e[0m\002'
+            #echo -ne "${red_b}✘${end}${red} $es${end}"
         else
             echo -ne "✘ $es"
         fi
     else
         if [[ "$BASH_NEW" -eq 1 ]]; then
-            echo -ne "${green_b}✔${end}"
+            echo -ne '\001\e[32;1m\002✔\001\e[0m\002'
+            #echo -ne "${green_b}✔${end}"
         else
             echo -ne "✔"
         fi
