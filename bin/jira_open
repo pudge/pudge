@@ -12,6 +12,7 @@ chomp($id = `$Bin/jira_id \Q$id\E`);
 my $host = $ENV{'JIRA_HOST'} || die "no jira host";
 my $url = "https://$host/browse/$id";
 
+$ENV{PATH} .= ":$ENV{HOME}/bin";
 if ($id && $id =~ /^\w+-\d+$/) {
 #    system 'open', '-b', 'com.atlassian.jira.mac', $url;
     system 'open_url', $url;
