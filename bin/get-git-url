@@ -13,6 +13,7 @@ our($b, $s);
 
 chomp(my $remote_git_branch = `git rev-parse --abbrev-ref \@{u} 2>/dev/null`);
 chomp(my $git_url = `git config --get remote.origin.url 2>/dev/null`);
+chomp(my $git_prefix = `git rev-parse --show-prefix 2>/dev/null`);
 exit 0 unless $remote_git_branch && $git_url;
 my $git_http_url = '';
 
@@ -31,12 +32,15 @@ elsif ($git_url =~ /^http/) {
 
 if ($remote_git_branch && $b) {
     chomp(my $git_branch = `git rev-parse --abbrev-ref HEAD 2>/dev/null`);
-    $git_http_url = "$git_http_url/tree/$git_branch" if $git_branch;
+    $git_http_url = "$git_http_url/tree/$git_branch/$git_prefix" if $git_branch;
 }
 elsif ($s) {
     my $git_sha = shift;
     chomp($git_sha = `git rev-parse --verify HEAD 2>/dev/null`) unless $git_sha;
     $git_http_url = "$git_http_url/commit/$git_sha" if $git_sha;
+}
+else {
+    $git_http_url .= "/$git_prefix";
 }
 
 print $git_http_url;
