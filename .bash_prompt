@@ -75,7 +75,7 @@ function set_ps1 {
 
     blue_bold='\[\e[34;1m\]'
 
-    ptime="${white}\$(_my_date)${end}"
+    ptime="${white}\$(_my_date)${end} "
     puser="${red}\u${end}"
     phost=$(hostname -f | cut -d . -f 1,2)
     if [[ $phost == 'VG9CX2JYQ5' ]]; then
@@ -87,8 +87,8 @@ function set_ps1 {
     pchar="${blue_bold}❯${end}"
 
     hostmarks="$red$(_host_marks)$end"
-    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$hostmarks$puser@$phost:${green}\$(get_pwd)${end}\$(git_url)" #$phist"
-    postcmd="$ptime\$(_dyn_marks)\n\$(show_exit_status) $pchar "
+    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$ptime$hostmarks$puser@$phost:${green}\$(get_pwd)${end}\$(git_url)" #$phist"
+    postcmd="\$(_dyn_marks)\n\$(show_exit_status) $pchar "
 
     GIT_PROMPT_START="$precmd"
     GIT_PROMPT_END="$postcmd"
@@ -124,7 +124,6 @@ function _my_date {
     fi
     hour=$(date +'%I')
     min=$(date +'%M')
-    echo -ne ' '
     if [[ $BASH_NEW -eq 1 ]]; then
         iso8601=$(date -Iseconds)
         echo -ne "\e]8;;$iso8601\e\\"
