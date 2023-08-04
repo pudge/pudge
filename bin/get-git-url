@@ -6,7 +6,7 @@ use feature ':5.10';
 our $dir = shift;
 if ($dir && !chdir $dir) {
     $dir =~ s!^/home/[^/]+!/Users/chrisn!;
-    chdir $dir or die "Cannot find `$dir`";
+    chdir $dir or exit 0; #die "Cannot find `$dir`";
 }
 
 our($b, $s);
