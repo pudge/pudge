@@ -5,7 +5,7 @@ if [[ $(uname) == 'Darwin' ]]; then
     # https://support.apple.com/en-us/HT202516
     alias dnsflush='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
     alias markoff='open -a Markoff'
-    alias dfh="df -PhT apfs | grep -v '/(VM|Preboot|Update|/Library/Developer/CoreSimulator/Volumes)$' | grep -v ' /$' | grep -v '/private/var/vm'"
+    alias dfh="df -PhT apfs | grep -v '/(VM|Preboot|Update)$' | grep -v '/Library/Developer/CoreSimulator/Volumes/' | grep -v ' /$' | grep -v '/private/var/vm'"
 else
     alias ll="ls -lh --color"
     alias ls="ls --color"
