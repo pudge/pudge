@@ -24,6 +24,7 @@ if [[ -x `which hub` ]]; then
 fi
 
 alias tmcc='tmux -CC'
+alias tmca='tmux -CC attach'
 
 alias kc=kubectl
 function kce() {

@@ -72,7 +72,7 @@
 [grep]
     patternType     = perl
     lineNumber      = true
-    column          = true
+    column          = false
 [merge]
     ff              = false
     tool            = bbdiff
