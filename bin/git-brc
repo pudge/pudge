@@ -87,8 +87,8 @@ sub do_branches {
     my $said = 0;
     for my $branch_line (@branches) {
         say "$name:" unless $said++;
-        $_ //= '' for (my($current, $sha, $branch, $status) = ($branch_line =~ $branch_re));
-        $iter->($branch_line, $current, $sha, $branch, $status);
+        $_ //= '' for (my($current, $sha, $branch, $status, $full_status) = ($branch_line =~ $branch_re));
+        $iter->($branch_line, $current, $sha, $branch, $full_status);
     }
 
     say '';

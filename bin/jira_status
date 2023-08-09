@@ -19,13 +19,13 @@ jira_status - handle status for Jira issues
 This program shows status and does transitions for Jira issues.
 
     $ jira_status status
-    In Review 🔄
+    In Review 
 
     # autocomplete support
     $ jira_status transition Continue\ Progress
 
     $ jira_status status
-    In Progress ↗️
+    In Progress 
 
 
 =head1 DESCRIPTION
@@ -103,17 +103,19 @@ Helper function to just return the completion shell script, if available for the
 
 =head3 Raw Commands
 
-These commands just return the JSON from Jira.
-
 =over 4
 
-=item * get_transitions [FORCE] [JIRA_ID]
+=item * get_transitions [JIRA_ID]
 
-Get the available transitions for the issue. If FORCE is set, update the cache.
+Get the raw JSON for available transitions for the Jira ID.
 
-=item * get_issue [FORCE] [JIRA_ID]
+=item * get_issue [JIRA_ID]
 
-Get the issue. If FORCE is set, update the cache.
+Get the raw JSON for the Jira ID.
+
+=item * refresh [JIRA_ID]
+
+Refresh the issue and transitions cache for the Jira ID.
 
 =back
 
@@ -172,6 +174,15 @@ For use with C<short_status> command.
 
 =cut
 
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
+use File::Path 'mkpath';
+use Getopt::Long;
+use HTTP::Request;
+use JSON::XS qw(decode_json encode_json);
+use LWP::UserAgent;
+use Pod::Usage;
+use URI::Escape 'uri_escape';
+
 our %STATUS = (
     'Selected'           => { icon => "️" },
     'In Progress'        => { icon => "" },
@@ -182,14 +193,9 @@ our %STATUS = (
     'Closed'             => { icon => "" },
 );
 
-use Data::Dumper; $Data::Dumper::Sortkeys=1;
-use File::Path 'mkpath';
-use Getopt::Long;
-use HTTP::Request;
-use JSON::XS qw(decode_json encode_json);
-use LWP::UserAgent;
-use Pod::Usage;
-use URI::Escape 'uri_escape';
+our %TRANSITIONS = (
+    '731'    => { browser => 1 },
+);
 
 
 our $VERSION = '0.0.1';
@@ -246,7 +252,7 @@ sub status {
 
 
 sub transition {
-    my($jira_id, $transition_id) = @_;
+    my($jira_id, $transition_id, $options) = @_;
 
     output_error("No transition ID provided") and return unless $transition_id;
 
@@ -255,6 +261,14 @@ sub transition {
         ($transition_id) = grep { $transitions->{$_} eq $transition_id } keys %$transitions;
     }
     return unless $transition_id && $transitions->{$transition_id};
+
+    my $fields = $TRANSITIONS{$transition_id};
+    if ($fields->{browser}) {
+        my $url = workflow_dispatch_url($jira_id, $transition_id);
+        qx{open_url \Q$url\E 2>/dev/null};
+        say "Transition at $url";
+        return;
+    }
 
     my $post = { transition => { id => $transition_id } };
     my $post_enc = encode_json($post);
@@ -314,6 +328,16 @@ sub get_issue {
 }
 
 
+sub refresh {
+    my($jira_id, $force) = @_;
+
+    get_issue($jira_id, 1);
+    get_transitions($jira_id, 1);
+
+    return;
+}
+
+
 sub estimate {
     my($jira_id) = @_;
 
@@ -332,7 +356,6 @@ sub set_estimate {
 
     my $url = issue_url($jira_id) . "/worklog?adjustEstimate=new&newEstimate=${minutes}m";
     my $res = $ua->post($url, req_headers(), Content => '{"timeSpent":"1m"}');
-    say Dumper $res if $verbose;
     res_error($jira_id, $res, "estimating ID") and return;
 
     get_issue($jira_id, 1);
@@ -419,6 +442,18 @@ sub issue_url {
 }
 
 
+sub workflow_dispatch_url {
+    my($jira_id, $transition_id) = @_;
+    my $issue = get_json($jira_id, get_issue($jira_id));
+    "https://$host/secure/CommentAssignIssue!default.jspa?id=$issue->{id}&action=$transition_id";
+}
+
+sub html_url {
+    my($jira_id) = @_;
+    "https://$host/browse/" . $jira_id
+}
+
+
 sub output_error {
     my(@lines) = @_;
     say STDERR for @lines;
@@ -465,11 +500,13 @@ sub _jira_id {
 #### init
 
 sub init {
+    my(@transition_options, %transition_options);
     Getopt::Long::Configure('bundling');
     GetOptions(
-        'h|help',               sub { pod2usage(-verbose => 2) },
-        'V|version',            \$version,
-        'v|verbose',            \$verbose,
+        'h|help',                sub { pod2usage(-verbose => 2) },
+        'V|version',             \$version,
+        'v|verbose',             \$verbose,
+        't|transition_option=s', \@transition_options,
     ) or pod2usage(-verbose => 1);
 
     if ($version) {
@@ -486,18 +523,22 @@ sub init {
         |status_line|short_status|status
         |transition|get_transitions|list_transitions
         |estimate|set_estimate
-        |get_issue
+        |get_issue|refresh
     )$/x;
 
     if ($cmd !~ $all_cmds) {
         pod2usage(-verbose => 1, -message => "Command '$cmd' not recognized");
     }
 
-    $jira_cache = $ENV{JIRA_CACHE} //= "$ENV{HOME}/.jira_cache/";
+    if (@transition_options) {
+        if ($cmd ne 'transition') {
+            pod2usage(-verbose => 1, -message => "--transition_option only valid with command '$cmd'");
+        }
+    }
 
+    $jira_cache = $ENV{JIRA_CACHE} //= "$ENV{HOME}/.jira_cache/";
     $jira_token = $ENV{JIRA_TOKEN} //= `cat $ENV{HOME}/.jira_token`;
     $ua = LWP::UserAgent->new;
-
 
     my($jira_id, $other);
 
@@ -514,6 +555,7 @@ sub init {
         chomp( $jira_id = `jira_id \Q$jira_id\E` );
         push @args, $jira_id;
         push @args, $other if defined $other;
+        push @args, \%transition_options if keys(%transition_options);
     }
 
     {
@@ -545,7 +587,7 @@ _transitions() {
     COMPREPLY=()
 
     if [[ $count -eq 2 ]]; then
-        word_list=(status status_line short_status transition list_transitions completion get_transitions get_issue estimate set_estimate)
+        word_list=(status status_line short_status transition list_transitions completion get_transitions get_issue refresh estimate set_estimate)
     elif [[ $count -eq 3 && $prev == 'transition' ]]; then
         word_list=($(jira_status list_transitions | jq -r .[]))
     elif [[ $count -eq 3 && $prev == 'completion' ]]; then
