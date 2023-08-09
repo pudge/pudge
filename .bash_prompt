@@ -44,19 +44,6 @@ function set_ps1 {
         GIT_PROMPT_THEME_FILE=~/.git-prompt-colors.sh
 
         source $HOME/.bash-git-prompt/gitprompt.sh
-
-    elif [ -r "$HOME/.git-prompt.sh" ]; then
-        MYGITPROMPT=git-prompt
-        GIT_PS1_SHOWSTASHSTATE=1
-        GIT_PS1_SHOWDIRTYSTATE=1
-        GIT_PS1_SHOWUNTRACKEDFILES=1
-        GIT_PS1_SHOWUPSTREAM='auto'
-        GIT_PS1_HIDE_IF_PWD_IGNORED=1
-        GIT_PS1_SHOWCOLORHINTS=1
-        #GIT_PS1_STATESEPARATOR='~'
-        GIT_PS1_DESCRIBE_STYLE=branch
-
-        source $HOME/.git-prompt.sh
     fi
 
 
