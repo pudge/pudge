@@ -164,6 +164,10 @@ Save your token to F<~/.jira_token> (set file mode to C<0600> or similar).
 
     sudo apt install libwww-perl libjson-xs-perl perl-doc
 
+=item * Terminal font with NerdFont support
+
+For use with C<short_status> command.
+
 =back
 
 =cut
@@ -218,13 +222,13 @@ sub short_status {
 
     if ($status) {
         return
-            $status eq 'In Progress'        ? "↗️" :
-            $status eq 'Selected'           ? "↕️" :
-            $status eq 'In Review'          ? "🔄" :
-            $status eq 'Blocked'            ? "🛑" :
-            $status eq 'Needs Information'  ? "❔" :
-            $status eq 'Resolved'           ? "✅" :
-            $status eq 'Closed'             ? "🏁" :
+            $status eq 'Selected'           ? "️" :
+            $status eq 'In Progress'        ? "" :
+            $status eq 'Blocked'            ? "" :
+            $status eq 'Needs Information'  ? "󰆆" :
+            $status eq 'In Review'          ? "" :
+            $status eq 'Resolved'           ? "" :
+            $status eq 'Closed'             ? "" :
             $status;
     }
     return '';
