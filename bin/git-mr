@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-chomp(my $full_url = `get-git-url -b`);
+chomp(my $full_url = `get-git-url -b -n`);
 my($base, $branch) = $full_url =~ m!^(http.+?//.+?)/tree/(.+)$!;
 $branch =~ s!/!%2F!g;
 

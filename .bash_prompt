@@ -87,7 +87,9 @@ function set_ps1 {
     pchar="${blue_bold}❯${end}"
 
     hostmarks="$red$(_host_marks)$end"
-    precmd="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$ptime$hostmarks$puser@$phost:${green}\$(get_pwd)${end}\$(git_url)" #$phist"
+    precmd1="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$ptime$hostmarks"
+    precmd2="$puser@$phost:${green}\$(get_pwd)${end}${cyan}\$(git_url)${end}"
+    precmd="${precmd1}${precmd2}"
     postcmd="\$(_dyn_marks)\n\$(show_exit_status) $pchar "
 
     GIT_PROMPT_START="$precmd"
@@ -142,15 +144,26 @@ function _my_date {
 }
 
 function _dyn_marks {
+    _jira_status
     if [[ -n "$AWS_PROFILE" ]]; then
-        echo -ne ' ☁️ \001\e[34m\002'$AWS_PROFILE'\001\e[0m\002'
+        echo -ne ' ☁️ \001\e[34m\002'$AWS_PROFILE'\001\e[0m\002'
     fi
     if [[ -n "$K8S_NAMESPACE" ]]; then
-        echo -ne ' 🫥 \001\e[35m\002'$K8S_NAMESPACE'\001\e[0m\002'
+        echo -ne ' 🫥 \001\e[35m\002'$K8S_NAMESPACE'\001\e[0m\002'
     fi
     if [[ -s "$JIRA_TRACK_TIME_FILE" ]]; then
         track_time_url="https://${JIRA_HOST}/browse/"$(head -1 "$JIRA_TRACK_TIME_FILE")
         echo -ne '\e]8;;'$track_time_url'\e\\ ⏱️ \e]8;;\e\\'
+    fi
+}
+
+function _jira_status {
+    jira_status=$( jira_status short_status 2>/dev/null )
+    if [[ -n "$jira_status" ]]; then
+        jira_url="https://${JIRA_HOST}/browse/"$( jira_status jira_id )
+        echo -ne ' '
+        echo -ne '\001\e[34m\002\e]8;;'$jira_url'\e\\󰌃 \e]8;;\e\\\001\e[0m\002'
+        echo -ne "$jira_status"
     fi
 }
 
@@ -198,16 +211,16 @@ function git_url {
     if [[ "$BASH_NEW" -eq 1 ]]; then
         local git_http_url=$(get-git-url -b $(pwd))
         if [[ -n "$git_http_url" ]]; then
-            echo -ne " \e]8;;"$git_http_url"\e\\💻\e]8;;\e\\"
+            echo -ne " \e]8;;"$git_http_url"\e\\\e]8;;\e\\"
         fi
     fi
 }
 
 function get_pwd {
     if [[ $PWD =~ "$HOME/src/eh/oz/" ]]; then
-        echo -ne "${PWD/#$HOME\/src\/eh\/oz\//🌪️ }";
+        echo -ne "${PWD/#$HOME\/src\/eh\/oz\//🌪️ }";
     elif [[ $PWD =~ "$HOME/src/eh/oz" ]]; then
-        echo -ne "${PWD/#$HOME\/src\/eh\/oz/🌪️  }";
+        echo -ne "${PWD/#$HOME\/src\/eh\/oz/🌪️ }";
     else
         if [[ $BASH_NEW -eq 1 ]]; then
             echo -n "${PWD/#$HOME/\~}";

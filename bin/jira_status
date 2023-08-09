@@ -1,0 +1,561 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use 5.018;
+use utf8;
+
+# libwww-perl libjson-xs-perl perl-doc
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+jira_status - handle status for Jira issues
+
+=head1 SYNOPSIS
+
+This program shows status and does transitions for Jira issues.
+
+    $ jira_status status
+    In Review 🔄
+
+    # autocomplete support
+    $ jira_status transition Continue\ Progress
+
+    $ jira_status status
+    In Progress ↗️
+
+
+=head1 DESCRIPTION
+
+Get the status, get the transitions, or execute a transition.
+
+Autocomplete will populate the available transitions.
+
+The issue status and the available transitions are cached for 30 minutes.
+
+C<JIRA_ID> will be taken from the branch name if not supplied as an argument.
+
+
+=head2 OPTIONS
+
+=over 4
+
+=item B<-h|--help>
+
+Prints brief help message and exits.
+
+=item B<-V|--version>
+
+Prints version and exits.
+
+=item B<-v|--verbose>
+
+More verbose output.
+
+=back
+
+
+=head2 COMMANDS
+
+=over 4
+
+=item * status [JIRA_ID]
+
+Returns the status (text, and emoji, if available).
+
+=item * status_line [JIRA_ID]
+
+Returns just the text of the status.
+
+=item * short_status [JIRA_ID]
+
+Returns just the emoji of the status (or text if there is no emoji).
+
+=item * transition TRANSITION [JIRA_ID]
+
+Transition the issue. Accepts a text name or numeric ID of a transition.
+
+=item * list_transitions [JIRA_ID]
+
+Returns JSON object of available transitions, C<{ID:NAME}>.
+
+=item * estimate [JIRA_ID]
+
+Returns minutes left on time estimate.
+
+=item * set_estimate MINUTES [JIRA_ID]
+
+Sets the remaining estimate.
+
+=item * jira_id [JIRA_ID]
+
+Helper function to just return the Jira ID.
+
+=item * completion SHELL
+
+Helper function to just return the completion shell script, if available for the named shell. Supported shells: C<bash>.
+
+=back
+
+
+=head3 Raw Commands
+
+These commands just return the JSON from Jira.
+
+=over 4
+
+=item * get_transitions [FORCE] [JIRA_ID]
+
+Get the available transitions for the issue. If FORCE is set, update the cache.
+
+=item * get_issue [FORCE] [JIRA_ID]
+
+Get the issue. If FORCE is set, update the cache.
+
+=back
+
+
+=head2 SETUP
+
+Add this to your F<.bashrc> or similar:
+
+    export JIRA_HOST=jira.i.extrahop.com
+    test -n $(which jira_status > /dev/null) && source <(jira_status completion bash)
+
+Add this or similar, if desired, to your bash prompt:
+
+    function _jira_status {
+        jira_status=$( jira_status short_status 2>/dev/null )
+        if [[ -n "$jira_status" ]]; then
+            jira_url="https://${JIRA_HOST}/browse/"$( jira_status jira_id )
+            echo -ne ' '
+            # link the Jira icon, and color it blue
+            echo -ne '\001\e[34m\002\e]8;;'$jira_url'\e\\󰌃 \e]8;;\e\\\001\e[0m\002'
+            echo -ne "$jira_status"
+        fi
+    }
+
+    PS1 = "${PS1}\$(_jira_status)"
+
+
+=head3 Authorization
+
+=over 4
+
+=item * Get an Atlassian API token
+
+Create a new token at Jira -> Profile -> Personal Access Tokens.
+
+=item * Save token
+
+Save your token to F<~/.jira_token> (set file mode to C<0600> or similar).
+
+=back
+
+
+=head1 REQUIREMENTS
+
+=over 4
+
+=item * apt packages
+
+    sudo apt install libwww-perl libjson-xs-perl perl-doc
+
+=back
+
+=cut
+
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
+use File::Path 'mkpath';
+use Getopt::Long;
+use HTTP::Request;
+use JSON::XS qw(decode_json encode_json);
+use LWP::UserAgent;
+use Pod::Usage;
+use URI::Escape 'uri_escape';
+
+
+our $VERSION = '0.0.1';
+
+our $TOOLS_DIR = '/opt/bin';
+our $JIRA_USER = $ENV{JIRA_USER} // $ENV{USER};
+
+binmode STDOUT, ':utf8';
+
+my($host, $port) = ($ENV{JIRA_HOST}, '443');
+# https://developer.atlassian.com/cloud/jira/platform/rest/v2/
+my $base_url = "https://$host:$port/rest/api/2";
+my $issue_url = "$base_url/issue/";
+
+my($ua, $jira_token, $err);
+my($sub, @args, $verbose, $version, $jira_cache);
+
+if (init()) {
+    my $res = $sub->(@args);
+    say $res if defined $res;
+}
+exit($err // 0);
+
+
+#### commands
+
+sub status_line {
+    my($jira_id) = @_;
+
+    my $issue = get_issue($jira_id);
+
+    return get_json($jira_id, $issue)->{fields}{status}{name} || '';
+}
+
+
+sub short_status {
+    my($jira_id) = @_;
+
+    my $status = status_line($jira_id);
+
+    if ($status) {
+        return
+            $status eq 'In Progress'        ? "↗️" :
+            $status eq 'Selected'           ? "↕️" :
+            $status eq 'In Review'          ? "🔄" :
+            $status eq 'Blocked'            ? "🛑" :
+            $status eq 'Needs Information'  ? "❔" :
+            $status eq 'Resolved'           ? "✅" :
+            $status eq 'Closed'             ? "🏁" :
+            $status;
+    }
+    return '';
+}
+
+
+sub status {
+    my($jira_id) = @_;
+
+    my $status = status_line($jira_id);
+    my $short_status = short_status($jira_id);
+
+    return $status if !$short_status || !$status || $status eq $short_status;
+    return $status . ' ' . $short_status;
+}
+
+
+sub transition {
+    my($jira_id, $transition_id) = @_;
+
+    output_error("No transition ID provided") and return unless $transition_id;
+
+    my $transitions = list_transitions($jira_id);
+    if ($transition_id !~ /^\d+$/) {
+        ($transition_id) = grep { $transitions->{$_} eq $transition_id } keys %$transitions;
+    }
+    return unless $transition_id && $transitions->{$transition_id};
+
+    my $post = { transition => { id => $transition_id } };
+    my $post_enc = encode_json($post);
+    say $post_enc if $verbose;
+    my $res = $ua->post(transitions_url($jira_id), req_headers(), Content => $post_enc);
+    res_error($jira_id, $res, "transitioning ID") and return;
+
+    get_issue($jira_id, 1);
+    get_transitions($jira_id, 1);
+
+    return;
+}
+
+
+sub get_transitions {
+    my($jira_id, $force) = @_;
+
+    my $transitions = read_cache(transitions => $jira_id);
+    return $transitions if $transitions && !$force;
+
+    my $res = $ua->get(transitions_url($jira_id), req_headers());
+    res_error($jira_id, $res, "getting issue transitions") and return;
+
+    $transitions = $res->content;
+    if ($transitions) {
+        write_cache(transitions => $jira_id, $transitions);
+    }
+    return $transitions;
+}
+
+
+sub list_transitions {
+    my($jira_id) = @_;
+
+    my $transitions = get_transitions($jira_id);
+    my %list = map { $_->{'id'}, $_->{'name'} } @{ get_json($jira_id, $transitions)->{'transitions'} || [] };
+
+    return \%list;
+}
+sub _list_transitions { encode_json(&list_transitions) }
+
+
+sub get_issue {
+    my($jira_id, $force) = @_;
+
+    my $issue = read_cache(issue => $jira_id);
+    return $issue if $issue && !$force;
+
+    my $res = $ua->get(issue_url($jira_id), req_headers());
+    res_error($jira_id, $res, "getting issue") and return;
+
+    $issue = $res->content;
+    if ($issue) {
+        write_cache(issue => $jira_id, $issue);
+    }
+    return $issue;
+}
+
+
+sub estimate {
+    my($jira_id) = @_;
+
+    my $issue = get_issue($jira_id);
+
+    return get_json($jira_id, $issue)->{fields}{timeestimate} // '';
+}
+
+
+sub set_estimate {
+    my($jira_id, $minutes) = @_;
+
+    output_error("No minutes provided") and return unless defined $minutes;
+    output_error("Minutes must be an integer") and return unless $minutes =~ /^\d+$/;
+
+
+    my $url = issue_url($jira_id) . "/worklog?adjustEstimate=new&newEstimate=${minutes}m";
+    my $res = $ua->post($url, req_headers(), Content => '{"timeSpent":"1m"}');
+    say Dumper $res if $verbose;
+    res_error($jira_id, $res, "estimating ID") and return;
+
+    get_issue($jira_id, 1);
+    get_transitions($jira_id, 1);
+
+    return;
+}
+
+
+sub completion {
+    my($shell) = @_;
+
+    my $completion = '';
+    my $seen = 0;
+    while (my $line = <DATA>) {
+        if ($line =~ /^__(\w+)__\Z/) {
+            my $SHELL = lc $1;
+            $seen = $shell eq $SHELL;
+            next;
+        }
+        if ($seen) {
+            $completion .= $line;
+        }
+    }
+
+    return $completion;
+}
+
+
+#### helpers
+
+sub get_json {
+    my($jira_id, $json) = @_;
+
+    say STDERR $json if $verbose;
+    my $data = eval { decode_json($json) };
+    if ($@) {
+        output_error(sprintf "Error decoding JSON for %s: %s", $jira_id, $@);
+        return;
+    }
+    return $data;
+}
+
+
+sub res_error {
+    my($jira_id, $res, $what, $extra) = @_;
+
+    say STDERR Dumper $res if $verbose;
+
+    unless ($res->is_success) {
+        my $error = $res->status_line;
+        my $data = get_json($jira_id, $res->content);
+
+        if ($data && keys %$data && $data->{errorMessages}) {
+            $error .= ': ' . join("; ", @{ $data->{errorMessages} });
+        }
+
+        $error .= ": $extra" if $extra;
+        output_error(sprintf "Error %s for %s: %s", $what, $jira_id, $error);
+        return 1;
+    }
+
+    return 0;
+}
+
+
+sub req_headers {
+    (
+        'Authorization' => 'Bearer ' . $jira_token,
+        'Content-Type'  => 'application/json'
+    )
+}
+
+
+sub transitions_url {
+    my($jira_id) = @_;
+    issue_url($jira_id) . '/transitions'
+}
+
+
+sub issue_url {
+    my($jira_id) = @_;
+    $issue_url . $jira_id
+}
+
+
+sub output_error {
+    my(@lines) = @_;
+    say STDERR for @lines;
+    $err = -1;
+}
+
+
+sub read_cache {
+    my($type, $jira_id) = @_;
+    my $file = "$jira_cache$jira_id.$type";
+    return if -e $file && -M _ > 1/48;
+    open my $fh, '<', $file or return;
+    return join '', <$fh>;
+}
+
+
+sub write_cache {
+    my($type, $jira_id, $json) = @_;
+    mkpath $jira_cache;
+    my $file = "$jira_cache$jira_id.$type";
+    open my $fh, '>', "$jira_cache$jira_id.$type";
+    print $fh $json;
+}
+
+
+sub jira_id {
+    my($id) = @_;
+
+    $id = _jira_id($id);
+    $id ||= _jira_id(`git rev-parse --abbrev-ref HEAD 2>&1`);
+
+    return $id;
+}
+
+sub _jira_id {
+    my $id = shift;
+    return unless defined $id && length $id;
+    chomp $id;
+    return uc($1) if $id =~ m|(\w+-\d+)|;
+    return;
+}
+
+
+#### init
+
+sub init {
+    Getopt::Long::Configure('bundling');
+    GetOptions(
+        'h|help',               sub { pod2usage(-verbose => 2) },
+        'V|version',            \$version,
+        'v|verbose',            \$verbose,
+    ) or pod2usage(-verbose => 1);
+
+    if ($version) {
+        printf "$0 version v%s\n", $VERSION;
+        return;
+    }
+
+    my $cmd = shift @ARGV;
+
+    pod2usage(-verbose => 1, -message => "No command found") unless $cmd;
+
+    my $all_cmds = qr/^(
+         jira_id|completion|test
+        |status_line|short_status|status
+        |transition|get_transitions|list_transitions
+        |estimate|set_estimate
+        |get_issue
+    )$/x;
+
+    if ($cmd !~ $all_cmds) {
+        pod2usage(-verbose => 1, -message => "Command '$cmd' not recognized");
+    }
+
+    $jira_cache = $ENV{JIRA_CACHE} //= "$ENV{HOME}/.jira_cache/";
+
+    $jira_token = $ENV{JIRA_TOKEN} //= `cat $ENV{HOME}/.jira_token`;
+    $ua = LWP::UserAgent->new;
+
+
+    my($jira_id, $other);
+
+    if ($cmd =~ /^(transition|set_estimate)$/) {
+        $other = shift @ARGV;
+    }
+
+    if ($cmd eq 'completion') {
+        my $completion_shell = shift @ARGV;
+        push @args, $completion_shell;
+    }
+    else {
+        $jira_id = shift(@ARGV) // '';
+        chomp( $jira_id = `jira_id \Q$jira_id\E` );
+        push @args, $jira_id;
+        push @args, $other if defined $other;
+    }
+
+    {
+        if ($cmd eq 'list_transitions') {
+            $sub = \&_list_transitions;
+        }
+        else {
+            no strict 'refs';
+            $sub = \&{$cmd};
+        }
+    }
+
+    return 1;
+}
+
+
+__END__
+__BASH__
+#!/bin/bash
+
+_transitions() {
+    local IFS=$'\n'
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local prev=${COMP_WORDS[COMP_CWORD-1]}
+    local count=${#COMP_WORDS[@]}
+    local word_list
+    local candidates
+
+    COMPREPLY=()
+
+    if [[ $count -eq 2 ]]; then
+        word_list=(status status_line short_status transition list_transitions completion get_transitions get_issue estimate set_estimate)
+    elif [[ $count -eq 3 && $prev == 'transition' ]]; then
+        word_list=($(jira_status list_transitions | jq -r .[]))
+    elif [[ $count -eq 3 && $prev == 'completion' ]]; then
+        word_list=(bash)
+    fi
+
+    candidates=($(compgen -W "${word_list[*]}" -- "$cur"))
+
+    if [ ${#candidates[*]} -eq 0 ]; then
+        COMPREPLY=()
+    else
+        COMPREPLY=($(printf '%q\n' "${candidates[@]}"))
+    fi
+}
+
+complete -F _transitions jira_status

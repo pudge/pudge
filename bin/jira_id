@@ -4,7 +4,7 @@ use strict;
 use feature ':5.10';
 
 our $s;
-my $proj = 'ENG';
+my $proj = $ENV{JIRA_PROJECT_PREFIX} //= 'OZ';
 
 # 0. get ID from Safari, if requested/available
 if ($s) {
