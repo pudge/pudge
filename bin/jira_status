@@ -172,6 +172,16 @@ For use with C<short_status> command.
 
 =cut
 
+our %STATUS = (
+    'Selected'           => { icon => "️" },
+    'In Progress'        => { icon => "" },
+    'Blocked'            => { icon => "" },
+    'Needs Information'  => { icon => "󰆆" },
+    'In Review'          => { icon => "" },
+    'Resolved'           => { icon => "" },
+    'Closed'             => { icon => "" },
+);
+
 use Data::Dumper; $Data::Dumper::Sortkeys=1;
 use File::Path 'mkpath';
 use Getopt::Long;
@@ -220,18 +230,7 @@ sub short_status {
 
     my $status = status_line($jira_id);
 
-    if ($status) {
-        return
-            $status eq 'Selected'           ? "️" :
-            $status eq 'In Progress'        ? "" :
-            $status eq 'Blocked'            ? "" :
-            $status eq 'Needs Information'  ? "󰆆" :
-            $status eq 'In Review'          ? "" :
-            $status eq 'Resolved'           ? "" :
-            $status eq 'Closed'             ? "" :
-            $status;
-    }
-    return '';
+    return $status ? $STATUS{$status} && $STATUS{$status}{icon} // $status : '';
 }
 
 
