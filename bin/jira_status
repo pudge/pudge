@@ -213,7 +213,7 @@ my $issue_url = "$base_url/issue/";
 my($ua, $jira_token, $err);
 my($sub, @args, $verbose, $version, $jira_cache);
 
-if (init()) {
+if (init() && $sub) {
     my $res = $sub->(@args);
     say $res if defined $res;
 }
@@ -353,9 +353,22 @@ sub set_estimate {
     output_error("No minutes provided") and return unless defined $minutes;
     output_error("Minutes must be an integer") and return unless $minutes =~ /^\d+$/;
 
+    my $post = {
+        fields => {
+            timetracking => {
+                remainingEstimate => "${minutes}m"
+            }
+        }
+    };
+    my $post_enc = encode_json($post);
+    say $post_enc if $verbose;
 
-    my $url = issue_url($jira_id) . "/worklog?adjustEstimate=new&newEstimate=${minutes}m";
-    my $res = $ua->post($url, req_headers(), Content => '{"timeSpent":"1m"}');
+    # adjust directly
+    my $url = issue_url($jira_id);
+    my $res = $ua->put($url, req_headers(), Content => $post_enc);
+    # adjust via worklog
+#     my $url = issue_url($jira_id) . "/worklog?adjustEstimate=new&newEstimate=${minutes}m";
+#     my $res = $ua->post($url, req_headers(), Content => '{"timeSpent":"1m"}');
     res_error($jira_id, $res, "estimating ID") and return;
 
     get_issue($jira_id, 1);
@@ -551,8 +564,8 @@ sub init {
         push @args, $completion_shell;
     }
     else {
-        $jira_id = shift(@ARGV) // '';
-        chomp( $jira_id = `jira_id \Q$jira_id\E` );
+        $jira_id = jira_id(shift(@ARGV));
+        output_error('No Jira ID') and return unless $jira_id;
         push @args, $jira_id;
         push @args, $other if defined $other;
         push @args, \%transition_options if keys(%transition_options);

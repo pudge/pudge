@@ -145,7 +145,7 @@ function _jira_status {
         jira_url="https://${JIRA_HOST}/browse/"$( jira_status jira_id )
         echo -ne ' '
         echo -ne '\001\e[34m\002\e]8;;'$jira_url'\e\\󰌃 \e]8;;\e\\\001\e[0m\002'
-        echo -ne "$jira_status"
+        echo -ne "$jira_status "
     fi
 }
 
