@@ -11,10 +11,10 @@ if ($dir && !chdir $dir) {
 
 our($b, $s, $n);
 
-chomp(my $remote_git_branch = `git rev-parse --abbrev-ref \@{u} 2>/dev/null`);
 chomp(my $git_url = `git config --get remote.origin.url 2>/dev/null`);
+exit 0 unless $git_url;
+chomp(my $remote_git_branch = `git rev-parse --abbrev-ref \@{u} 2>/dev/null`);
 chomp(my $git_prefix = `git rev-parse --show-prefix 2>/dev/null`);
-exit 0 unless $remote_git_branch && $git_url;
 my $git_http_url = '';
 
 # ssh://git@github.com/pudge/pudge.git

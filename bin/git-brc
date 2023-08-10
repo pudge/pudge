@@ -46,7 +46,7 @@ sub get_branch {
 sub update_locals {
     my($repo, $current_branch) = @_;
     do_branches($repo, 'Updating local branches from remote', sub {
-        my($branch_line, $current, $sha, $branch, $status) = @_;
+        my($branch_line, $current, $sha, $branch, $status, $full_status) = @_;
         if ($status && $status eq '<') {
             if ($current_branch eq $branch) {
                 eval { $repo->command_noisy('merge', '--ff-only', 'FETCH_HEAD') };
@@ -61,8 +61,8 @@ sub update_locals {
 sub git_r_done {
     my($repo) = @_;
     do_branches($repo, 'Deleting merged branches', sub {
-        my($branch_line, $current, $sha, $branch, $status) = @_;
-        if (merged($repo, $branch, $status)) {
+        my($branch_line, $current, $sha, $branch, $status, $full_status) = @_;
+        if (merged($repo, $branch, $status || $full_status)) {
             git_cmd_try { $repo->command('r-done', $branch) }
                 'Error, cannot continue (%s [%d])';
         }
@@ -72,7 +72,7 @@ sub git_r_done {
 sub report {
     my($repo) = @_;
     do_branches($repo, 'Branches', sub {
-        my($branch_line, $current, $sha, $branch, $status) = @_;
+        my($branch_line, $current, $sha, $branch, $status, $full_status) = @_;
         say $branch_line;
     });
 }
@@ -88,7 +88,7 @@ sub do_branches {
     for my $branch_line (@branches) {
         say "$name:" unless $said++;
         $_ //= '' for (my($current, $sha, $branch, $status, $full_status) = ($branch_line =~ $branch_re));
-        $iter->($branch_line, $current, $sha, $branch, $full_status);
+        $iter->($branch_line, $current, $sha, $branch, $status, $full_status);
     }
 
     say '';

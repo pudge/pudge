@@ -193,9 +193,9 @@ our %STATUS = (
     'Closed'             => { icon => "" },
 );
 
-our %TRANSITIONS = (
-    '731'    => { browser => 1 },
-);
+# our %TRANSITIONS = (
+#     '731'    => { browser => 1 },
+# );
 
 
 our $VERSION = '0.0.1';
@@ -262,19 +262,27 @@ sub transition {
     }
     return unless $transition_id && $transitions->{$transition_id};
 
-    my $fields = $TRANSITIONS{$transition_id};
-    if ($fields->{browser}) {
-        my $url = workflow_dispatch_url($jira_id, $transition_id);
-        qx{open_url \Q$url\E 2>/dev/null};
-        say "Transition at $url";
-        return;
-    }
+#     my $fields = $TRANSITIONS{$transition_id};
+#     if ($fields->{browser}) {
+#         my $url = workflow_dispatch_url($jira_id, $transition_id);
+#         qx{open_url \Q$url\E 2>/dev/null};
+#         say "Transition at $url";
+#         return;
+#     }
 
     my $post = { transition => { id => $transition_id } };
     my $post_enc = encode_json($post);
     say $post_enc if $verbose;
     my $res = $ua->post(transitions_url($jira_id), req_headers(), Content => $post_enc);
-    res_error($jira_id, $res, "transitioning ID") and return;
+
+    res_error($jira_id, $res, "transitioning ID", {no_error => 1 }) and do {
+        my $url = workflow_dispatch_url($jira_id, $transition_id);
+        qx{open_url \Q$url\E 2>/dev/null};
+        say "Transition at $url";
+        local $| = 1;
+        print "Press Enter to Continue: ";
+        <>;
+    };
 
     get_issue($jira_id, 1);
     get_transitions($jira_id, 1);
@@ -414,20 +422,21 @@ sub get_json {
 
 
 sub res_error {
-    my($jira_id, $res, $what, $extra) = @_;
+    my($jira_id, $res, $what, $opts) = @_;
 
     say STDERR Dumper $res if $verbose;
 
     unless ($res->is_success) {
-        my $error = $res->status_line;
-        my $data = get_json($jira_id, $res->content);
+        unless ($opts->{no_error}) {
+            my $error = $res->status_line;
+            my $data = get_json($jira_id, $res->content);
 
-        if ($data && keys %$data && $data->{errorMessages}) {
-            $error .= ': ' . join("; ", @{ $data->{errorMessages} });
+            if ($data && keys %$data && $data->{errorMessages}) {
+                $error .= ': ' . join("; ", @{ $data->{errorMessages} });
+            }
+
+            output_error(sprintf "Error %s for %s: %s", $what, $jira_id, $error);
         }
-
-        $error .= ": $extra" if $extra;
-        output_error(sprintf "Error %s for %s: %s", $what, $jira_id, $error);
         return 1;
     }
 
@@ -513,13 +522,13 @@ sub _jira_id {
 #### init
 
 sub init {
-    my(@transition_options, %transition_options);
+#     my(@transition_options, %transition_options);
     Getopt::Long::Configure('bundling');
     GetOptions(
         'h|help',                sub { pod2usage(-verbose => 2) },
         'V|version',             \$version,
         'v|verbose',             \$verbose,
-        't|transition_option=s', \@transition_options,
+#         't|transition_option=s', \@transition_options,
     ) or pod2usage(-verbose => 1);
 
     if ($version) {
@@ -543,11 +552,11 @@ sub init {
         pod2usage(-verbose => 1, -message => "Command '$cmd' not recognized");
     }
 
-    if (@transition_options) {
-        if ($cmd ne 'transition') {
-            pod2usage(-verbose => 1, -message => "--transition_option only valid with command '$cmd'");
-        }
-    }
+#     if (@transition_options) {
+#         if ($cmd ne 'transition') {
+#             pod2usage(-verbose => 1, -message => "--transition_option only valid with command '$cmd'");
+#         }
+#     }
 
     $jira_cache = $ENV{JIRA_CACHE} //= "$ENV{HOME}/.jira_cache/";
     $jira_token = $ENV{JIRA_TOKEN} //= `cat $ENV{HOME}/.jira_token`;
@@ -568,7 +577,7 @@ sub init {
         output_error('No Jira ID') and return unless $jira_id;
         push @args, $jira_id;
         push @args, $other if defined $other;
-        push @args, \%transition_options if keys(%transition_options);
+#         push @args, \%transition_options if keys(%transition_options);
     }
 
     {
