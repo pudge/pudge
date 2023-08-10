@@ -193,8 +193,12 @@ function git_url {
     if [[ "$BASH_NEW" -eq 1 ]]; then
         local git_http_url=$(get-git-url -b $(pwd))
         if [[ -n "$git_http_url" ]]; then
-            echo -ne " \e]8;;"$git_http_url"\e\\\e]8;;\e\\"
+            echo -ne " \e]8;;"$git_http_url"\e\\\e]8;;\e\\"
+        else
+            echo -ne " "
         fi
+    else
+        echo -ne " "
     fi
 }
 
