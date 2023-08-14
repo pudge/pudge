@@ -112,7 +112,7 @@ function _my_date {
         iso8601=$(date -Iseconds)
         echo -ne "\e]8;;$iso8601\e\\"
     fi
-    perl -E 'binmode STDOUT, ":encoding(UTF-8)"; $x = 1359; $x += shift; $x += 12 if shift >= 30; print eval qq!"\\x{1f! . sprintf("%x",$x) . qq!}"!' $hour $min
+    perl -CSDA -E '$x = hex q!1f54f!; $x += shift; $x += 12 if shift >= 30; print chr $x' $hour $min
     if [[ $BASH_NEW -eq 1 ]]; then
         echo -ne "\e]8;;\e\\"
     fi
@@ -140,18 +140,19 @@ function _dyn_marks {
 }
 
 function _jira_status {
-    jira_status=$( jira_status short_status 2>/dev/null )
+    jira_status=$( jira_status short_status 2>/dev/null );
     if [[ -n "$jira_status" ]]; then
+        jira_estimate=$( jira_status short_estimate 2>/dev/null );
         jira_url="https://${JIRA_HOST}/browse/"$( jira_status jira_id )
         echo -ne ' '
         echo -ne '\001\e[34m\002\e]8;;'$jira_url'\e\\󰌃 \e]8;;\e\\\001\e[0m\002'
-        echo -ne "$jira_status "
+        echo -ne "$jira_status $jira_estimate "
     fi
 }
 
-function iterm2_prompt_mark {
-    echo -n ''
-}
+# function iterm2_prompt_mark {
+#     echo -n ''
+# }
 
 function _host_marks {
     if [[ -x /opt/bin/get_env.sh ]]; then

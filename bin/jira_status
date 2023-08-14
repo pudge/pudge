@@ -1,10 +1,8 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -CSDA
 use strict;
 use warnings;
 use 5.018;
 use utf8;
-
-# libwww-perl libjson-xs-perl perl-doc
 
 =pod
 
@@ -82,13 +80,13 @@ Transition the issue. Accepts a text name or numeric ID of a transition.
 
 Returns JSON object of available transitions, C<{ID:NAME}>.
 
-=item * estimate [JIRA_ID]
+=item * estimate [MINUTES] [JIRA_ID]
 
-Returns minutes left on time estimate.
+Sets/gets the remaining estimate.
 
-=item * set_estimate MINUTES [JIRA_ID]
+=item * short_estimate [JIRA_ID]
 
-Sets the remaining estimate.
+Returns just the emoji of the remaining estimate.
 
 =item * jira_id [JIRA_ID]
 
@@ -130,13 +128,14 @@ Add this to your F<.bashrc> or similar:
 Add this or similar, if desired, to your bash prompt:
 
     function _jira_status {
-        jira_status=$( jira_status short_status 2>/dev/null )
+        jira_status=$( jira_status short_status 2>/dev/null );
         if [[ -n "$jira_status" ]]; then
+            jira_estimate=$( jira_status short_estimate 2>/dev/null );
             jira_url="https://${JIRA_HOST}/browse/"$( jira_status jira_id )
             echo -ne ' '
             # link the Jira icon, and color it blue
             echo -ne '\001\e[34m\002\e]8;;'$jira_url'\e\\󰌃 \e]8;;\e\\\001\e[0m\002'
-            echo -ne "$jira_status"
+            echo -ne "$jira_status $jira_estimate "
         fi
     }
 
@@ -168,7 +167,7 @@ Save your token to F<~/.jira_token> (set file mode to C<0600> or similar).
 
 =item * Terminal font with NerdFont support
 
-For use with C<short_status> command.
+For use with C<short_status> and C<short_estimate> command.
 
 =back
 
@@ -193,17 +192,10 @@ our %STATUS = (
     'Closed'             => { icon => "" },
 );
 
-# our %TRANSITIONS = (
-#     '731'    => { browser => 1 },
-# );
-
-
 our $VERSION = '0.0.1';
 
 our $TOOLS_DIR = '/opt/bin';
 our $JIRA_USER = $ENV{JIRA_USER} // $ENV{USER};
-
-binmode STDOUT, ':utf8';
 
 my($host, $port) = ($ENV{JIRA_HOST}, '443');
 # https://developer.atlassian.com/cloud/jira/platform/rest/v2/
@@ -261,14 +253,6 @@ sub transition {
         ($transition_id) = grep { $transitions->{$_} eq $transition_id } keys %$transitions;
     }
     return unless $transition_id && $transitions->{$transition_id};
-
-#     my $fields = $TRANSITIONS{$transition_id};
-#     if ($fields->{browser}) {
-#         my $url = workflow_dispatch_url($jira_id, $transition_id);
-#         qx{open_url \Q$url\E 2>/dev/null};
-#         say "Transition at $url";
-#         return;
-#     }
 
     my $post = { transition => { id => $transition_id } };
     my $post_enc = encode_json($post);
@@ -347,42 +331,59 @@ sub refresh {
 
 
 sub estimate {
-    my($jira_id) = @_;
+    my($jira_id, $minutes) = @_;
 
-    my $issue = get_issue($jira_id);
+    my $issue;
+    if (defined $minutes) {
+        output_error("Minutes must be an integer") and return unless $minutes =~ /^\d+$/;
 
-    return get_json($jira_id, $issue)->{fields}{timeestimate} // '';
+        $issue = get_issue($jira_id, 1);
+        my $originalEstimate = get_json($jira_id, $issue)->{fields}{timetracking}{originalEstimate};
+
+        my $post = {
+            fields => {
+                timetracking => {
+                    originalEstimate => $originalEstimate,
+                    remainingEstimate => "${minutes}m"
+                }
+            }
+        };
+        my $post_enc = encode_json($post);
+        say $post_enc if $verbose;
+
+        my $url = issue_url($jira_id);
+        my $res = $ua->put($url, req_headers(), Content => $post_enc);
+        res_error($jira_id, $res, "estimating ID") and return;
+
+        $issue = get_issue($jira_id, 1);
+        get_transitions($jira_id, 1);
+    }
+    else {
+        $issue = get_issue($jira_id);
+    }
+
+    my $est = get_json($jira_id, $issue)->{fields}{timeestimate};
+    $est /= 60 if $est;
+    return $est // '';
 }
 
 
-sub set_estimate {
-    my($jira_id, $minutes) = @_;
+sub short_estimate {
+    my($jira_id) = @_;
 
-    output_error("No minutes provided") and return unless defined $minutes;
-    output_error("Minutes must be an integer") and return unless $minutes =~ /^\d+$/;
-
-    my $post = {
-        fields => {
-            timetracking => {
-                remainingEstimate => "${minutes}m"
-            }
+    my $est = int( estimate($jira_id) / 60 );
+    return '' unless $est;
+    my $val;
+    if ($est) {
+        $val = hex 'f143e';
+        if ($est >= 12) {
+            $val += 12;
         }
-    };
-    my $post_enc = encode_json($post);
-    say $post_enc if $verbose;
-
-    # adjust directly
-    my $url = issue_url($jira_id);
-    my $res = $ua->put($url, req_headers(), Content => $post_enc);
-    # adjust via worklog
-#     my $url = issue_url($jira_id) . "/worklog?adjustEstimate=new&newEstimate=${minutes}m";
-#     my $res = $ua->post($url, req_headers(), Content => '{"timeSpent":"1m"}');
-    res_error($jira_id, $res, "estimating ID") and return;
-
-    get_issue($jira_id, 1);
-    get_transitions($jira_id, 1);
-
-    return;
+        else {
+            $val += $est;
+        }
+    }
+    return chr $val;
 }
 
 
@@ -504,10 +505,12 @@ sub write_cache {
 sub jira_id {
     my($id) = @_;
 
-    $id = _jira_id($id);
-    $id ||= _jira_id(`git rev-parse --abbrev-ref HEAD 2>&1`);
-
-    return $id;
+    if (length $id) {
+        return _jira_id($id);
+    }
+    else {
+        return _jira_id(`git rev-parse --abbrev-ref HEAD 2>&1`);
+    }
 }
 
 sub _jira_id {
@@ -522,13 +525,11 @@ sub _jira_id {
 #### init
 
 sub init {
-#     my(@transition_options, %transition_options);
     Getopt::Long::Configure('bundling');
     GetOptions(
         'h|help',                sub { pod2usage(-verbose => 2) },
         'V|version',             \$version,
         'v|verbose',             \$verbose,
-#         't|transition_option=s', \@transition_options,
     ) or pod2usage(-verbose => 1);
 
     if ($version) {
@@ -544,7 +545,7 @@ sub init {
          jira_id|completion|test
         |status_line|short_status|status
         |transition|get_transitions|list_transitions
-        |estimate|set_estimate
+        |estimate|short_estimate
         |get_issue|refresh
     )$/x;
 
@@ -552,32 +553,49 @@ sub init {
         pod2usage(-verbose => 1, -message => "Command '$cmd' not recognized");
     }
 
-#     if (@transition_options) {
-#         if ($cmd ne 'transition') {
-#             pod2usage(-verbose => 1, -message => "--transition_option only valid with command '$cmd'");
-#         }
-#     }
-
     $jira_cache = $ENV{JIRA_CACHE} //= "$ENV{HOME}/.jira_cache/";
     $jira_token = $ENV{JIRA_TOKEN} //= `cat $ENV{HOME}/.jira_token`;
     $ua = LWP::UserAgent->new;
 
-    my($jira_id, $other);
+    my($jira_id);
 
-    if ($cmd =~ /^(transition|set_estimate)$/) {
-        $other = shift @ARGV;
+    if ($cmd eq 'transition') {
+        my $transition = shift @ARGV;
+        $jira_id = jira_id(shift(@ARGV));
+        output_error('No Jira ID') and return unless $jira_id;
+        push @args, $jira_id;
+        push @args, $transition if defined $transition;
     }
-
-    if ($cmd eq 'completion') {
+    elsif ($cmd eq 'estimate') {
+        my $minutes;
+        # 1. estimate # get
+        # 2. estimate ID # get
+        # 3. estimate MINUTES # set
+        # 4. estimate MINUTES ID # set
+        if (@ARGV) {
+            $minutes = shift(@ARGV);
+            if ($minutes =~ /^\d+$/) { # 3
+                $jira_id = jira_id(shift(@ARGV)); # 4
+            }
+            else {
+                $jira_id = jira_id($minutes); # 2
+                undef $minutes;
+            }
+        }
+        else {
+            $jira_id = jira_id(); # 1
+        }
+        output_error('No Jira ID') and return unless $jira_id;
+        push @args, $jira_id;
+        push @args, $minutes if defined $minutes;
+    }
+    elsif ($cmd eq 'completion') {
         my $completion_shell = shift @ARGV;
         push @args, $completion_shell;
     }
     else {
         $jira_id = jira_id(shift(@ARGV));
-        output_error('No Jira ID') and return unless $jira_id;
         push @args, $jira_id;
-        push @args, $other if defined $other;
-#         push @args, \%transition_options if keys(%transition_options);
     }
 
     {
@@ -609,7 +627,7 @@ _transitions() {
     COMPREPLY=()
 
     if [[ $count -eq 2 ]]; then
-        word_list=(status status_line short_status transition list_transitions completion get_transitions get_issue refresh estimate set_estimate)
+        word_list=(status status_line short_status transition list_transitions completion get_transitions get_issue refresh estimate short_estimate)
     elif [[ $count -eq 3 && $prev == 'transition' ]]; then
         word_list=($(jira_status list_transitions | jq -r .[]))
     elif [[ $count -eq 3 && $prev == 'completion' ]]; then
