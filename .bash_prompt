@@ -140,13 +140,9 @@ function _dyn_marks {
 }
 
 function _jira_status {
-    jira_status=$( jira_status short_status 2>/dev/null );
+    jira_status=$( jira_status prompt 2>/dev/null );
     if [[ -n "$jira_status" ]]; then
-        jira_estimate=$( jira_status short_estimate 2>/dev/null );
-        jira_url="https://${JIRA_HOST}/browse/"$( jira_status jira_id )
-        echo -ne ' '
-        echo -ne '\001\e[34m\002\e]8;;'$jira_url'\e\\󰌃 \e]8;;\e\\\001\e[0m\002'
-        echo -ne "$jira_status $jira_estimate "
+        echo -ne " $jira_status"
     fi
 }
 

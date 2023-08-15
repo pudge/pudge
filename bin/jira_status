@@ -127,7 +127,7 @@ Add this to your F<.bashrc> or similar:
 
 Add this or similar, if desired, to your bash prompt:
 
-    function _jira_status {
+    function _jira_status_make_your_own {
         jira_status=$( jira_status short_status 2>/dev/null );
         if [[ -n "$jira_status" ]]; then
             jira_estimate=$( jira_status short_estimate 2>/dev/null );
@@ -136,6 +136,13 @@ Add this or similar, if desired, to your bash prompt:
             # link the Jira icon, and color it blue
             echo -ne '\001\e[34m\002\e]8;;'$jira_url'\e\\󰌃 \e]8;;\e\\\001\e[0m\002'
             echo -ne "$jira_status $jira_estimate "
+        fi
+    }
+
+    function _jira_status {
+        jira_status=$( jira_status prompt 2>/dev/null );
+        if [[ -n "$jira_status" ]]; then
+            echo -ne " $jira_status"
         fi
     }
 
@@ -191,6 +198,16 @@ our %STATUS = (
     'Resolved'           => { icon => "" },
     'Closed'             => { icon => "" },
 );
+
+my @ALL_CMDS = qw(
+    jira_id completion test prompt refresh
+    get_issue status_line short_status status
+    get_transitions list_transitions transition
+    estimate short_estimate
+);
+
+my $all_cmds_str = join '|', @ALL_CMDS;
+my $ALL_CMDS = qr/^($all_cmds_str)$/;
 
 our $VERSION = '0.0.1';
 
@@ -387,12 +404,34 @@ sub short_estimate {
 }
 
 
+sub prompt {
+    my($jira_id) = @_;
+
+    my $status = short_status($jira_id);
+    return unless $status;
+
+
+    my $url = "https://$ENV{JIRA_HOST}/browse/$jira_id";
+
+    my $return = "\001\e[34m\002\e]8;;" . $url . "\e\\󰌃 \e]8;;\e\\\001\e[0m\002";
+    $return .= "$status ";
+
+    my $est = short_estimate($jira_id);
+    if ($est) {
+        $return .= "$est ";
+    }
+
+    return $return;
+}
+
+
 sub completion {
     my($shell) = @_;
 
     my $completion = '';
     my $seen = 0;
     while (my $line = <DATA>) {
+        $line =~ s/\b__ALL_CMDS__\b/join ' ', @ALL_CMDS/e;
         if ($line =~ /^__(\w+)__\Z/) {
             my $SHELL = lc $1;
             $seen = $shell eq $SHELL;
@@ -541,15 +580,7 @@ sub init {
 
     pod2usage(-verbose => 1, -message => "No command found") unless $cmd;
 
-    my $all_cmds = qr/^(
-         jira_id|completion|test
-        |status_line|short_status|status
-        |transition|get_transitions|list_transitions
-        |estimate|short_estimate
-        |get_issue|refresh
-    )$/x;
-
-    if ($cmd !~ $all_cmds) {
+    if ($cmd !~ $ALL_CMDS) {
         pod2usage(-verbose => 1, -message => "Command '$cmd' not recognized");
     }
 
@@ -595,6 +626,7 @@ sub init {
     }
     else {
         $jira_id = jira_id(shift(@ARGV));
+        output_error('No Jira ID') and return unless $jira_id;
         push @args, $jira_id;
     }
 
@@ -627,7 +659,7 @@ _transitions() {
     COMPREPLY=()
 
     if [[ $count -eq 2 ]]; then
-        word_list=(status status_line short_status transition list_transitions completion get_transitions get_issue refresh estimate short_estimate)
+        word_list=(__ALL_CMDS__)
     elif [[ $count -eq 3 && $prev == 'transition' ]]; then
         word_list=($(jira_status list_transitions | jq -r .[]))
     elif [[ $count -eq 3 && $prev == 'completion' ]]; then
