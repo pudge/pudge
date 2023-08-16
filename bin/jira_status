@@ -388,16 +388,18 @@ sub estimate {
 sub short_estimate {
     my($jira_id) = @_;
 
-    my $est = int( estimate($jira_id) / 60 );
-    return '' unless $est;
+    my $est_min = estimate($jira_id);
+    return '' unless $est_min;
+    my $est_hrs = int( estimate($jira_id) / 60 );
+    return '' unless $est_hrs;
     my $val;
-    if ($est) {
+    if ($est_hrs) {
         $val = hex 'f143e';
-        if ($est >= 12) {
+        if ($est_hrs >= 12) {
             $val += 12;
         }
         else {
-            $val += $est;
+            $val += $est_hrs;
         }
     }
     return chr $val;
