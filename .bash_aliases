@@ -26,10 +26,12 @@ fi
 alias tmcc='tmux -CC'
 alias tmca='tmux -CC attach'
 
+alias dr='direnv reload'
+
 alias kc=kubectl
 function kce() {
     cmd=$2
-    container_id=$(kubectl get po | grep $1 | cut -f 1 -d ' ' | head -1)
+    container_id=$(kubectl get po | grep $1 | grep Running | cut -f 1 -d ' ' | head -1)
     if [[ -z $container_id ]]; then
         echo "could not find container ID for $1"
     else
