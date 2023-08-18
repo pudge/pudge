@@ -28,7 +28,18 @@ alias tmca='tmux -CC attach'
 
 alias dr='direnv reload'
 
-alias kc=kubectl
+alias dockrun='docker run -it --rm'
+
+if [[ $(which kubectl 2>/dev/null) ]]; then
+    alias kc=kubectl
+    source <(kubectl completion bash)
+    if [[ $(type -t compopt) = "builtin" ]]; then
+        complete -o default -F __start_kubectl kc
+    else
+        complete -o default -o nospace -F __start_kubectl kc
+    fi
+fi
+
 function kce() {
     cmd=$2
     container_id=$(kubectl get po | grep $1 | grep Running | cut -f 1 -d ' ' | head -1)

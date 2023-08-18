@@ -131,7 +131,8 @@ function _dyn_marks {
         echo -ne ' ☁️ \001\e[34m\002'$AWS_PROFILE'\001\e[0m\002'
     fi
     if [[ -n "$K8S_NAMESPACE" ]]; then
-        echo -ne ' 🫥 \001\e[35m\002'$K8S_NAMESPACE'\001\e[0m\002'
+        k8s_namespace=$(kubectl config view --minify -o jsonpath='{...namespace}')
+        echo -ne ' 🫥 \001\e[35m\002'$k8s_namespace'\001\e[0m\002'
     fi
     if [[ -s "$JIRA_TRACK_TIME_FILE" ]]; then
         track_time_url="https://${JIRA_HOST}/browse/"$(head -1 "$JIRA_TRACK_TIME_FILE")
