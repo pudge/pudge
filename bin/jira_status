@@ -90,7 +90,7 @@ Returns just the emoji of the remaining estimate.
 
 =item * jira_id [JIRA_ID]
 
-Helper function to just return the Jira ID.
+Convenience command to return the Jira ID (since it is not always passed, and is often derived from branch name).
 
 =item * completion SHELL
 
@@ -122,12 +122,27 @@ Refresh the issue and transitions cache for the Jira ID.
 
 Add this to your F<.bashrc> or similar:
 
-    export JIRA_HOST=jira.i.extrahop.com
+    export JIRA_HOST=jira.example.com
     test -n $(which jira_status > /dev/null) && source <(jira_status completion bash)
 
-Add this or similar, if desired, to your bash prompt:
+Add this or similar, if desired, to your prompt:
 
-    function _jira_status_make_your_own {
+    function _jira_status {
+        jira_status=$( jira_status prompt 2>/dev/null );
+        if [[ -n "$jira_status" ]]; then
+            echo -ne " $jira_status"
+        fi
+    }
+
+    PS1 = "${PS1}\$(_jira_status)"
+
+Mine looks like this, given a branch referencing an in-progress ticket with three hours remaining. And in some terminals, the Jira icon has a clickable link to Jira in the web browser.
+
+    pudge@bourque:~  pudge/DEV-1234 ✔ 󰌃  󱑁
+
+You could also make your own C<_jira_status>. C<jira_status prompt> is a nice shortcut that effectively does the same thing as the below; making your own means more calls to C<jira_status> for each prompt, which isn’t great, but gives you more control.
+
+    function _jira_status {
         jira_status=$( jira_status short_status 2>/dev/null );
         if [[ -n "$jira_status" ]]; then
             jira_estimate=$( jira_status short_estimate 2>/dev/null );
@@ -138,15 +153,6 @@ Add this or similar, if desired, to your bash prompt:
             echo -ne "$jira_status $jira_estimate "
         fi
     }
-
-    function _jira_status {
-        jira_status=$( jira_status prompt 2>/dev/null );
-        if [[ -n "$jira_status" ]]; then
-            echo -ne " $jira_status"
-        fi
-    }
-
-    PS1 = "${PS1}\$(_jira_status)"
 
 
 =head3 Authorization
@@ -189,18 +195,25 @@ use LWP::UserAgent;
 use Pod::Usage;
 use URI::Escape 'uri_escape';
 
-our %STATUS = (
-    'Selected'           => { icon => "️" },
-    'In Progress'        => { icon => "" },
-    'Blocked'            => { icon => "" },
-    'Needs Information'  => { icon => "󰆆" },
-    'In Review'          => { icon => "" },
-    'Resolved'           => { icon => "" },
-    'Closed'             => { icon => "" },
-);
+our %STATUS;
+use FindBin '$Bin';
+eval { require "$Bin/jira_status_statuses.pl" };
+
+unless (keys %STATUS) {
+    %STATUS = (
+        'Selected'           => { icon => "️" },
+        'In Progress'        => { icon => "" },
+        'Blocked'            => { icon => "" },
+        'Needs Information'  => { icon => "󰆆" },
+        'In Review'          => { icon => "" },
+        'Resolved'           => { icon => "" },
+        'Closed'             => { icon => "" },
+    );
+}
+
 
 my @ALL_CMDS = qw(
-    jira_id completion test prompt refresh
+    jira_id completion prompt refresh
     get_issue status_line short_status status
     get_transitions list_transitions transition
     estimate short_estimate
