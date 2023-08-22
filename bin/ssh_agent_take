@@ -5,13 +5,13 @@ use warnings;
 use File::Spec::Functions qw(catdir tmpdir);
 use File::Find;
 
-my $ps = `ps auxw | grep -v grep | grep ssh-agent`;
+my $ps = `ps auxw | grep -v grep | grep -v GNOME | grep 'ssh-agent'`;
 my($pid) = $ps =~ /^\S+\s+(\d+).+\bssh-agent(?: -l)?$/m;
 
 die "No PID found for ssh-agent:\n$ps" unless $pid;
 
-my $lsof = `lsof -p $pid`;
-my($tmpfile) = $lsof =~ /^\S+\s+$pid.+\sunix\s.+\s(\S+(?:\bagent.\d+|\/Listeners))$/m;
+my $lsof = `sudo lsof -p $pid`;
+my($tmpfile) = $lsof =~ /^\S+\s+$pid.+\sunix\s.+\s(\S+(?:\bagent.\d+|\/Listeners))/m;
 
 die "No tmp file found for ssh-agent $pid:\n$lsof" unless $tmpfile;
 
