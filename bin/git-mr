@@ -1,8 +1,15 @@
 #!/usr/bin/perl
+use strict;
+use warnings;
+use 5.010;
 
 chomp(my $full_url = `get-git-url -b -n`);
+#say $full_url;
 my($base, $branch) = $full_url =~ m!^(http.+?//.+?)/tree/(.+)$!;
 $branch =~ s!/!%2F!g;
+#say $base;
+#say $branch;
 
 my $url = "$base/-/merge_requests/new?merge_request%5Bsource_branch%5D=$branch";
+say "opening <$url>";
 system open_url => $url;
