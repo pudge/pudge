@@ -106,11 +106,11 @@
     cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
 [mergetool "bbdiff"]
     cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
-[filter "lfs"]
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
-	clean = git-lfs clean -- %f
+# [filter "lfs"]
+# 	smudge = git-lfs smudge -- %f
+# 	process = git-lfs filter-process
+# 	required = true
+# 	clean = git-lfs clean -- %f
 [credential]
 	helper = store
 

@@ -19,9 +19,9 @@ alias cenodiff="cenoview -l diff.diff"
 alias fixenv='$HOME/bin/fixenv.pl > $HOME/.fixenv;source $HOME/.fixenv'
 alias fucking=sudo
 alias tcpd='sudo tcpdump -p -i any -s0 -v -w /tmp/$(hostname).$(date +%F-%T).pcap'
-if [[ -x `which hub` ]]; then
-    alias git=hub
-fi
+# if [[ -x `which hub` ]]; then
+#     alias git=hub
+# fi
 
 alias tmcc='tmux -CC'
 alias tmca='tmux -CC attach'
@@ -30,7 +30,7 @@ alias dr='direnv reload'
 
 alias dockrun='docker run -it --rm'
 
-if [[ $(which kubectl 2>/dev/null) ]]; then
+if [[ $(uname) == 'Linux' ]] && [[ $(which kubectl 2>/dev/null) ]]; then
     alias kc=kubectl
     source <(kubectl completion bash)
     if [[ $(type -t compopt) = "builtin" ]]; then
