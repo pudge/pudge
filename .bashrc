@@ -48,7 +48,7 @@ elif [[ $(uname) == 'Darwin' ]]; then
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
 fi
 
-export PATH=$HOME/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
+export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
 test -r "${HOME}/.eh.bash" && source "${HOME}/.eh.bash"
 
 # don't run these things if calling perl from BBEdit, it's pretty slow

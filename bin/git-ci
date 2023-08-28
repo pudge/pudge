@@ -2,16 +2,23 @@
 use warnings;
 use strict;
 use feature ':5.10';
+
 use File::Temp 'tempfile';
+use JSON::XS qw(decode_json encode_json);
+use LWP::UserAgent;
 
 my $mess = '';
 chomp(my $id = uc `jira_id`);
+my $subj = '';
 if ($id) {
     $mess = "Ticket: $id";
+    $subj = get_jira_issue($id);
 }
 
 my($fh, $filename) = tempfile();
 my $template = <<EOT;
+$subj
+
 
 
 Ticket: $id
@@ -20,3 +27,20 @@ EOT
 print $fh $template;
 
 system 'git', 'commit', '-t', $filename, '-e', @ARGV;
+
+sub get_jira_issue {
+    my($jira_id) = @_;
+    my($host, $port) = ($ENV{JIRA_HOST}, '443');
+    my $jira_token = $ENV{JIRA_TOKEN} //= `cat $ENV{HOME}/.jira_token`;
+    my $ua = LWP::UserAgent->new;
+    my $base_url = "https://$host:$port/rest/api/2";
+    my $issue_url = "$base_url/issue/";
+
+    # https://developer.atlassian.com/cloud/jira/platform/rest/v2/
+    my $res = $ua->get($issue_url . $jira_id,
+        'Authorization' => 'Bearer ' . $jira_token,
+        'Content-Type'  => 'application/json'
+    );
+    my $issue = $res->content;
+    return eval { decode_json($issue)->{fields}{summary} };
+}
