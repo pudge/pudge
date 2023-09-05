@@ -117,6 +117,15 @@ function iterm2_print_user_vars {
     it2git
 }
 
+# truncate $HOME/.ssh/env --size 0
+# chmod 0600 $HOME/.ssh/env
+# if [[ -n "$SSH_AUTH_SOCK" && -n "$SSH_AGENT_PID" ]]; then
+#     echo "export SSH_AUTH_SOCK='$SSH_AUTH_SOCK'" >> $HOME/.ssh/env
+#     echo "export SSH_AGENT_PID='$SSH_AGENT_PID'" >> $HOME/.ssh/env
+# fi
+# echo "export SSH_CLIENT='$SSH_CLIENT'" >> $HOME/.ssh/env
+# echo "export SSH_CONNECTION='$SSH_CONNECTION'" >> $HOME/.ssh/env
+
 
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"

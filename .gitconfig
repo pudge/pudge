@@ -6,6 +6,8 @@
     hooksPath       = ~/.githooks
 [alias]
     cwip    = !git commit -m wip --no-verify
+    ca      = !git commit --amend
+    can     = !git commit --amend --no-edit
 
     pushf   = !git push --force-with-lease
     fetcht  = !git fetch --tags --force

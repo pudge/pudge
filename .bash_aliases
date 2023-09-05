@@ -99,6 +99,8 @@ function psg() {
 }
 export -f psg
 
+#alias sshc="source $HOME/.ssh/env"
+
 function git_only() {
     opts=$(git rev-parse --no-revs "$@" 2>/dev/null)
     rev=$(git rev-parse --revs-only "$@" 2>/dev/null)
