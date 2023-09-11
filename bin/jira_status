@@ -404,6 +404,7 @@ sub short_estimate {
     my $est_min = estimate($jira_id);
     return '' unless $est_min;
     my $est_hrs = int( estimate($jira_id) / 60 );
+    $est_hrs = 1 if $est_hrs == 0; # min < 60
     return '' unless $est_hrs;
     my $val;
     if ($est_hrs) {
