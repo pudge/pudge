@@ -8,6 +8,8 @@ export HISTTIMEFORMAT='%F %T '
 
 export OPEN_URL_SSH=1
 
+export SSH_AUTH_SOCK=~/.1password/agent.sock
+
 export GITHUB_HOST=github.com
 export PAGER=less
 export FORCE_HYPERLINKS=1
