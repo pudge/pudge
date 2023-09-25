@@ -8,8 +8,6 @@ export HISTTIMEFORMAT='%F %T '
 
 export OPEN_URL_SSH=1
 
-export SSH_AUTH_SOCK=~/.1password/agent.sock
-
 export GITHUB_HOST=github.com
 export PAGER=less
 export FORCE_HYPERLINKS=1
@@ -48,6 +46,8 @@ elif [[ $(uname) == 'Darwin' ]]; then
     export COPYFILE_DISABLE=1
     export VERSIONER_PERL_PREFER_32_BIT=yes
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
+
+    export SSH_AUTH_SOCK=~/.1password/agent.sock
 fi
 
 export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
