@@ -1,12 +1,12 @@
 [user]
-	name        = Chris Nandor
+	name        = pudge
 	email       = projects@pudge.net
 	signingKey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDnC0XRXfufzyt4lVyNRpxkSmp2CZjJ/gdbY16zqpInG
 [author]
-	name        = Chris Nandor
+	name        = pudge
 	email       = projects@pudge.net
 [committer]
-	name        = Chris Nandor
+	name        = pudge
 	email       = projects@pudge.net
 [commit]
 	gpgsign = true
