@@ -1,7 +1,7 @@
 [user]
-    name        = Chris Nandor
-    email       = projects@pudge.net
-	signingkey  = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDnC0XRXfufzyt4lVyNRpxkSmp2CZjJ/gdbY16zqpInG
+	name        = Chris Nandor
+	email       = projects@pudge.net
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDnC0XRXfufzyt4lVyNRpxkSmp2CZjJ/gdbY16zqpInG
 [commit]
 	gpgsign = true
 [gpg]
@@ -9,113 +9,113 @@
 [gpg "ssh"]
 	allowedSignersFile  = ~/.ssh/allowed_signers
 [core]
-    excludesfile    = ~/.gitignore.default
-    hooksPath       = ~/.githooks
+	excludesfile    = ~/.gitignore.default
+	hooksPath       = ~/.githooks
 
 [alias]
-    cwip    = !git commit -m wip --no-verify
-    ca      = !git commit --amend
-    can     = !git commit --amend --no-edit
+	cwip    = !git commit -m wip --no-verify
+	ca      = !git commit --amend
+	can     = !git commit --amend --no-edit
 
-    pushf   = !git push --force-with-lease
-    fetcht  = !git fetch --tags --force
-    pullr   = !git pull --rebase --tags
-    fp      = !git fetcht && git pullr
-    pro     = !hub pull-request --browse
-    prod    = !hub pull-request --browse --draft
-    st      = !git --no-pager status
-    sts     = !git --no-pager status --short --branch
-    ss      = !git stash save
-    sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
-    fetch   = !git fetch --tags --force
-    delrem  = !git push origin --delete
+	pushf   = !git push --force-with-lease
+	fetcht  = !git fetch --tags --force
+	pullr   = !git pull --rebase --tags
+	fp      = !git fetcht && git pullr
+	pro     = !hub pull-request --browse
+	prod    = !hub pull-request --browse --draft
+	st      = !git --no-pager status
+	sts     = !git --no-pager status --short --branch
+	ss      = !git stash save
+	sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
+	fetch   = !git fetch --tags --force
+	delrem  = !git push origin --delete
 
-    diffc   = !git diff --cached
-    dl      = !git diff --color=always | less -R
-    dlc     = !git diff --cached --color=always | less -R
-    dt      = !git difftool
-    dtc     = !git difftool --cached
+	diffc   = !git diff --cached
+	dl      = !git diff --color=always | less -R
+	dlc     = !git diff --cached --color=always | less -R
+	dt      = !git difftool
+	dtc     = !git difftool --cached
 
-    lasttag = describe --tags --abbrev=0
-    tagl    = !git tag --list | sort_tags
-    mod     = ls-files --modified
-    br      = rev-parse --abbrev-ref HEAD
-    sbr     = symbolic-ref HEAD
-    rbr     = rev-parse --abbrev-ref --symbolic-full-name @{u}
-    repo    = config --get remote.origin.url
-    sha     = rev-parse --verify HEAD
-    shas    = rev-parse --short HEAD
+	lasttag = describe --tags --abbrev=0
+	tagl    = !git tag --list | sort_tags
+	mod     = ls-files --modified
+	br      = rev-parse --abbrev-ref HEAD
+	sbr     = symbolic-ref HEAD
+	rbr     = rev-parse --abbrev-ref --symbolic-full-name @{u}
+	repo    = config --get remote.origin.url
+	sha     = rev-parse --verify HEAD
+	shas    = rev-parse --short HEAD
 
-    lg      = log --pretty=pudge1 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*' --decorate-refs-exclude='refs/tags/[a-z]*-[A-Z]*[0-9]*'
-    lgs     = !git lg --numstat
-    top     = !git lg -10
-    tops    = !git lgs -10
+	lg      = log --pretty=pudge1 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*' --decorate-refs-exclude='refs/tags/[a-z]*-[A-Z]*[0-9]*'
+	lgs     = !git lg --numstat
+	top     = !git lg -10
+	tops    = !git lgs -10
 
-    #log1    = log --oneline
-    log1    = log --pretty=pudge1 --date=short
-    logs    = log --stat --show-signature
-    logp    = log --patch --show-signature
-    logsp   = !git logs --patch
-    logg    = log --graph --show-signature
-    logg1   = !git logg --oneline
+	#log1    = log --oneline
+	log1    = log --pretty=pudge1 --date=short
+	logs    = log --stat --show-signature
+	logp    = log --patch --show-signature
+	logsp   = !git logs --patch
+	logg    = log --graph --show-signature
+	logg1   = !git logg --oneline
 
-    last    = log -1
-    last1   = last
-    lasts   = !git logs -1
-    lastp   = !git logp -1
-    lastsp  = !git logsp -1
-    lastc   = log --pretty=hash
+	last    = log -1
+	last1   = last
+	lasts   = !git logs -1
+	lastp   = !git logp -1
+	lastsp  = !git logsp -1
+	lastc   = log --pretty=hash
 
-    grepp   = grep -p
+	grepp   = grep -p
 
 [log]
-    date            = iso-strict
-    decorate        = true
+	date            = iso-strict
+	decorate        = true
 [pretty]
-    pudge1          = format:%C(auto)%h%Creset %<(12,trunc)%Cblue%al %ad%Creset %s%C(auto)%d%Creset %C(cyan)%GS%Creset
-    hash            = format:%H
+	pudge1          = format:%C(auto)%h%Creset %<(12,trunc)%Cblue%al %ad%Creset %s%C(auto)%d%Creset %C(cyan)%GS%Creset
+	hash            = format:%H
 [format]
-    pretty          = medium
+	pretty          = medium
 [color]
-    ui              = auto
-    grep            = always
+	ui              = auto
+	grep            = always
 [grep]
-    patternType     = perl
-    lineNumber      = true
-    column          = false
+	patternType     = perl
+	lineNumber      = true
+	column          = false
 [merge]
-    ff              = false
-    tool            = bbdiff
+	ff              = false
+	tool            = bbdiff
 [hub]
-    host            = github.com
-    protocol        = ssh
+	host            = github.com
+	protocol        = ssh
 [remote "origin"]
-    #fetch           = +refs/tags/*:refs/tags/*
-    prune           = true
+	#fetch           = +refs/tags/*:refs/tags/*
+	prune           = true
 [branch]
-    autosetuprebase = always
+	autosetuprebase = always
 [push]
-    default         = current
+	default         = current
 [forward]
-    verbose         = true
+	verbose         = true
 [rebase]
-    stat            = true
-    autostash       = true
+	stat            = true
+	autostash       = true
 [rerere]
-    enabled         = false
+	enabled         = false
 [init]
-    templatedir     = ~/.git-templates
+	templatedir     = ~/.git-templates
 
 [diff]
-    tool = bbdiff
-    renameLimit = 4096
-    colorMoved = zebra
+	tool = bbdiff
+	renameLimit = 4096
+	colorMoved = zebra
 [difftool]
-    prompt = false
+	prompt = false
 [difftool "bbdiff"]
-    cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
+	cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
 [mergetool "bbdiff"]
-    cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
+	cmd = bbdiff --wait --resume \"$LOCAL\" \"$REMOTE\"
 # [filter "lfs"]
 # 	smudge = git-lfs smudge -- %f
 # 	process = git-lfs filter-process
@@ -127,80 +127,80 @@
 
 # colors!
 [color "branch"]
-    current = green bold reverse
-    local = green
-    remote = red
-    upstream = blue
-    plain = cyan
+	current = green bold reverse
+	local = green
+	remote = red
+	upstream = blue
+	plain = cyan
 
 [color "diff"]
-    context =
-    plain =
-    commit = yellow
-    meta = bold
-    frag = cyan
-    func = magenta
-    old = red
-    new = green
-    whitespace = magenta reverse
+	context =
+	plain =
+	commit = yellow
+	meta = bold
+	frag = cyan
+	func = magenta
+	old = red
+	new = green
+	whitespace = magenta reverse
 
-    # See the <mode> setting of --color-moved in git-diff
-    oldMoved = red reverse
-    newMoved = green reverse
-#     oldMovedDimmed =
-#     oldMovedAlternative =
-#     oldMovedAlternativeDimmed =
-#     newMovedDimmed =
-#     newMovedAlternative =
-#     newMovedAlternativeDimmed =
+	# See the <mode> setting of --color-moved in git-diff
+	oldMoved = red reverse
+	newMoved = green reverse
+# 	oldMovedDimmed =
+# 	oldMovedAlternative =
+# 	oldMovedAlternativeDimmed =
+# 	newMovedDimmed =
+# 	newMovedAlternative =
+# 	newMovedAlternativeDimmed =
 
-    # see git-range-diff
-#     contextDimmed =
-#     oldDimmed =
-#     newDimmed =
-#     contextBold =
-#     oldBold =
-#     newBold =
+	# see git-range-diff
+# 	contextDimmed =
+# 	oldDimmed =
+# 	newDimmed =
+# 	contextBold =
+# 	oldBold =
+# 	newBold =
 
 [color "decorate"]
-    branch = green
-    remoteBranch = red
-    tag = yellow
-    stash = magenta
-    HEAD = white bold
+	branch = green
+	remoteBranch = red
+	tag = yellow
+	stash = magenta
+	HEAD = white bold
 
 [color "grep"]
-    context =
-    filename =
-    function = magenta bold
-    lineNumber = green
-    column = yellow
-    match =
-    matchContext =
-    matchSelected = blue bold
-    selected =
-    separator = cyan
+	context =
+	filename =
+	function = magenta bold
+	lineNumber = green
+	column = yellow
+	match =
+	matchContext =
+	matchSelected = blue bold
+	selected =
+	separator = cyan
 
 [color "interactive"]
-    prompt = yellow
-    header = cyan bold
-    help = green
-    error = red
+	prompt = yellow
+	header = cyan bold
+	help = green
+	error = red
 
 [color "remote"]
-    hint = yellow reverse
-    warning = magenta reverse
-    success = green reverse
-    error = red reverse
+	hint = yellow reverse
+	warning = magenta reverse
+	success = green reverse
+	error = red reverse
 
 [color "status"]
-    header =
-    branch = green
-    localBranch = green
-    nobranch = red reverse
-    remoteBranch = red
-    unmerged = magenta bold reverse
-    added = green
-    updated = green
-    changed = yellow
-    untracked = cyan
+	header =
+	branch = green
+	localBranch = green
+	nobranch = red reverse
+	remoteBranch = red
+	unmerged = magenta bold reverse
+	added = green
+	updated = green
+	changed = yellow
+	untracked = cyan
