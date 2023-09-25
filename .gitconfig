@@ -64,6 +64,7 @@
 	logsp   = !git logs --patch
 	logg    = log --graph --show-signature
 	logg1   = !git logg --oneline
+	logf    = log --pretty=fuller --show-signature
 
 	last    = log -1
 	last1   = last
