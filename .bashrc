@@ -23,7 +23,9 @@ export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#21262c,hl:#9580FF --color=fg+:#f
 
 ssh_identity=$(ssh-add -L 2>/dev/null | perl -ne '@x = split " "; print $x[1] if $x[2] eq "id_ed25519"')
 if [[ -n "$ssh_identity" ]]; then
-    git config --global user.signingkey "ssh-ed25519 $(ssh_identity)"
+    git config --global commit.gpgsign true
+    git config --global gpg.format ssh
+    git config --global user.signingkey "ssh-ed25519 $ssh_identity"
 fi
 
 
