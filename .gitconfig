@@ -53,10 +53,10 @@
 
     #log1    = log --oneline
     log1    = log --pretty=pudge1 --date=short
-    logs    = log --stat
-    logp    = log --patch
+    logs    = log --stat --show-signature
+    logp    = log --patch --show-signature
     logsp   = !git logs --patch
-    logg    = log --graph
+    logg    = log --graph --show-signature
     logg1   = !git logg --oneline
 
     last    = log -1
@@ -72,7 +72,7 @@
     date            = iso-strict
     decorate        = true
 [pretty]
-    pudge1          = format:%C(auto)%h%Creset %<(12,trunc)%Cblue%al %ad%Creset %s%C(auto)%d%Creset
+    pudge1          = format:%C(auto)%h%Creset %<(12,trunc)%Cblue%al %ad%Creset %s%C(auto)%d%Creset %C(cyan)%GS%Creset
     hash            = format:%H
 [format]
     pretty          = medium
