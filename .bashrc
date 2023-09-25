@@ -21,14 +21,6 @@ export PIPENV_VENV_IN_PROJECT=true
 # Dracula 2
 export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#21262c,hl:#9580FF --color=fg+:#f8f8f2,bg+:#414d58,hl+:#9580FF --color=info:#ffca80,prompt:#8aff80,pointer:#ff80bf --color=marker:#ffff80,spinner:#9580ff,header:#708ca9'
 
-ssh_identity=$(ssh-add -L 2>/dev/null | perl -ne '@x = split " "; print $x[1] if $x[2] eq "id_ed25519"')
-if [[ -n "$ssh_identity" ]]; then
-    git config --global commit.gpgsign true
-    git config --global gpg.format ssh
-    git config --global user.signingkey "ssh-ed25519 $ssh_identity"
-fi
-
-
 if [[ $(uname) == 'Linux' ]]; then
     ulimit -n 4096
     export EDITOR=vim
