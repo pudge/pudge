@@ -44,8 +44,6 @@ elif [[ $(uname) == 'Darwin' ]]; then
     export COPYFILE_DISABLE=1
     export VERSIONER_PERL_PREFER_32_BIT=yes
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
-
-    export SSH_AUTH_SOCK=~/.1password/agent.sock
 fi
 
 export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
@@ -116,16 +114,6 @@ function iterm2_print_user_vars {
 #     fi
     it2git
 }
-
-# truncate $HOME/.ssh/env --size 0
-# chmod 0600 $HOME/.ssh/env
-# if [[ -n "$SSH_AUTH_SOCK" && -n "$SSH_AGENT_PID" ]]; then
-#     echo "export SSH_AUTH_SOCK='$SSH_AUTH_SOCK'" >> $HOME/.ssh/env
-#     echo "export SSH_AGENT_PID='$SSH_AGENT_PID'" >> $HOME/.ssh/env
-# fi
-# echo "export SSH_CLIENT='$SSH_CLIENT'" >> $HOME/.ssh/env
-# echo "export SSH_CONNECTION='$SSH_CONNECTION'" >> $HOME/.ssh/env
-
 
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"
