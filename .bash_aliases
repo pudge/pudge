@@ -16,7 +16,7 @@ alias cl=clear
 alias grep="egrep --color"
 alias whois="whois -h whois.geektools.com"
 alias cenodiff="cenoview -l diff.diff"
-alias fixenv='$HOME/bin/fixenv.pl > $HOME/.fixenv;source $HOME/.fixenv'
+alias tmfixenv='$HOME/bin/tmfixenv.pl > $HOME/.tmfixenv;source $HOME/.tmfixenv'
 alias fucking=sudo
 alias tcpd='sudo tcpdump -p -i any -s0 -v -w /tmp/$(hostname).$(date +%F-%T).pcap'
 # if [[ -x `which hub` ]]; then

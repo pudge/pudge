@@ -44,6 +44,10 @@ elif [[ $(uname) == 'Darwin' ]]; then
     export COPYFILE_DISABLE=1
     export VERSIONER_PERL_PREFER_32_BIT=yes
     unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
+
+    if [[ -e ~/.1password/agent.sock ]]; then
+        export SSH_AUTH_SOCK=~/.1password/agent.sock
+    fi
 fi
 
 export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
