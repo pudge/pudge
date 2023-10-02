@@ -24,7 +24,7 @@ export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#21262c,hl:#9580FF --color=fg+:#f
 if [[ $(uname) == 'Linux' ]]; then
     ulimit -n 4096
     export EDITOR=vim
-    if [[ -d /home/vagrant ]]; then
+    if [[ -x $(which ceno 2>1 /dev/null) ]]; then
         export EDITOR=ceno
     fi
 
@@ -43,7 +43,7 @@ elif [[ $(uname) == 'Darwin' ]]; then
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
     export COPYFILE_DISABLE=1
     export VERSIONER_PERL_PREFER_32_BIT=yes
-    unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
+    #unset AEDebug AEDebugSends AEDebugReceives AEDebugVerbose AEDebugOSL
 
     if [[ -e ~/.1password/agent.sock ]]; then
         export SSH_AUTH_SOCK=~/.1password/agent.sock
@@ -51,7 +51,7 @@ elif [[ $(uname) == 'Darwin' ]]; then
 fi
 
 export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
-test -r "${HOME}/.eh.bash" && source "${HOME}/.eh.bash"
+test -r "${HOME}/.bashrc.local" && source "${HOME}/.bashrc.local"
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=$(ps -o comm= $PPID)
