@@ -24,10 +24,6 @@ export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#21262c,hl:#9580FF --color=fg+:#f
 if [[ $(uname) == 'Linux' ]]; then
     ulimit -n 4096
     export EDITOR=vim
-    if [[ -x $(which ceno 2>1 /dev/null) ]]; then
-        export EDITOR=ceno
-    fi
-
     MYPATH=$PATH
 
     if [[ -x "$HOME/bin/open_url" ]]; then
@@ -51,6 +47,13 @@ elif [[ $(uname) == 'Darwin' ]]; then
 fi
 
 export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
+
+if [[ $(uname) == 'Linux' ]]; then
+    if [[ -x $(which ceno 2>1 /dev/null) ]]; then
+        export EDITOR=ceno
+    fi
+fi
+
 test -r "${HOME}/.bashrc.local" && source "${HOME}/.bashrc.local"
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
