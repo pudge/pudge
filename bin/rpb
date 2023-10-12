@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+our $v;
+our $SSH = 'ssh';
+our $copy = 'pbcopy';
+our $paste = 'pbpaste';
+our $cmd;
+our $in;
+
+if ($0 =~ /cp|copy/) {
+    $cmd = $copy;
+    $in = join '', <>;
+}
+else {
+    $cmd = $paste;
+}
+
+my $host = $ENV{SSH_CLIENT} || $ENV{SSH_CONNECTION};
+if ($host) {
+    $host =~ s/ .+$//;
+    if ($host =~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) {
+        _rpb($SSH, $host, $cmd, $in);
+        exit 0;
+    }
+}
+exit 0;
+
+
+sub _rpb {
+    my(@args) = @_;
+    if ($v) {
+        say "@args";
+    }
+    if (defined $args[3]) {
+        my $x = quotemeta($args[3]);
+        $x =~ s/\n/\\n/g;
+        `echo -n $x | @args[0..2]`;
+    }
+    else {
+        system(@args[0..2]);
+    }
+}

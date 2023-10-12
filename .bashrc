@@ -70,6 +70,8 @@ if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
     test -r "/opt/homebrew/etc/profile.d/bash_completion.sh"    && source "/opt/homebrew/etc/profile.d/bash_completion.sh"
     test -r "/usr/local/etc/profile.d/bash_completion.sh"       && source "/usr/local/etc/profile.d/bash_completion.sh"
 
+    test -r "${HOME}/.bash-preexec.sh"                          && source "${HOME}/.bash-preexec.sh"
+
     # brew install git
     test -r "${HOME}/.git-completion.bash"                      && source "${HOME}/.git-completion.bash"
     test -r "${HOME}/.hub-completion.bash"                      && source "${HOME}/.hub-completion.bash"
@@ -122,7 +124,18 @@ function iterm2_print_user_vars {
     it2git
 }
 
+function tmux_env_refresh {
+    if [ -n "$TMUX" ]; then
+        export SSH_AUTH_SOCK="$(tmux show-environment | grep '^SSH_AUTH_SOCK' | cut -d '=' -f 2)"
+        export SSH_CLIENT="$(tmux show-environment | grep '^SSH_CLIENT' | cut -d '=' -f 2)"
+        export SSH_CONNECTION="$(tmux show-environment | grep '^SSH_CONNECTION' | cut -d '=' -f 2)"
+    fi
+}
+
+function preexec {
+    tmux_env_refresh
+}
+
 if [[ ! -z $(which pyenv) ]]; then
     eval "$(pyenv init -)"
 fi
-
