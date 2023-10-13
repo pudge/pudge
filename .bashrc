@@ -129,6 +129,7 @@ function tmux_env_refresh {
         export SSH_AUTH_SOCK="$(tmux show-environment | grep '^SSH_AUTH_SOCK' | cut -d '=' -f 2)"
         export SSH_CLIENT="$(tmux show-environment | grep '^SSH_CLIENT' | cut -d '=' -f 2)"
         export SSH_CONNECTION="$(tmux show-environment | grep '^SSH_CONNECTION' | cut -d '=' -f 2)"
+        export TERM=tmux-256color
     fi
 }
 
