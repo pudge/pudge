@@ -49,7 +49,7 @@ fi
 export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
 
 if [[ $(uname) == 'Linux' ]]; then
-    if [[ -x $(which ceno 2>1 /dev/null) ]]; then
+    if [[ -x $(which ceno 2>&1 /dev/null) ]]; then
         export EDITOR=ceno
     fi
 fi

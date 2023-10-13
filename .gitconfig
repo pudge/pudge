@@ -75,6 +75,8 @@
 
 	grepp   = grep -p
 
+	cp      = cherry-pick
+
 [log]
 	date            = iso-strict
 	decorate        = true
