@@ -46,10 +46,6 @@ elif [[ $(uname) == 'Darwin' ]]; then
     fi
 fi
 
-if [[ -n "$TMUX" ]]; then
-    export TERM=tmux-256color
-fi
-
 export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
 
 if [[ $(uname) == 'Linux' ]]; then
