@@ -14,7 +14,7 @@ fi
 
 alias cl=clear
 alias grep="egrep --color"
-alias whois="whois -h whois.geektools.com"
+# alias whois="whois -h whois.geektools.com"
 alias cenodiff="cenoview -l diff.diff"
 alias tmfixenv='$HOME/bin/tmfixenv.pl > $HOME/.tmfixenv;source $HOME/.tmfixenv'
 alias fucking=sudo
