@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+my @terms = @ARGV;
+
+opendir my $dh, '.' or die "Cannot opendir: $!";
+
+for my $dir (readdir $dh) {
+    next if $dir =~ /^\./;
+    next unless -d $dir;
+    chdir $dir;
+    say " # grepping $dir";
+    system(git => 'grep', @terms);
+    chdir '..';
+    say "";
+}
+

@@ -26,8 +26,8 @@ if [[ $(uname) == 'Linux' ]]; then
     export EDITOR=vim
     MYPATH=$PATH
 
-    if [[ -x "$HOME/bin/open_url" ]]; then
-        export BROWSER="$HOME/bin/open_url"
+    if [[ -x "$HOME/bin/url" ]]; then
+        export BROWSER="$HOME/bin/url"
     fi
 
     # renice +1 $$
