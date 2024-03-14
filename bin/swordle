@@ -55,7 +55,7 @@ if ($p) {
 $DIR = $h ? shift @ARGV : "$ENV{HOME}/.swordle";
 
 if ($C) {
-    print "Today's solution is ${\( color_str(solutions(1), RED, { bold => 1 }) )}, cheater\n";
+    print "Today's solution is ${\( color_str(solutions(1, shift(@ARGV)), RED, { bold => 1 }) )}, cheater\n";
     exit -1;
 }
 
@@ -227,10 +227,19 @@ sub word {
 }
 
 sub solutions {
-    my($cheat) = @_;
+    my($cheat, $days) = @_;
     return {} unless $WORDLE;
 
-    my $today = get_date([ localtime(time) ]);
+    my $today;
+    if (defined $days && $days =~ /^\d{4}-\d{2}-\d{2}$/) {
+        $today = $days;
+    }
+    else {
+        $days //= 0;
+        my $time = time + $days*86400;
+        $today = get_date([ localtime($time) ]);
+    }
+
     my $solutions = fetch_solutions($today);
     return $solutions->{$today} if $cheat;
     return { map { $solutions->{$_} => 1 } grep { $_ lt $today } keys %$solutions };

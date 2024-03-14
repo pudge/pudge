@@ -1,0 +1,134 @@
+#!/usr/bin/perl -s
+use warnings;
+use strict;
+use feature ':5.10';
+
+use Data::Dumper; $Data::Dumper::Sortkeys=1;
+
+our $v;
+
+our @colors = qw(
+    black
+    red
+    green
+    yellow
+    blue
+    magenta
+    cyan
+    white
+);
+
+our %colors = (
+    black   => 30,
+    red     => 31,
+    green   => 32,
+    yellow  => 33,
+    blue    => 34,
+    magenta => 35,
+    cyan    => 36,
+    white   => 37,
+);
+
+my $base_len = 0;
+for (@colors) {
+    $base_len = length($_) if length($_) > $base_len;
+}
+
+our %mods = (
+    reset => 0,
+    bold => 1,
+    dim => 2,
+    italic => 3,
+    underline => 4,
+    blink => 5,
+    inverse => 7,
+    strike => 9,
+);
+
+our $start = '\e[';
+our $reset = '\e[0m';
+
+sub color_str {
+    my($str, $color_name, $mod) = @_;
+
+    my $color = $colors{$color_name};
+
+    my @mods = ();
+
+    for (keys %$mod) {
+        push @mods, $mods{$_} if exists $mods{$_};
+    }
+
+    if ($mod->{mod}) {
+        for (@{$mod->{mod}}) {
+            push @mods, $_;
+        }
+    }
+
+    if ($mod->{background}) {
+        push @mods, $colors{$mod->{background}}+10;
+    }
+
+    if ($color) {
+        push @mods, $color;
+    }
+
+    my $mods = @mods ? join(';', @mods) . ';' : '';
+
+    if ($v) {
+        say STDERR "[$mods]$str";
+    }
+
+    my $return = "${start}${mods}m${str}${reset}";
+
+    unless ($mod->{string}) {
+        $return =~ s/\\e/\e/g;
+    }
+
+    return $return;
+}
+
+for (qw(normal bold dim italic uline inverse strike all bgb bld-bgb dim-bgb bgw bld-bgw dim-bgw)) {
+    printf "%-${base_len}s  ", $_;
+}
+print "\n";
+
+for (@colors) {
+    my $C = $_;
+    my @strs = (
+        [ color_str($C, $C) ],
+        [ color_str($C, $C, { bold => 1 }) ],
+        [ color_str($C, $C, { dim => 1 }) ],
+        [ color_str($C, $C, { italic => 1 }) ],
+        [ color_str($C, $C, { underline => 1 }) ],
+        [ color_str($C, $C, { inverse => 1 }) ],
+        [ color_str($C, $C, { strike => 1 }) ],
+        [ color_str($C, $C, { bold => 1, italic => 1, underline => 1, inverse => 1, strike => 1 }) ],
+        [ color_str($C, $C, { background => 'black' }) ],
+        [ color_str($C, $C, { background => 'black', bold => 1 }) ],
+        [ color_str($C, $C, { background => 'black', dim => 1 }) ],
+        [ color_str($C, $C, { background => 'white' }) ],
+        [ color_str($C, $C, { background => 'white', bold => 1 }) ],
+        [ color_str($C, $C, { background => 'white', dim => 1 }) ],
+    );
+
+    #print Dumper \@strs;
+
+    my @fmt;
+    my @vals;
+    for (@strs) {
+        my $len = (length($_->[0])-length($C)) + $base_len;
+        push @fmt, "%-${len}s";
+        push @vals, $_->[0];
+    }
+
+    say sprintf join('  ', @fmt), @vals;
+}
+
+# for (0..107) {
+#     printf "%-3d  %s\n", $_, color_str($_, 'white', { mod => [$_] });
+# }
+
+say "";
+
+say color_str('black', 'black', { string => 1 });
