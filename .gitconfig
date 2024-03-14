@@ -76,6 +76,7 @@
 	grepp   = grep -p
 
 	cp      = cherry-pick
+	nb      = newbranch
 
 [log]
 	date            = iso-strict

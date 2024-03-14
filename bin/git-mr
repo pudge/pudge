@@ -10,6 +10,6 @@ $branch =~ s!/!%2F!g;
 #say $base;
 #say $branch;
 
-my $url = "$base/-/merge_requests/new?merge_request%5Bsource_branch%5D=$branch"; #&issuable_template=Default";
+my $url = "$base/-/merge_requests/new?merge_request%5Bsource_branch%5D=$branch&issuable_template=Default";
 say "opening <$url>";
 system open_url => $url;
