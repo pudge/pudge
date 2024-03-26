@@ -87,7 +87,8 @@ FOO: while (my $child = $sock->accept) {
     die "fork error: $!.\n" unless defined $pid;
     close $sock;
 
-    die "unauthorized" unless inet_ntoa($child->peeraddr) eq '10.140.18.126';
+    my $peeraddr = inet_ntoa($child->peeraddr);
+    die "unauthorized" unless $peeraddr eq '10.140.18.126' || $peeraddr eq '127.0.0.1';
 
     $child->autoflush(1);
 
@@ -115,6 +116,7 @@ FOO: while (my $child = $sock->accept) {
     system osascript => (map {( '-e', $_ )}
         'on run argv' =>
             'tell application "Google Chrome"' =>
+                'activate' =>
                 'set foo to make new window' =>
                 'set URL of tab 1 of foo to item 1 of argv' =>
             'end tell' =>
