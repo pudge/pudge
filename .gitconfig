@@ -23,6 +23,7 @@
 	ca      = !git commit --amend
 	can     = !git commit --amend --no-edit
 
+	pushu   = !git push --set-upstream origin $(git rev-parse --abbrev-ref HEAD)
 	pushf   = !git push --force-with-lease
 	fetcht  = !git fetch --tags --force
 	pullr   = !git pull --rebase --tags

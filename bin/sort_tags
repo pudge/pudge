@@ -1,8 +1,13 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use warnings;
 use strict;
 
-print join "\n", sortfoo([<>]), "";
+our $r;
+
+our @list = sortfoo([<>]);
+@list = reverse @list if $r;
+
+print join "\n", @list, "";
 
 sub sortfoo {
     my($list) = @_;
@@ -28,6 +33,6 @@ sub sortfoo {
         return $cmp;
     }
     map {
-        [ $_, [ my @a = split /[_.-]/ ] ]
+        [ $_, [ (my @a = split /[_.-]/), (0)x10 ] ]
     } @$list;
 }

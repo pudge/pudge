@@ -72,7 +72,8 @@ function set_ps1 {
     phist="${yellow}\!${end}"
     pchar="${blue_bold}❯${end}"
 
-    hostmarks="$red$(_host_marks)$end"
+    #hostmarks="$red$(_host_marks)$end"
+    hostmarks="$(_host_marks)"
     precmd1="\$(prompt_command)\n\[\$(iterm2_prompt_mark)\]$ptime$hostmarks"
     precmd2="$puser@$phost:${green}\$(get_pwd)${end}${cyan}\$(git_url)${end}"
     precmd="${precmd1}${precmd2}"
@@ -147,9 +148,9 @@ function _jira_status {
     fi
 }
 
-# function iterm2_prompt_mark {
-#     echo -n ''
-# }
+function iterm2_prompt_mark {
+    echo -n ''
+}
 
 function _host_marks {
     if [[ -x /opt/bin/get_env.sh ]]; then
@@ -157,6 +158,9 @@ function _host_marks {
         if [[ ! -z "$myenv" && "$myenv" != "UNKNOWN" && "$myenv" != "VBOX" ]]; then
             echo -n "☢️ $myenv☢️  "
         fi
+    fi
+    if [[ -n "${IS_DEVCONTAINER}" ]]; then
+        echo -n ' '
     fi
 }
 
@@ -205,6 +209,10 @@ function get_pwd {
         echo -ne "${PWD/#$HOME\/src\/eh\/oz\//🌪️ }";
     elif [[ $PWD =~ "$HOME/src/eh/oz" ]]; then
         echo -ne "${PWD/#$HOME\/src\/eh\/oz/🌪️ }";
+    elif [[ $PWD =~ "/workspaces/oz/" ]]; then
+        echo -ne "${PWD/#\/workspaces\/oz\//🌪️ }";
+    elif [[ $PWD =~ "/workspaces/oz" ]]; then
+        echo -ne "${PWD/#\/workspaces\/oz/🌪️ }";
     else
         if [[ $BASH_NEW -eq 1 ]]; then
             echo -n "${PWD/#$HOME/\~}";

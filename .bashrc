@@ -57,7 +57,10 @@ fi
 test -r "${HOME}/.bashrc.local" && source "${HOME}/.bashrc.local"
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
-parent_caller=$(ps -o comm= $PPID)
+parent_caller=""
+if [[ "${PPID}" -ne 0 ]]; then
+    parent_caller=$(ps -o comm= $PPID)
+fi
 if [[ -z "$parent_caller" ]] || ! [[ "$parent_caller" =~ /BBEdit\.app/ ]]; then
     # brew install bash; add `/usr/local/bin/bash` to /etc/shells; chsh
     test -r "${HOME}/.bash_aliases"                             && source "${HOME}/.bash_aliases"
