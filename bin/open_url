@@ -10,6 +10,11 @@ exit 0;
 
 sub open_url {
     my($url) = @_;
+    _open_url(url => $url);
+}
+
+sub open_url_old {
+    my($url) = @_;
 
     my $cmd = $ENV{OPEN_URL_CMD} // $ENV{BROWSER} // (
         $^O eq 'darwin' ? 'open' : 'xdg-open' # modern Linux default
