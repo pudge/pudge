@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+my $user = shift;
+die unless $user;
+my $pass = shift;
+die unless $pass;
+
+$| = 1;
+
+sub ask {
+    my(@ask) = @_;
+    say "# @ask";
+    print "do? [Yn] ";
+    chomp(my $ans = <>);
+    if ($ans =~ /^n/) {
+        say "skipping";
+        return 0;
+    }
+    return 1;
+}
+
+
+sub do_system {
+    my(@args) = @_;
+    ask(@args) && do {
+        say "$args[0]";
+        system(@args) == 0
+            or die "system(@args) failed: $?";
+        return 1;
+    };
+    return 0;
+}
+
+sub output {
+    my($file, $text, $mode0, $mode1, $uid, $gid) = @_;
+    $mode0 ||= '>';
+
+    if ($mode1) {
+        (do_system touch => $file)
+            && (chmod $mode1, $file or die $!);
+    }
+
+    ask("open $mode0 $file") && do {
+        say "$file";
+        open my $fh, $mode0, $file or die $!;
+        print $fh $text;
+        close $fh;
+
+        if (defined $uid && defined $gid) {
+            chown $uid, $gid, $file or die $!;
+        }
+    };
+    return 0;
+}
+
+# user cleanup
+{
+    output("/var/lib/AccountsService/users/$user", <<EOT, '>', 0600);
+[User]
+SystemAccount=true
+EOT
+
+    do_system systemctl => restart => 'accounts-daemon.service';
+}
+
+# user quota
+{
+
+    do_system setquota => '-u', $user => qw(10G 20G 0 0 /home);
+    do_system repquota => '-s', '/home';
+}
+
+# user files
+{
+    my $home  = "/home/$user";
+    my $files = "$home/files";
+    my $creds = "$home/.files.creds";
+
+    my($uid, $gid) = (getpwnam($user))[2,3];
+    die "cannot get uid/gid: $!" unless defined $uid && defined $gid;
+
+    unless (-d $files) {
+        ask("mkdir $files") && do {
+            mkdir $files or die $!;
+        };
+    }
+    ask("chown/chmod $files") && do {
+        chmod 0700, $files or die $!;
+        chown $uid, $gid, $files or die $!;
+    };
+
+    my $create = output($creds, <<EOT, '>', 0600, $uid, $gid);
+user=$user
+password=$pass
+domain=WORKGROUP
+EOT
+
+    output('/etc/fstab', <<EOT, '>>');
+//192.168.1.35/home /home/$user/files cifs vers=2.0,credentials=$creds,iocharset=utf8,uid=$uid,gid=$gid,file_mode=0777,dir_mode=0777 0 0
+EOT
+
+    ask("mount $files") && do {
+        system mount => $files;
+    };
+}
