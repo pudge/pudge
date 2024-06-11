@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+use warnings;
+use strict;
+use feature ':5.10';
+
+my %sensors = (
+    nandorlan => 'NandorLAN-Sensor',
+    nandorlan_packets => 'NandorLAN-Packets',
+);
+
+for my $domain (sort keys %sensors) {
+    my $vnet = `virsh domiflist $sensors{$domain} | perl -anE 'print \$F[0] if \$F[2] eq "eda"'`;
+    system "ovs-vsctl -- --id=\@$vnet get port $vnet -- set mirror $domain output-port=\@$vnet";
+}
