@@ -1,8 +1,0 @@
-#!/usr/bin/perl
-use warnings;
-use strict;
-use feature ':5.10';
-
-my @args = grep !/^--no-browser$/, @ARGV;
-chomp(my $aws = `which -a aws | grep -v "\$HOME"`);
-system $aws => @args;

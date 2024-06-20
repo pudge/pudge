@@ -32,12 +32,14 @@ alias dockrun='docker run -it --rm'
 
 if [[ $(uname) == 'Linux' ]] && [[ $(which kubectl 2>/dev/null) ]]; then
     alias kc=kubectl
+
     source <(kubectl completion bash)
     if [[ $(type -t compopt) = "builtin" ]]; then
         complete -o default -F __start_kubectl kc
     else
         complete -o default -o nospace -F __start_kubectl kc
     fi
+
 fi
 
 function kce() {

@@ -1,0 +1,4 @@
+#!/usr/bin/perl
+say "entering demo mode";
+sleep 5;
+
