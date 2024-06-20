@@ -1,4 +1,5 @@
-#!/usr/bin/perl
-say "entering demo mode";
-sleep 5;
-
+#!/bin/bash
+echo "entering demo mode"
+tmpdir="/tmp/pudge/demo-$$"
+mkdir -p ${tmpdir} 2>&1 > /dev/null
+pushd ${tmpdir} >/dev/null
