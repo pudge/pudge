@@ -3,12 +3,39 @@ use warnings;
 use strict;
 use feature ':5.10';
 
+my $mirror_bridge = 'eda';
 my %sensors = (
     nandorlan => 'NandorLAN-Sensor',
     nandorlan_packets => 'NandorLAN-Packets',
 );
 
-for my $domain (sort keys %sensors) {
-    my $vnet = `virsh domiflist $sensors{$domain} | perl -anE 'print \$F[0] if \$F[2] eq "eda"'`;
-    system "ovs-vsctl -- --id=\@$vnet get port $vnet -- set mirror $domain output-port=\@$vnet";
+for my $mirror (sort keys %sensors) {
+    my $domain = $sensors{$mirror};
+
+    my $vnet_wanted;
+    for my $line (`virsh domiflist $domain`) {
+        my @fields = split ' ', $line;
+        if ($fields[2] && $fields[2] eq $mirror_bridge) {
+            $vnet_wanted = $fields[0];
+            last;
+        }
+    }
+    unless ($vnet_wanted) {
+        say "cannot find vnet for $domain; giving up";
+        next;
+    }
+
+    chomp(my $output_port = `ovs-vsctl get mirror $mirror output_port`);
+    unless ($output_port) {
+        say "cannot find mirror for $mirror_bridge; giving up";
+        next;
+    }
+
+    chomp(my $vnet_running = `ovs-vsctl get port $output_port name`);
+    say "Domain $domain : Mirror $mirror : vnet $vnet_wanted : current vnet $vnet_running ($output_port)";
+    if (!$vnet_running || $vnet_running ne $vnet_wanted) {
+        my $cmd = "ovs-vsctl -- --id=\@$vnet_wanted get port $vnet_wanted -- set mirror $mirror output-port=\@$vnet_wanted";
+        say $cmd;
+        system $cmd;
+    }
 }
