@@ -3,7 +3,7 @@ if [[ $(uname) == 'Darwin' ]]; then
     alias ls="ls -G"
     alias verbosemode='sudo nvram boot-args="-v"'
     # https://support.apple.com/en-us/HT202516
-    alias dnsflush='sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder'
+    alias dnsflush='sudo bash -c "dscacheutil -flushcache && killall -HUP mDNSResponder"'
     alias markoff='open -a Markoff'
     alias dfh="df -PhY -T nodevfs,autofs,nullfs | grep -v '/(System|Library/Developer/CoreSimulator)/Volumes/[^/]+$'"
 else
