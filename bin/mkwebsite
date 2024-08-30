@@ -28,7 +28,7 @@ system systemctl => reload => 'apache2';
 
 __DATA__
 <Directory /home/pudge/www/__HOST__>
-    Options Indexes FollowSymLinks
+    Options FollowSymLinks
     AllowOverride None
     Require all granted
     Header set Access-Control-Allow-Origin "*"

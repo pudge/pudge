@@ -1,7 +1,9 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use warnings;
 use strict;
 use feature ':5.10';
+
+our $v;
 
 my $mirror_bridge = 'eda';
 my %sensors = (
@@ -14,6 +16,7 @@ for my $mirror (sort keys %sensors) {
 
     my $vnet_wanted;
     for my $line (`virsh domiflist $domain`) {
+        output($line);
         my @fields = split ' ', $line;
         if ($fields[2] && $fields[2] eq $mirror_bridge) {
             $vnet_wanted = $fields[0];
@@ -27,15 +30,23 @@ for my $mirror (sort keys %sensors) {
 
     chomp(my $output_port = `ovs-vsctl get mirror $mirror output_port`);
     unless ($output_port) {
+        output($output_port);
         say "cannot find mirror for $mirror_bridge; giving up";
         next;
     }
 
     chomp(my $vnet_running = `ovs-vsctl get port $output_port name`);
-    say "Domain $domain : Mirror $mirror : vnet $vnet_wanted : current vnet $vnet_running ($output_port)";
+    output($vnet_running);
+    say "Domain $domain : Mirror $mirror : vnet $vnet_running ($output_port) => vnet $vnet_wanted";
     if (!$vnet_running || $vnet_running ne $vnet_wanted) {
         my $cmd = "ovs-vsctl -- --id=\@$vnet_wanted get port $vnet_wanted -- set mirror $mirror output-port=\@$vnet_wanted";
-        say $cmd;
-        system $cmd;
+        say "# $cmd";
+        system $cmd unless $v;
     }
+}
+
+sub output {
+    my @lines = @_;
+    return unless $v;
+    print "# $_" for @lines;
 }
