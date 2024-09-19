@@ -17,15 +17,9 @@
 # magenta_b='\e[35;1m'
 # white_b='\e[37;1m'
 
-
 BASH_NEW=$( if [[ "${BASH_VERSION/.*/}" -ge 5 ]]; then echo 1; else echo 0; fi )
 
 function set_ps1 {
-    if [[ "$ITERM_PROFILE" =~ Demo || -f ~/.demo ]]; then
-        PS1='❯ '
-        return
-    fi
-
     # git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1
     if [ -r "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
         MYGITPROMPT=bash-git-prompt

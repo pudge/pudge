@@ -16,5 +16,6 @@ $ENV{PATH} .= ":$ENV{HOME}/bin";
 if ($id && $id =~ /^\w+-\d+$/) {
 #     system 'open', '-b', 'com.atlassian.jira.mac', $url;
 #     system 'open_url', $url;
-    system url => '-h' => localhost => $url;
+#     system url => '-h' => localhost => $url;
+    system url => $url;
 }
