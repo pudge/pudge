@@ -19,6 +19,10 @@
 
 BASH_NEW=$( if [[ "${BASH_VERSION/.*/}" -ge 5 ]]; then echo 1; else echo 0; fi )
 
+function timing {
+    echo -n "$1: " >> /tmp/timing && date +"%T.%3N" >> /tmp/timing;
+}
+
 function set_ps1 {
     # git clone https://github.com/magicmonty/bash-git-prompt.git ~/.bash-git-prompt --depth=1
     if [ -r "$HOME/.bash-git-prompt/gitprompt.sh" ]; then
@@ -84,19 +88,27 @@ function set_ps1 {
 }
 
 function prompt_command {
+    #return
+    #timing "prompt_command start"
     history -a;
     wintitle;
+    #timing "prompt_command end"
 }
 
 function wintitle {
+    #return
+    #timing "wintitle start"
     echo -ne "\033]0;${PHOST}"
     if [[ $PWD =~ "$HOME/src/eh/oz" ]]; then
         echo -ne " 🌪️";
     fi
     echo -ne " \007"
+    #timing "wintitle end"
 }
 
 function _my_date {
+    #return
+    #timing "_my_date start"
     if [[ -n "$LTZ" ]]; then
         OTZ=$TZ
         export TZ=$LTZ
@@ -118,9 +130,12 @@ function _my_date {
             unset TZ
         fi
     fi
+    #timing "_my_date end"
 }
 
 function _dyn_marks {
+    #return
+    #timing "_dyn_marks start"
     _jira_status
     if [[ -n "$AWS_PROFILE" ]]; then
         echo -ne ' ☁️ \001\e[34m\002'$AWS_PROFILE'\001\e[0m\002'
@@ -133,20 +148,29 @@ function _dyn_marks {
         track_time_url="https://${JIRA_HOST}/browse/"$(head -1 "$JIRA_TRACK_TIME_FILE")
         echo -ne '\e]8;;'$track_time_url'\e\\ ⏱️ \e]8;;\e\\'
     fi
+    #timing "_dyn_marks end"
 }
 
 function _jira_status {
+    #return
+    #timing "_jira_status start"
     jira_status=$( jira_status prompt 2>/dev/null );
     if [[ -n "$jira_status" ]]; then
         echo -ne " $jira_status"
     fi
+    #timing "_jira_status end"
 }
 
 function iterm2_prompt_mark {
+    #return
+    #timing "iterm2_prompt_mark start"
     echo -n ''
+    #timing "iterm2_prompt_mark end"
 }
 
 function _host_marks {
+    #return
+    #timing "_host_marks start"
     if [[ -x /opt/bin/get_env.sh ]]; then
         local myenv=$(/opt/bin/get_env.sh | awk '{ print toupper($0) }')
         if [[ ! -z "$myenv" && "$myenv" != "UNKNOWN" && "$myenv" != "VBOX" ]]; then
@@ -156,9 +180,12 @@ function _host_marks {
     if [[ -n "${IS_DEVCONTAINER}" ]]; then
         echo -n ' '
     fi
+    #timing "_host_marks end"
 }
 
 function show_exit_status {
+    #return
+    #timing "show_exit_status start"
     local es="$__bp_last_ret_value"
 
     # format from bash-git-prompt
@@ -183,9 +210,12 @@ function show_exit_status {
             echo -ne "✔"
         fi
     fi
+    #timing "show_exit_status end"
 }
 
 function git_url {
+    #return
+    #timing "git_url start"
     if [[ "$BASH_NEW" -eq 1 ]]; then
         local git_http_url=$(get-git-url -b $(pwd))
         if [[ -n "$git_http_url" ]]; then
@@ -196,9 +226,12 @@ function git_url {
     else
         echo -ne " "
     fi
+    #timing "git_url end"
 }
 
 function get_pwd {
+    #return
+    #timing "get_pwd start"
     if [[ $PWD =~ "$HOME/src/eh/oz/" ]]; then
         echo -ne "${PWD/#$HOME\/src\/eh\/oz\//🌪️ }";
     elif [[ $PWD =~ "$HOME/src/eh/oz" ]]; then
@@ -214,6 +247,7 @@ function get_pwd {
             echo -n "${PWD/#$HOME/~}";
         fi
     fi
+    #timing "get_pwd end"
 }
 
 set_ps1
