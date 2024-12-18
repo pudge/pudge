@@ -53,19 +53,18 @@
 	sha     = rev-parse --verify HEAD
 	shas    = rev-parse --short HEAD
 
-	lg      = log --pretty=pudge1 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*' --decorate-refs-exclude='refs/tags/[a-z]*-[A-Z]*[0-9]*'
+	lg      = log --pretty=pudge11 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*' --decorate-refs-exclude='refs/tags/[a-z]*-[A-Z]*[0-9]*'
 	lgs     = !git lg --numstat
 	top     = !git lg -10
 	tops    = !git lgs -10
 
 	#log1    = log --oneline
-	log1    = log --pretty=pudge1 --date=short
+	log1    = log --pretty=pudge11 --date=short
 	logs    = log --stat --show-signature
 	logp    = log --patch --show-signature
 	logsp   = !git logs --patch
 	logg    = log --graph --show-signature
 	logg1   = !git logg --oneline
-	logf    = log --pretty=fuller --show-signature
 
 	last    = log -1
 	last1   = last
@@ -83,10 +82,12 @@
 	date            = iso-strict
 	decorate        = true
 [pretty]
+	pudgeX          = %C(yellow)commit%Creset %C(auto)%H%Creset %C(yellow)(%Creset%C(auto)%D%Creset%C(yellow))%Creset%nAuthor:     %an <%ae> %G?%nAuthorDate: %ad%nCommitDate: %cd%n%n    %s%n    %b%n
 	pudge1          = format:%C(auto)%h%Creset %<(12,trunc)%Cblue%al %ad%Creset %s%C(auto)%d%Creset %C(cyan)%GS%Creset
+	pudge11         = format:%C(auto)%h%Creset %<(12,trunc)%Cblue%al %cd %ad%Creset %s%C(auto)%d%Creset %C(cyan)%GS%Creset
 	hash            = format:%H
 [format]
-	pretty          = medium
+	pretty          = fuller
 [color]
 	ui              = auto
 	grep            = always
