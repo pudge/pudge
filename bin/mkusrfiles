@@ -102,6 +102,15 @@ EOT
 //192.168.1.35/home /home/$user/files cifs credentials=$creds,iocharset=utf8,uid=$uid,gid=$gid,dir_mode=0700 0 0
 EOT
 
-    do_system mount => $files;
-    do_system df => '-h', $files;
+    ask("mount $files") && do {
+        system mount => $files;
+    };
+    chown $uid, $gid, $files, $perms or die $!;
+
+
+    output('/etc/fstab', <<EOT, '>>');
+//192.168.1.35/home /home/$user/files cifs vers=2.0,credentials=$perms,iocharset=utf8,uid=$uid,gid=$gid,file_mode=0777,dir_mode=0777 0 0
+EOT
+
+    system mount => $files;
 }

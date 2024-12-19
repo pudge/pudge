@@ -1,0 +1,2 @@
+#!/bin/bash
+/Applications/Tailscale.app/Contents/MacOS/Tailscale status --json | jq -r '.Peer[] | select(.HostName == "'$1'") | .TailscaleIPs[] | select(test(":") | not)'
