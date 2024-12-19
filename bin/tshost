@@ -1,2 +1,7 @@
 #!/bin/bash
-/Applications/Tailscale.app/Contents/MacOS/Tailscale status --json | jq -r '.Peer[] | select(.HostName == "'$1'") | .TailscaleIPs[] | select(test(":") | not)'
+tailscale=tailscale
+if [[ $(uname) == 'Darwin' ]]; then
+    tailscale=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+fi
+
+$tailscale status --json | jq -r '.Peer[] | select(.HostName == "'$1'") | select(.Online) | .TailscaleIPs[] | select(test(":") | not)'
