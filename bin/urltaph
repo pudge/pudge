@@ -88,7 +88,8 @@ FOO: while (my $child = $sock->accept) {
     close $sock;
 
     my $peeraddr = inet_ntoa($child->peeraddr);
-    die "unauthorized" unless $peeraddr eq '10.140.18.126' || $peeraddr eq '127.0.0.1';
+    chomp(my $tshost = `tshost 2>/dev/null`);
+    die "unauthorized" unless $peeraddr eq '10.140.18.126' || $peeraddr eq '127.0.0.1' || $peeraddr eq $tshost;
 
     $child->autoflush(1);
 
