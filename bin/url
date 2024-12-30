@@ -17,7 +17,8 @@ use Digest::MD5 'md5_hex';
 #
 # make settable from config file
 our($mac_host, $backup, $view);
-my($ssh_client) = ($ENV{SSH_CONNECTION} || $ENV{SSH_CLIENT});
+my($ssh_client) = (`tshost` || $ENV{SSH_CONNECTION} || $ENV{SSH_CLIENT});
+chomp $ssh_client;
 $ssh_client =~ s/^([\w\.]+).*$/$1/ if $ssh_client;
 $mac_host = $ENV{CENO_HOST} || 'yourhost.example.com'; # Change to name of your editor
 
