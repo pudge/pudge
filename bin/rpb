@@ -18,7 +18,8 @@ else {
     $cmd = $paste;
 }
 
-my $host = $ENV{SSH_CLIENT} || $ENV{SSH_CONNECTION};
+my $host = `tshost` || $ENV{SSH_CLIENT} || $ENV{SSH_CONNECTION};
+chomp $host;
 if ($host) {
     $host =~ s/ .+$//;
     if ($host =~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) {
