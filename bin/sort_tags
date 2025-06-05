@@ -12,11 +12,17 @@ print join "\n", @list, "";
 sub sortfoo {
     my($list) = @_;
     chomp @$list;
-    
+
     map { $_->[0] }
     sort {
         my $arr = $a->[1];
         my $brr = $b->[1];
+        if ($arr->[0] =~ /^\d/ && $brr->[0] =~ /^\D/) {
+            return 1;
+        }
+        if ($arr->[0] =~ /^\D/ && $brr->[0] =~ /^\d/) {
+            return -1;
+        }
         my $cmp = 0;
         for my $i (0 .. $#{$arr}) {
             my $aa = $arr->[$i] // '';
