@@ -18,7 +18,7 @@ else {
     $cmd = $paste;
 }
 
-my $host = `tshost` || $ENV{SSH_CLIENT} || $ENV{SSH_CONNECTION};
+my $host = `machost` || $ENV{SSH_CLIENT} || $ENV{SSH_CONNECTION};
 chomp $host;
 if ($host) {
     $host =~ s/ .+$//;
