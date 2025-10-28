@@ -17,7 +17,9 @@ chomp(my $current_branch = $repo->command('rev-parse', '--abbrev-ref', 'HEAD'));
 my $branch = shift // $current_branch;
 
 my $master;
-for my $name (qw(main master)) {
+my @names = qw(release/raven main master);
+
+for my $name (@names) {
     my $sha;
     try {
         chomp($sha = $repo->command(['rev-parse', '--short', "origin/$name"], { STDERR => 0 }));
@@ -29,7 +31,7 @@ for my $name (qw(main master)) {
         last;
     }
 }
-die "No master/main found" unless $master;
+die "No " . join('/', @names) . " found" unless $master;
 
 die "Cannot get branches, exiting\n" unless $branch && $current_branch;
 die "Can't prune $master, exiting\n" if $branch eq $master;

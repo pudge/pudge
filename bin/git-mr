@@ -1,15 +1,635 @@
-#!/usr/bin/perl
-use strict;
-use warnings;
-use 5.010;
+#!/usr/bin/env python3
+"""Create and configure GitLab merge requests.
 
-chomp(my $full_url = `get-git-url -b -n`);
-#say $full_url;
-my($base, $branch) = $full_url =~ m!^(http.+?//.+?)/tree/(.+)$!;
-$branch =~ s!/!%2F!g;
-#say $base;
-#say $branch;
+USAGE:
+    git-mr-create [--verbose] [--draft] [--edit] [--open] \
+        [assignee1 assignee2 ...]
 
-my $url = "$base/-/merge_requests/new?merge_request%5Bsource_branch%5D=$branch"; #&issuable_template=Default";
-say "opening <$url>";
-system url => $url;
+DESCRIPTION:
+This will create or update a GitLab merge request (MR) for the current git
+branch.
+
+Creation sets up branch, title, description, and draft status. The title
+is the title of the first commit message on the branch, and the description
+is built from all commit messages. If a Jira ticket is detected in the branch
+name, it is appended to the description. If there is an MR template file in
+the repository, its content is appended to the description.
+
+Updating adds reviewers, assignees, and labels. Reviewers are defined in
+config. The current user is always added as an assignee. Additional assignees
+can be specified on the command line. Labels include any specified in the
+script, plus a release label if a release number file exists.
+
+If `--draft` is specified, the MR is created as a draft.
+
+If `--edit` is specified, the list of reviewers is opened in your default
+editor for modification before creation, then the MR title and description
+are opened.
+
+If `--open` is specified, the MR is opened in the browser after creation.
+
+REQUIREMENTS:
+    - GitLab API token stored in `~/.gl_token`
+    - Configuration file at `~/.git-mr-config.json`
+
+OPTIONAL:
+    - For release label, a release number file at `~/.release_number_eh`
+        - Will add label `release::FOO` where `FOO` is the release number
+        - Can be generated with `gcal_sprint_fetch.py`, which I run
+            hourly via cron
+            - Requires `gcal_token_generate` for Google Calendar API access
+    - MR_TEMPLATE_FILE at `.gitlab/merge_request_templates/Default.md` in the
+        repository root
+
+CONFIGURATION FILE:
+    The configuration file `~/.git-mr-config.json` should contain:
+    {
+        "gitlab_url": "https://gitlab.example.com/api/v4",
+        "reviewers": ["user1", "user2", ...],
+        "labels": ["Label1", "Label2", ...]
+    }
+
+TODO:
+    - Use LLM to decide who to add as assignees?
+    - config file for release labels (this is very team-specific right now)
+"""
+
+import argparse
+import fcntl
+import json
+import os
+import re
+import subprocess
+import sys
+from pathlib import Path
+from typing import Optional
+
+import requests
+
+
+# Configuration file paths
+CONFIG_FILE = Path.home() / ".git-mr-config.json"
+GL_TOKEN_PATH = Path.home() / ".gl_token"
+USER_CACHE_FILE = Path.home() / ".gl_user_cache.json"
+RELEASE_FILE = Path.home() / ".release_number_eh"
+MR_TEMPLATE_FILE = ".gitlab/merge_request_templates/Default.md"
+COMMIT_SEPARATOR = "!!GitLabMRCreator!!"
+
+
+class GitLabMRCreator:
+    """Create and configure GitLab merge requests."""
+
+    def __init__(
+        self,
+        verbose: bool = False,
+        draft: bool = False,
+        edit: bool = False,
+        open: bool = False,
+    ) -> None:
+        self.verbose = verbose
+        self.draft = draft
+        self.edit = edit
+        self.open = open
+
+        # Load configuration
+        self.config = self._load_config()
+        self.gitlab_url = self.config["gitlab_url"]
+        self.reviewers = self.config["reviewers"]
+        self.labels = self.config["labels"]
+
+        self.token = self._load_token()
+        self.headers = {"Authorization": f"Bearer {self.token}"}
+        self.user_cache: dict[str, int] = {}
+
+    # Utility Methods
+
+    def _log(self, message: str) -> None:
+        """Print message if verbose mode is enabled."""
+        if self.verbose:
+            print(message)
+
+    def _warn(self, message: str) -> None:
+        """Print warning message to stderr."""
+        print(f"Warning: {message}", file=sys.stderr)
+
+    def _error(self, message: str) -> None:
+        """Print error message and exit."""
+        print(f"Error: {message}", file=sys.stderr)
+        sys.exit(1)
+
+    # Token and Cache Management
+
+    def _load_config(self) -> dict:
+        """Load configuration from file or use defaults."""
+        if not CONFIG_FILE.exists():
+            self._error(
+                f"Configuration file not found: {CONFIG_FILE}\n"
+                f"Please create it (see docs for structure)"
+            )
+
+        try:
+            config = json.loads(CONFIG_FILE.read_text())
+            # Ensure all required keys exist
+            for key in ["gitlab_url", "reviewers", "labels"]:
+                if key not in config:
+                    self._error(f"Missing '{key}' in config file")
+                if (
+                    key in ["gitlab_url"]
+                    and not isinstance(config.get(key), str)
+                ):
+                    self._error(f"'{key}' must be a string in config file")
+                if (
+                    key in ["reviewers", "labels"]
+                    and not isinstance(config.get(key), list)
+                ):
+                    self._error(f"'{key}' must be a list in config file")
+            return config
+        except json.JSONDecodeError as e:
+            self._error(f"Invalid JSON in config file: {e}")
+        except Exception as e:
+            self._error(f"Could not load config file: {e}")
+
+    def _load_token(self) -> str:
+        """Load GitLab API token from file."""
+        try:
+            return GL_TOKEN_PATH.read_text().strip()
+        except FileNotFoundError:
+            self._error(f"GitLab token file not found: {GL_TOKEN_PATH}")
+        except Exception as e:
+            self._error(f"Error reading GitLab token: {e}")
+
+    def _load_user_cache(self) -> dict[str, int]:
+        """Load cached user ID mappings from disk with file locking."""
+        if not USER_CACHE_FILE.exists():
+            return {}
+
+        try:
+            with open(USER_CACHE_FILE, 'r') as f:
+                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                try:
+                    return json.load(f)
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        except Exception as e:
+            self._warn(f"Could not load user cache: {e}")
+            return {}
+
+    def _save_user_cache(self) -> None:
+        """Save user ID cache to disk with file locking."""
+        try:
+            with open(USER_CACHE_FILE, 'w') as f:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                try:
+                    json.dump(self.user_cache, f, indent=2)
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        except Exception as e:
+            self._warn(f"Could not save user cache: {e}")
+
+    # Browser and Editor Operations
+
+    def _open_in_browser(self, url: str) -> None:
+        """Open URL in default web browser."""
+        if not self.open:
+            return
+        try:
+            if sys.platform == "win32":
+                os.startfile(url)
+            elif sys.platform == "darwin":
+                subprocess.run(["open", url], check=True)
+            else:
+                browser = os.environ.get("BROWSER")
+                if browser:
+                    subprocess.run([browser, url], check=True)
+                else:
+                    subprocess.run(["xdg-open", url], check=True)
+        except Exception as e:
+            self._warn(f"Could not open URL in browser: {e}")
+
+    def _edit_file(self, content: str) -> str:
+        """Open editor to modify MR title and description."""
+        if not self.edit:
+            return content
+
+        editor = os.environ.get("EDITOR", "vi")
+        temp_file = Path(f"/tmp/git_mr_edit-{os.getpid()}.md")
+
+        try:
+            # Write to temp file
+            with temp_file.open("w") as f:
+                f.write(content)
+
+            # Open editor
+            subprocess.run([editor, str(temp_file)], check=True)
+
+            # Read back
+            content = temp_file.read_text()
+            return content
+        except Exception as e:
+            self._error(f"Error editing file: {e}")
+        finally:
+            if temp_file.exists():
+                temp_file.unlink()
+
+    # Git Operations
+
+    def _run_git_command(self, *args: str) -> str:
+        """Run a git command and return output."""
+        try:
+            result = subprocess.run(
+                ["git", *args],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            return result.stdout.strip()
+        except subprocess.CalledProcessError as e:
+            self._log(f"Git stderr: {e.stderr.strip()}")
+            self._error(f"Git command failed: {e}")
+
+    def _get_current_branch(self) -> str:
+        """Get current git branch."""
+        return self._run_git_command("rev-parse", "--abbrev-ref", "HEAD")
+
+    def _get_root_dir(self) -> str:
+        """Get git repository root directory."""
+        return self._run_git_command("rev-parse", "--show-toplevel")
+
+    def _get_jira_ticket(self, branch: str) -> str:
+        """Extract Jira ticket from branch name."""
+        parts = branch.split("/")
+        last_part = parts[-1]
+        if "-" in last_part and any(c.isdigit() for c in last_part):
+            return last_part
+        return ""
+
+    def _get_commits(self, default_branch: str) -> list[dict]:
+        """Get list of commits on the current branch."""
+        git_format = "%H%n%an%n%ae%n%s%n%b%n" + COMMIT_SEPARATOR
+        output = self._run_git_command(
+            "log",
+            f"--pretty=format:{git_format}",
+            f"{default_branch}..HEAD",
+        )
+
+        commits = []
+        for entry in output.split(COMMIT_SEPARATOR):
+            entry = entry.strip()
+            if not entry:
+                continue
+
+            lines = entry.split("\n")
+            commits.append({
+                "hash": lines[0],
+                "author_name": lines[1],
+                "author_email": lines[2],
+                "title": lines[3],
+                "body": "\n".join(lines[4:]).strip(),
+            })
+
+        return commits
+
+    # GitLab API Operations - Lookups
+
+    def _get_user_id(self, username: str) -> Optional[int]:
+        """Get GitLab user ID for a username (cached)."""
+        if username in self.user_cache:
+            user_id = self.user_cache[username]
+            self._log(f"Found user '{username}' in cache: ID {user_id}")
+            return user_id
+
+        try:
+            response = requests.get(
+                f"{self.gitlab_url}/users",
+                headers=self.headers,
+                params={"username": username},
+                timeout=10,
+            )
+            response.raise_for_status()
+            users = response.json()
+
+            if users:
+                user_id = users[0]["id"]
+                self.user_cache[username] = user_id
+                self._log(f"Found user '{username}': ID {user_id}")
+                return user_id
+
+            self._warn(f"No user found for '{username}'")
+            return None
+        except requests.RequestException as e:
+            self._warn(f"Error fetching user '{username}': {e}")
+            return None
+
+    def _collect_user_ids(
+        self, additional_assignees: list[str],
+    ) -> tuple[list[int], list[int]]:
+        """Collect reviewer and assignee IDs from usernames."""
+        current_user: str = os.environ.get("USER", "")
+        reviewer_ids: list[int] = []
+        assignee_ids: list[int] = []
+        seen: set[str] = set()
+
+        content = self._edit_file("\n".join(self.reviewers))
+        reviewers = set(content.split("\n"))
+        assignees = set(additional_assignees) | {current_user}
+        all_users = reviewers | assignees
+
+        self.user_cache = self._load_user_cache()
+        for username in all_users:
+            if username in seen:
+                continue
+            seen.add(username)
+
+            user_id = self._get_user_id(username)
+            if user_id is None:
+                continue
+
+            if username in assignees:
+                assignee_ids.append(user_id)
+
+            if username != current_user:
+                reviewer_ids.append(user_id)
+
+        self._save_user_cache()
+        return reviewer_ids, assignee_ids
+
+    def _get_project_info(self) -> tuple[int, str]:
+        """Get project ID and default branch for the current repo."""
+        project_url = self._run_git_command(
+            "config", "--get", "remote.origin.url"
+        )
+        project_path = project_url.split(":")[-1].replace(".git", "")
+        project_name = project_path.split("/")[-1]
+
+        try:
+            response = requests.get(
+                f"{self.gitlab_url}/projects?search={project_name}",
+                headers=self.headers,
+                timeout=10,
+            )
+            response.raise_for_status()
+            projects = response.json()
+
+            for project in projects:
+                path = project.get("path_with_namespace", "")
+                if path == project_path:
+                    project_id = project.get("id")
+                    default_branch = project.get("default_branch")
+                    self._log(f"Found project: {project_id}")
+                    return project_id, default_branch
+
+            self._error(f"No project found for {project_path}")
+        except requests.RequestException as e:
+            self._error(f"Error fetching project info: {e}")
+
+    def _get_merge_request_info(
+        self, branch: str, project_id: int
+    ) -> tuple[Optional[int], str]:
+        """Get MR IID and web URL for the current branch."""
+        try:
+            response = requests.get(
+                f"{self.gitlab_url}/merge_requests",
+                headers=self.headers,
+                params={
+                    "source_branch": branch,
+                    "project_id": project_id,
+                    "state": "opened",
+                },
+                timeout=10,
+            )
+            response.raise_for_status()
+            mrs = response.json()
+
+            for mr in mrs:
+                mr_iid = mr.get("iid")
+                web_url = mr.get("web_url", "")
+                self._log(f"Found MR: {project_id}/{mr_iid}")
+                return mr_iid, web_url
+
+            return None, ""
+        except requests.RequestException as e:
+            self._error(f"Error fetching merge request info: {e}")
+
+    # GitLab API Operations - Updates
+
+    def _create_merge_request(
+        self,
+        project_id: int,
+        branch: str,
+        default_branch: str,
+        title: str,
+        description: str,
+    ) -> tuple[int, str]:
+        """Create a new merge request and return its IID and web URL."""
+        url = f"{self.gitlab_url}/projects/{project_id}/merge_requests"
+
+        if self.draft:
+            title = f"Draft: {title}"
+
+        payload = {
+            "source_branch": branch,
+            "target_branch": default_branch,
+            "title": title,
+            "description": description,
+        }
+        self._log(f"Creating MR with payload: {payload}")
+
+        try:
+            response = requests.post(
+                url,
+                headers=self.headers,
+                json=payload,
+                timeout=10,
+            )
+            response.raise_for_status()
+            mr_data = response.json()
+            return mr_data["iid"], mr_data["web_url"]
+        except requests.RequestException as e:
+            self._error(f"Error creating merge request: {e}")
+
+    def _update_merge_request(
+        self,
+        project_id: int,
+        mr_iid: int,
+        reviewer_ids: list[int],
+        assignee_ids: list[int],
+        labels: list[str],
+    ) -> None:
+        """Update merge request with reviewers, assignees, and labels."""
+        url = (
+            f"{self.gitlab_url}/projects/{project_id}/"
+            f"merge_requests/{mr_iid}"
+        )
+
+        payload = {
+            "add_labels": ",".join(labels),
+            "reviewer_ids": reviewer_ids,
+            "assignee_ids": assignee_ids,
+        }
+        self._log(f"Updating MR with payload: {payload}")
+
+        try:
+            response = requests.put(
+                url,
+                headers=self.headers,
+                json=payload,
+                timeout=10,
+            )
+            response.raise_for_status()
+        except requests.RequestException as e:
+            self._error(f"Error updating merge request: {e}")
+
+    # MR Content Generation
+
+    def _get_labels(self) -> list[str]:
+        """Build list of labels including release label."""
+        labels = list(self.labels)
+        try:
+            release = RELEASE_FILE.read_text().strip()
+            labels.append(f"release::{release}")
+        except Exception as e:
+            self._warn(f"Could not read release file: {e}")
+        return labels
+
+    def _build_mr_description(
+        self, commits: list[dict], jira_ticket: str
+    ) -> str:
+        """Build MR description from commits and template."""
+        # Add commit info
+        commit_lines = []
+        for commit in commits:
+            commit_lines.append(f"\ncommit {commit['hash']}")
+            author_info = (
+                f"\nAuthor: {commit['author_name']} "
+                f"<{commit['author_email']}>\n"
+                f"{commit['title']}\n"
+                f"{commit['body']}"
+            )
+            commit_lines.append(author_info.replace("\n", "\n    "))
+
+        description = "\n".join(commit_lines) + "\n"
+
+        # Add template content if it exists
+        root_dir = self._get_root_dir()
+        template_file = Path(root_dir) / MR_TEMPLATE_FILE
+
+        if template_file.exists():
+            try:
+                template_content = template_file.read_text()
+                # Remove directives
+                template_content = re.sub(r"<!--.+-->", "", template_content)
+                template_content = re.sub(
+                    r"^/.+$", "", template_content, flags=re.MULTILINE
+                )
+                description = (
+                    description.strip() + "\n\n" + template_content.strip()
+                ) + "\n"
+            except Exception as e:
+                self._warn(f"Could not read MR template file: {e}")
+
+        # Add Jira ticket
+        if jira_ticket:
+            description += f"\n\nTicket: {jira_ticket}"
+
+        return description
+
+    def _get_new_mr_data(
+        self, default_branch: str, jira_ticket: str
+    ) -> tuple[str, str]:
+        """Get title and description for a new merge request."""
+        commits = self._get_commits(default_branch)
+        if not commits:
+            self._error(
+                f"No commits found on branch compared to {default_branch}"
+            )
+        title = commits[0]["title"]
+        description = self._build_mr_description(commits, jira_ticket)
+        return title, description
+
+    # Main Workflow
+
+    def create_or_update(self, additional_assignees: list[str]) -> None:
+        """Create or update merge request with reviewers and assignees."""
+        branch = self._get_current_branch()
+        jira_ticket = self._get_jira_ticket(branch)
+        project_id, default_branch = self._get_project_info()
+
+        reviewer_ids, assignee_ids = self._collect_user_ids(
+            additional_assignees,
+        )
+
+        labels = self._get_labels()
+
+        # Check for existing MR
+        mr_iid, web_url = self._get_merge_request_info(branch, project_id)
+
+        # Create MR if it doesn't exist
+        if mr_iid is None:
+            title, description = self._get_new_mr_data(
+                default_branch, jira_ticket
+            )
+            content = self._edit_file(f"{title}\n\n{description}")
+            lines = content.split("\n")
+            new_title = lines[0].strip()
+            new_description = "\n".join(lines[2:]).strip()
+
+            mr_iid, web_url = self._create_merge_request(
+                project_id, branch, default_branch, new_title, new_description
+            )
+            print(f"Created MR: {web_url}")
+
+        # Update MR with reviewers, assignees, labels
+        self._update_merge_request(
+            project_id, mr_iid, reviewer_ids, assignee_ids, labels
+        )
+        print(f"Updated MR: {web_url}")
+        self._open_in_browser(web_url)
+
+
+def main() -> None:
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description="Create/update GitLab MR with reviewers and assignees"
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output",
+    )
+    parser.add_argument(
+        "-d",
+        "--draft",
+        action="store_true",
+        help="Mark new merge request as a draft",
+    )
+    parser.add_argument(
+        "-e",
+        "--edit",
+        action="store_true",
+        help="Edit the merge request title and description before creation",
+    )
+    parser.add_argument(
+        "-o",
+        "--open",
+        action="store_true",
+        help="Open the merge request in browser after creation",
+    )
+    parser.add_argument(
+        "assignees",
+        nargs="*",
+        help="Additional assignees for the merge request",
+    )
+
+    args = parser.parse_args()
+    creator = GitLabMRCreator(
+        verbose=args.verbose,
+        draft=args.draft,
+        edit=args.edit,
+        open=args.open,
+    )
+    creator.create_or_update(args.assignees)
+
+
+if __name__ == "__main__":
+    main()

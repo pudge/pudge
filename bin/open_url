@@ -5,12 +5,12 @@ use warnings;
 our $v;
 our $SSH = 'ssh';
 
-open_url(@ARGV);
+open_url_old(@ARGV);
 exit 0;
 
-sub open_url {
+sub open_url_url {
     my($url) = @_;
-    _open_url(url => $url);
+    _open_url(open => $url);
 }
 
 sub open_url_old {
@@ -23,14 +23,14 @@ sub open_url_old {
     my $ssh_allowed = $ENV{OPEN_URL_SSH}; # boolean, no need to use for X11
 
     if ($url && $ssh_allowed) {
-        my $host = $ENV{SSH_CLIENT} || $ENV{SSH_CONNECTION};
+        chomp(my $host = `machost` || $ENV{SSH_CLIENT} || $ENV{SSH_CONNECTION});
         if ($host) {
             $host =~ s/ .+$//;
             # IPV4 only :sadpanda:
             if ($host =~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) {
                 # quote the $url, else '&' characters will still be unhappy
                 # on the remote from the ssh cmd
-                _open_url($SSH, $host, $cmd_remote, quotemeta($url));
+                _open_url($SSH, '-p 2302', $host, $cmd_remote, quotemeta($url));
                 exit(0);
             }
         }

@@ -206,6 +206,7 @@ unless (keys %STATUS) {
         'Blocked'            => { icon => "" },
         'Needs Information'  => { icon => "󰆆" },
         'In Review'          => { icon => "" },
+        'Code Review'        => { icon => "" },
         'Resolved'           => { icon => "" },
         'Closed'             => { icon => "" },
     );
