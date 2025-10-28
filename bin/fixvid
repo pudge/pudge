@@ -1,10 +1,17 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -s
 use warnings;
 use strict;
 use feature ':5.10';
 
-my $o = shift;
+our $max;
 
-(my $n = $o) =~	s/\.mov$/\.mp4/;
+for (@ARGV) {
+    my $o = $_;
 
-system qw(ffmpeg -i), $o, qw(-b:v 3000k -bufsize 3000k), $n;
+    (my $n = $o) =~	s/\.mov$/\.mp4/;
+
+    my @args = ( qw(ffmpeg -i), $o, ($max ? qw(-threads 0) : ()), qw(-b:v 3000k -bufsize 3000k), $n );
+#     my @args = ( qw(ffmpeg -i), $o, ($max ? qw(-threads 0) : ()), qw(-c:v copy -c:a copy), $n );
+    say join ' ', @args;
+    system @args;
+}

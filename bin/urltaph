@@ -41,6 +41,7 @@ my $token = do {
 our $verbose;
 if (shift) {
     $verbose = 1;
+    say "starting";
 }
 else {
     my $pid = fork;
@@ -77,7 +78,9 @@ my $sock = new IO::Socket::INET (
     Listen      => SOMAXCONN,
 ) or die "Could not start server: $!.\n";
 
+say "ok" if $verbose;
 FOO: while (my $child = $sock->accept) {
+    say "forking" if $verbose;
     my $pid;
     if ($pid = fork) {
         close $child;
@@ -87,12 +90,17 @@ FOO: while (my $child = $sock->accept) {
     die "fork error: $!.\n" unless defined $pid;
     close $sock;
 
+    say "receiving" if $verbose;
     my $peeraddr = inet_ntoa($child->peeraddr);
-    chomp(my $tshost = `tshost 2>/dev/null`);
-    die "unauthorized" unless $peeraddr eq '10.140.18.126' || $peeraddr eq '127.0.0.1' || $peeraddr eq $tshost;
+    say "receiving from $peeraddr" if $verbose;
+    #chomp(my $tshost = `tshost 2>/dev/null`);
+    my $tshost = '100.110.219.22';
+    die "unauthorized" unless $peeraddr eq '10.140.18.126' || $peeraddr eq '127.0.0.1' || $peeraddr =~ /^192\.168\.\d\.12$/ || $peeraddr eq $tshost;
 
+    say "autoflushing" if $verbose;
     $child->autoflush(1);
 
+    say "reading" if $verbose;
     my $vers    = readlen $child, 4;
     say "VERSION: $vers" if $verbose;
     my $flags   = readlen $child, 4;
@@ -114,12 +122,25 @@ FOO: while (my $child = $sock->accept) {
     die "bad token" unless $crypt eq md5_hex($url . $token);
 
     #system $open, $url;
+#     system osascript => (map {( '-e', $_ )}
+#         'on run argv' =>
+#             'tell application "Google Chrome"' =>
+#                 'activate' =>
+#                 'set foo to make new window' =>
+#                 'set URL of tab 1 of foo to item 1 of argv' =>
+#             'end tell' =>
+#         'end run'
+#     ), $url;
+
+    close STDOUT;
+
     system osascript => (map {( '-e', $_ )}
         'on run argv' =>
-            'tell application "Google Chrome"' =>
+            'tell application "Arc"' =>
                 'activate' =>
-                'set foo to make new window' =>
-                'set URL of tab 1 of foo to item 1 of argv' =>
+                'tell front window' =>
+                    'make new tab with properties {URL:item 1 of argv}' =>
+                'end tell' =>
             'end tell' =>
         'end run'
     ), $url;
