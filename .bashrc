@@ -46,15 +46,11 @@ elif [[ $(uname) == 'Darwin' ]]; then
     fi
 fi
 
-export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
-
 if [[ $(uname) == 'Linux' ]]; then
     if [[ -x $(which ceno 2>&1 /dev/null) ]]; then
         export EDITOR=ceno
     fi
 fi
-
-test -r "${HOME}/.bashrc.local" && source "${HOME}/.bashrc.local"
 
 # don't run these things if calling perl from BBEdit, it's pretty slow
 parent_caller=""
@@ -146,3 +142,6 @@ fi
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+export PATH=$HOME/bin:$HOME/.tfenv/bin:$HOME/.local/bin:/opt/bin:/opt/homebrew/bin:$MYPATH:$HOME/.yarn/bin
+test -r "${HOME}/.bashrc.local" && source "${HOME}/.bashrc.local"
