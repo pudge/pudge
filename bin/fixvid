@@ -10,8 +10,8 @@ for (@ARGV) {
 
     (my $n = $o) =~	s/\.mov$/\.mp4/;
 
-    my @args = ( qw(ffmpeg -i), $o, ($max ? qw(-threads 0) : ()), qw(-b:v 3000k -bufsize 3000k), $n );
-#     my @args = ( qw(ffmpeg -i), $o, ($max ? qw(-threads 0) : ()), qw(-c:v copy -c:a copy), $n );
+#    my @args = ( qw(ffmpeg -i), $o, ($max ? qw(-threads 0) : ()), qw(-b:v 3000k -bufsize 3000k), $n );
+    my @args = ( qw(ffmpeg -i), $o, ($max ? qw(-threads 0) : ()), qw(-c:v copy -c:a copy), $n );
     say join ' ', @args;
     system @args;
 }
