@@ -207,6 +207,7 @@ unless (keys %STATUS) {
         'Needs Information'  => { icon => "󰆆" },
         'In Review'          => { icon => "" },
         'Code Review'        => { icon => "" },
+        'Story Review'        => { icon => "" },
         'Resolved'           => { icon => "" },
         'Closed'             => { icon => "" },
     );
@@ -215,7 +216,7 @@ unless (keys %STATUS) {
 
 my @ALL_CMDS = qw(
     jira_id completion prompt refresh
-    get_issue status_line short_status status
+    get_issue status_line short_status status full_status
     get_transitions list_transitions transition
     estimate short_estimate
 );
@@ -248,9 +249,7 @@ exit($err // 0);
 sub status_line {
     my($jira_id) = @_;
 
-    my $issue = get_issue($jira_id);
-
-    return get_json($jira_id, $issue)->{fields}{status}{name} || '';
+    return get_issue_json($jira_id)->{fields}{status}{name} || '';
 }
 
 
@@ -271,6 +270,25 @@ sub status {
 
     return $status if !$short_status || !$status || $status eq $short_status;
     return $status . ' ' . $short_status;
+}
+
+
+sub full_status {
+    my($jira_id) = @_;
+
+    my $issue = get_issue_json($jira_id);
+    my $title = $issue->{fields}{summary};
+    my $url = html_url($jira_id);
+    my $status = status($jira_id);
+    my $estimate = estimate($jira_id);
+
+    my $full_status = "[$jira_id] $title";
+    $full_status .= "\n  $status";
+    if (length $estimate) {
+        $full_status .= "\n  $estimate min. remaining";
+    }
+    $full_status .= "\n  $url";
+    return $full_status;
 }
 
 
@@ -326,8 +344,7 @@ sub get_transitions {
 sub list_transitions {
     my($jira_id) = @_;
 
-    my $transitions = get_transitions($jira_id);
-    my %list = map { $_->{'id'}, $_->{'name'} } @{ get_json($jira_id, $transitions)->{'transitions'} || [] };
+    my %list = map { $_->{'id'}, $_->{'name'} } @{ get_transitions_json($jira_id)->{'transitions'} || [] };
 
     return \%list;
 }
@@ -368,8 +385,8 @@ sub estimate {
     if (defined $minutes) {
         output_error("Minutes must be an integer") and return unless $minutes =~ /^\d+$/;
 
-        $issue = get_issue($jira_id, 1);
-        my $originalEstimate = get_json($jira_id, $issue)->{fields}{timetracking}{originalEstimate};
+        $issue = get_issue_json($jira_id, 1);
+        my $originalEstimate = $issue->{fields}{timetracking}{originalEstimate};
 
         my $post = {
             fields => {
@@ -386,14 +403,14 @@ sub estimate {
         my $res = $ua->put($url, req_headers(), Content => $post_enc);
         res_error($jira_id, $res, "estimating ID") and return;
 
-        $issue = get_issue($jira_id, 1);
+        $issue = get_issue_json($jira_id, 1);
         get_transitions($jira_id, 1);
     }
     else {
-        $issue = get_issue($jira_id);
+        $issue = get_issue_json($jira_id);
     }
 
-    my $est = get_json($jira_id, $issue)->{fields}{timeestimate};
+    my $est = $issue->{fields}{timeestimate};
     $est /= 60 if $est;
     return $est // '';
 }
@@ -465,6 +482,16 @@ sub completion {
 
 #### helpers
 
+sub get_issue_json {
+    my($jira_id, $force) = @_;
+    return get_json($jira_id, get_issue($jira_id, $force));
+}
+
+sub get_transitions_json {
+    my($jira_id, $force) = @_;
+    return get_json($jira_id, get_transitions($jira_id, $force));
+}
+
 sub get_json {
     my($jira_id, $json) = @_;
 
@@ -523,7 +550,7 @@ sub issue_url {
 
 sub workflow_dispatch_url {
     my($jira_id, $transition_id) = @_;
-    my $issue = get_json($jira_id, get_issue($jira_id));
+    my $issue = get_issue_json($jira_id);
     "https://$host/secure/CommentAssignIssue!default.jspa?id=$issue->{id}&action=$transition_id";
 }
 

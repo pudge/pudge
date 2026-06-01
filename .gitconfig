@@ -30,9 +30,10 @@
 	fp      = !git fetcht && git pullr
 	pro     = !hub pull-request --browse
 	prod    = !hub pull-request --browse --draft
-	st      = !git --no-pager status
+	st      = !git --no-pager status -uno
+    stu     = !git st -u
 	sts     = !git --no-pager status --short --branch
-	ss      = !git stash save
+	sp      = !git stash push --message
 	sta     = !git for-each-ref --color=always --format='%(HEAD) %(color:yellow)%(objectname:short) %(color:reset)%(refname:short)%(color:red)%(upstream:trackshort) %(color:blue)%(upstream:track)' refs/heads
 	fetch   = !git fetch --tags --force
 	delrem  = !git push origin --delete
@@ -55,8 +56,8 @@
 
 	lg      = log --pretty=pudge11 --date=short --decorate-refs-exclude='refs/tags/[A-Z]*[0-9]*' --decorate-refs-exclude='refs/tags/[a-z]*-[A-Z]*[0-9]*'
 	lgs     = !git lg --numstat
-	top     = !git lg -10
-	tops    = !git lgs -10
+	top     = !git lg -20
+	tops    = !git lgs -20
 
 	#log1    = log --oneline
 	log1    = log --pretty=pudge11 --date=short

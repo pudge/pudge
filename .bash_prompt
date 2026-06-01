@@ -1,21 +1,38 @@
-# black='\e[30m'
-# red='\e[31m'
-# yellow='\e[33m'
-# green='\e[32m'
-# cyan='\e[36m'
-# blue='\e[34m'
-# magenta='\e[35m'
-# white='\e[37m'
-# end='\e[0m'
-#
-# black_b='\e[30;1m'
-# red_b='\e[31;1m'
-# yellow_b='\e[33;1m'
-# green_b='\e[32;1m'
-# cyan_b='\e[36;1m'
-# blue_b='\e[34;1m'
-# magenta_b='\e[35;1m'
-# white_b='\e[37;1m'
+sss='\001'
+eee='\002'
+
+black='\e[30m'
+red='\e[31m'
+yellow='\e[33m'
+green='\e[32m'
+cyan='\e[36m'
+blue='\e[34m'
+magenta='\e[35m'
+white='\e[37m'
+
+bold_black='\e[1;30m'
+bold_red='\e[1;31m'
+bold_yellow='\e[1;33m'
+bold_green='\e[1;32m'
+bold_cyan='\e[1;36m'
+bold_blue='\e[1;34m'
+bold_magenta='\e[1;35m'
+bold_white='\e[1;37m'
+
+dim='\e[2m'
+end='\e[0m'
+
+# red='\033[31m'
+# yellow='\033[33m'
+# green='\033[32m'
+# cyan='\033[36m'
+# blue='\033[34m'
+# magenta='\033[35m'
+# bold_cyan='\033[1;36m'
+# bold_green='\033[1;32m'
+# bold_red='\033[1;31m'
+# dim='\033[2m'
+# end='\033[0m'
 
 BASH_NEW=$( if [[ "${BASH_VERSION/.*/}" -ge 5 ]]; then echo 1; else echo 0; fi )
 
@@ -137,9 +154,10 @@ function _dyn_marks {
     #return
     #timing "_dyn_marks start"
     _jira_status
-    if [[ -n "$AWS_PROFILE" ]]; then
-        echo -ne ' ☁️ \001\e[34m\002'$AWS_PROFILE'\001\e[0m\002'
-    fi
+    #_aws_profile
+    #if [[ -n "$AWS_PROFILE" ]]; then
+    #    echo -ne ' ☁️ \001\e[34m\002'$AWS_PROFILE'\001\e[0m\002'
+    #fi
     if [[ -n "$K8S_NAMESPACE" ]]; then
         k8s_namespace=$(kubectl config view --minify -o jsonpath='{...namespace}')
         echo -ne ' 🫥 \001\e[35m\002'$k8s_namespace'\001\e[0m\002'
@@ -149,6 +167,46 @@ function _dyn_marks {
         echo -ne '\e]8;;'$track_time_url'\e\\ ⏱️ \e]8;;\e\\'
     fi
     #timing "_dyn_marks end"
+}
+
+function _aws_profile {
+    # AWS profile + SSO session expiry
+    marks=""
+    if [[ -n "$AWS_PROFILE" ]]; then
+        marks+=" ☁️ ${blue}${AWS_PROFILE}${end}"
+        sso_expiry=""
+        for f in ~/.aws/sso/cache/*.json; do
+            exp=$(jq -r 'select(.startUrl) | .expiresAt // empty' "$f" 2>/dev/null)
+            if [[ -n "$exp" ]]; then
+                exp_epoch=$(date -d "$exp" +%s 2>/dev/null)
+                now_epoch=$(date +%s)
+                if [[ -n "$exp_epoch" ]]; then
+                    remaining=$((exp_epoch - now_epoch))
+                    if [[ $remaining -le 0 ]]; then
+                        sso_expiry=" ${bold_red}expired${end}"
+                    else
+                        hours=$((remaining / 3600))
+                        mins=$(( (remaining % 3600) / 60 ))
+                        if [[ $hours -gt 0 ]]; then
+                            time_str="${hours}h${mins}m"
+                        else
+                            time_str="${mins}m"
+                        fi
+                        if [[ $remaining -le 1800 ]]; then  # 30 minutes
+                            sso_expiry=" ${bold_red}${time_str}${end}"
+                        elif [[ $remaining -le 7200 ]]; then # 2 hours
+                            sso_expiry=" ${yellow}${time_str}${end}"
+                        else
+                            sso_expiry=" ${dim}${time_str}${end}"
+                        fi
+                    fi
+                    break
+                fi
+            fi
+        done
+        marks+="$sso_expiry"
+    fi
+    echo -ne "${marks}"
 }
 
 function _jira_status {
@@ -198,14 +256,14 @@ function show_exit_status {
     if [[ $es != '' && $es != '0' ]]; then
         if [[ "$BASH_NEW" -eq 1 ]]; then
             echo -ne '\001\e[31;1m\002✘ '$es'\001\e[0m\002'
-            #echo -ne "${red_b}✘${end}${red} $es${end}"
+            #echo -ne "${bold_red}✘${end}${red} $es${end}"
         else
             echo -ne "✘ $es"
         fi
     else
         if [[ "$BASH_NEW" -eq 1 ]]; then
             echo -ne '\001\e[32;1m\002✔\001\e[0m\002'
-            #echo -ne "${green_b}✔${end}"
+            #echo -ne "${bold_green}✔${end}"
         else
             echo -ne "✔"
         fi

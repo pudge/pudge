@@ -10,7 +10,9 @@ export OPEN_URL_SSH=1
 
 export GITHUB_HOST=github.com
 export PAGER=less
-export FORCE_HYPERLINKS=1
+#export FORCE_HYPERLINKS=1
+
+export GLAB_FORCE_HYPERLINKS=1
 
 export PIPENV_VENV_IN_PROJECT=true
 
